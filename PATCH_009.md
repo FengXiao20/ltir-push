@@ -29,3 +29,15 @@
 - `limit: n->inf of sin(n)` → `True sin(n)`：非有理式实参静默回声，宜弃权
 - 数值 lane 多字母连写（`V: 2xy`）不拆 → UNDECIDED（诚实但与多项式 lane 口径不一）
 - `xy^2^3` 链式幂：首 ^ 修末变量、次 ^ 作用在整体（罕见写法，行为未立法）
+
+---
+
+# English summary
+
+**Implicit-power binding patch** (touching only `src/ltir006.cpp`, 4 spots; version
+stays 0.0.9 — patches don't mint versions). Bug: in the polynomial layer, a
+power applied after an implicit-product group bound the whole group — `xy^2` parsed
+as `(xy)^2`, so the true identity `(x+y)^3 == x^3+3x^2y+3xy^2+y^3` was falsely
+verdicted `False`, violating the "never fake a False" hard rule. Fix: `^` now binds
+only the last factor of an implicit product (`xy^2` = `x·y^2`). Regression:
+347/347 SMOKE, zero breakage.

@@ -287,3 +287,106 @@ V: 2 ∈ ∅ -> False       → L01 True       （声明词先剥，且不残留
 | `./ltir006 check 卷.ltir` | 三态与码照出，答案值不输出 |
 | `bash ltir.sh tri` | 打印 `export LTIR_OUTPUT=tri` |
 | `bash ltir.sh u` / `./ltir006 uninstall` | 卸载指引与脚本 |
+
+---
+
+# LTIR Quick Tour (English)
+
+> One page for "opened this folder and have no idea what it is". Same content as the
+> Chinese original above; this English edition is the translation of record.
+
+## 1. What is this
+
+**A verdict language that tells the truth.** You write math assertions; the engine
+answers line by line `True / False / UNDECIDED`. When it doesn't know, it abstains —
+it never guesses, and never folds UNDECIDED into False. Everything is exact `int64`
+rationals, zero floats; `-> True` is only a declaration word — **the engine computes
+the truth itself** and does not trust external labels.
+
+`core/` is the frozen eleven-file ℚ-domain kernel (SHA-gated); `src/` is the 0.0.6+
+language layer. No MCP — the interface is the language itself.
+
+## 2. Keyword cheat sheet
+
+**Rules**: keywords are English, abbreviated where possible, but never abbreviated to
+a bare single letter. `A:` / `V:` / `id:` (with colon) are legal; a lone `X` at line
+start is `E-UNK-LINE`. Single chars like `i e π x f R` are identifiers/constants, not
+keywords.
+
+| Keyword | Short | How to write | What comes out |
+|---|---|---|---|
+| `assert:` | `A:` | `A: 2+2=5 -> True` | `False E-VAL-MISMATCH` (engine got 4≠5) |
+| `assert:` | `A:` | `A: 3^3 == 27 -> True。` | `True` (Chinese period truncated, not rejected) |
+| `value:` | `V:` | `V: 1/3+1/6` | `1/2` |
+| `value:` | `V:` | `V: sin(2*pi/3)` | `(1/2)√3` |
+| `value:` | `V:` | `V: 1/0` | `∞` (only `oo-oo` is UNDECIDED) |
+| `at:` | `at:` | `at: x=3, y=2/3` | substitution scope until next `at:` |
+| `ident:` | `id:` | `id: (x+y)^2 == x^2+y^2` | `False` (residual 2xy ≠ 0) |
+| `numth:` | `N:` | `N: isprime(2^61-1)` | `True` (Miller–Rabin) |
+| `define:` / `derive:` | — | `derive: f'(x)` | `2*x - 3` |
+| `solve:` | — | `solve: x^2-5x+6 < 0` | `x ∈ (2, 3)` |
+| `sum:` / `seq:` / `limit:` | — | `sum: n=1..10 of a_n` | `120` / registered / `0` |
+| `vector:` / `prob:` / `stat:` | — | see Chinese table | exact results |
+| `set:` | — | `set: A = {1,2,3}` | `{1, 2, 3}` |
+| `const:` | — | `const: phi = (1+sqrt(5))/2` | new symbol; then `V: phi^2-phi` → `1` |
+| `given:` / `case:` / `check:` | — | bookkeeping | registered, **no verdicts** |
+| `note:` | `#` | comment, kept verbatim | skipped |
+| `subject:` | `<s>` | `<subject domain="math">…</subject>` | problem container |
+| `zf:` / `zfc:` | — | ledger only, **register never judge** | `registered` |
+
+**Containers**: `<a> 解：设 x=1，则 sin(pi/6)=1/2 -> True </a>` → `True`. Chinese prose
+inside is free-form; every ASCII math segment goes to the parser (multi-segment state
+machine). `设 x=5` binds the environment; `<裸 C:>` stays sealed.
+
+## 3. Tags (restored by ruling, not replaced)
+
+| Tag | Meaning | Behavior |
+|---|---|---|
+| `<calc>` / `<a>` | computation | extracts math segments |
+| `<C_and_E>` | reasoning | `cause:`/`effect:`/`by:` fields; no verdict lines |
+| `<answer>` | answer | archived form of `A:`; `tag:"answer"` in `--json` |
+| `<subject domain="…">` | problem | domain enters context, queryable |
+| `S:` `E:` `P:` `Q:` | decorations | whole-line, machine-skipped, kept verbatim |
+
+## 4. Three states & exit codes
+
+| Verdict | Meaning | Exit |
+|---|---|---|
+| `True` | computation matches the declaration | 0 |
+| `False` | it doesn't, with reason code | 0 |
+| `UNDECIDED` | out of scope / overflow / undetermined — honest abstention | 0 |
+| `ERROR` | hard syntax error (bare single-letter keyword etc.) | **1** |
+
+## 5. Set-theory layer (0.0.7+, condensed)
+
+`system:` `choice:` `axiom:` `ref:` `module:` `preset:` `load:` `universe:` `univ:`
+`card:` `forall:` `exists:` `cex:` `inj:` `surj:` `bij:` `mapping:` `under:` `claim:`
+`paradox:` — map declarations and finite-set quantifiers. `⊢` = relatively derivable
+on the loaded map, never absolute truth. Quantifiers over infinite/constructed domains
+→ `UNDECIDED E-SCOPE-INFINITE`. `{x | x ∉ x}` → `E-PARADOX-RUSSELL` (map collapse,
+registered, never judged). Extra ellipses collapse to one `...` + tsundere easter egg.
+
+## 6. How to run
+
+```bash
+bash ltir.sh          # SHA gate -> build -> SMOKE (347/347) -> demo
+bash ltir.sh b / t    # build only / SMOKE only (Termux auto-switches to clang++)
+./ltir006 verify 卷.ltir --explain / --json / --tri / --lang=en
+./ltir006 --version   # ltir006 0.0.9
+```
+
+**Termux**: `pkg install clang make`; keep off `/storage/emulated/0` (noexec) —
+the script relocates to `~/ltir006_lab` automatically.
+
+## 7. Lineage & boundaries
+
+Frozen ℚ kernel (0.0.1–2) → capability extension (0.0.4-lab) → shorthand/containers/
+LaTeX/trig/ZFC ledger (0.0.5) → self-contained C++ layer (0.0.6 reinforced, 69 SMOKE)
+→ set-theory map + quantifiers (0.0.7, 136→225 SMOKE) → formal defs + multiverse
+(0.0.8) → implicit product, π/12 exact angles, `--tri` output modes (0.0.9, 347 SMOKE).
+
+Still not doing (listed, not forgotten): piecewise functions, parametric/polar,
+triangle solving, solid geometry, linear regression, distribution tables, highlighted
+rendering, browser host, i18n dictionary, Windows repack. Every phase only lists what
+it does NOT do, awaiting new orders. Full legislation: `SYNTAX.md`; run records:
+`RUNRESULT.md`; error explanations driven by `lab_codes.tsv`.

@@ -82,3 +82,43 @@ AD ⟹ DC_R · 全局 V 的势 · 省略号猜通项。
 - `RAD2` 只作精确展示，**不参与四则与比较**（返回 UND 有码弃权），
   避免把两个不同根式的运算伪造成有理数 —— 与 Richardson 弃权同源。
 - 非特殊角（如 `sin(π/7)`）仍弃权，不插值、不近似。
+
+---
+
+# English summary
+
+Academic calibration archive for the 0.0.7 set-theory map, sourced from public
+authorities (CMI/AMS pages, SEP, paper bibliographies). Items with no scholarly
+consensus (Berkeley consistency, NF consistency, Ultimate-L conjecture, AD ⟹ DC_R)
+are registered as open — which is itself evidence that "register, never judge" holds.
+
+**Three corrections (backfilled into the text)**: ① a single Woodin cardinal is weaker
+than supercompact — only a proper class of Woodins is stronger; ② I0 lives inside ZFC
+(dodging Kunen) while Reinhardt/Berkeley belong to the ZF-without-AC line — not one
+linear ladder; ③ "large cardinals don't settle CH" is the **corollary** of Levy–Solovay,
+not its statement; SCH/Silver/pcf bounds all carry "strong limit / uncountable cofinality"
+qualifiers.
+
+**Confirmed hard points**: CH is Hilbert's 1st problem, not among the CMI seven
+(Gödel 1940 + Cohen 1963 are the two external certificates of independence —
+`ZFC ⊢ CH → UNDECIDED` is a fact of mathematics, not an engine gap). AC ⟹ DC ⟹ AC_ω
+(strict); BPI strictly weaker than AC and incomparable with DC; the weak-choice
+principles form a partial order — only confirmed implication edges are drawn. AD
+conflicts with AC, is consistent with DC; whether AD ⟹ DC_R is open. Under
+`choice: on`, Reinhardt hits `E-AXIOM-CONFLICT` (Kunen 1971 uses AC) — registered as
+a metatheorem, **never merged into False**.
+
+**0.0.8 addendum**: Hamkins' multiverse view is registered `status: contested` (Maddy's
+universe view and Woodin/Steel monism persist); forcing extensions as Kripke
+accessibility gives exactly **S4.2** (Hamkins–Löwe); CH is a *switch* (mild forcing
+flips it while preserving large cardinals); strong Goldbach is unproven, weak Goldbach
+was proved by Helfgott 2013–2014, checked to 4×10¹⁸ — finite checks don't prove
+universals, so Goldbach is `status: open`, **not** `independent-of: ZFC` (same for the
+millennium problems since 0.0.8).
+
+**0.0.9 addendum**: the π/12 family uses exact dual-radical values
+(`sin(π/12)=(√6−√2)/4`, `cos(π/12)=(√6+√2)/4`, `tan(π/12)=2−√3`, symmetric angles),
+derived by half-angle/sum-difference formulas — zero floats, zero table lookups.
+`RAD2` is display-exact only: it never participates in arithmetic or comparison
+(returns a coded UND) so distinct radicals can't be laundered into rationals — same
+discipline as the Richardson abstention. Non-special angles (`sin(π/7)`) still abstain.

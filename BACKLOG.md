@@ -101,3 +101,53 @@
   模态定理证明器、无限集展开、区间证书、嵌套集合精确、双层 `choice:`、
   同行双层声明词优先级、28 个仅台账域零判定核、Win10+ 包重打、
   Termux clang++ 真机 0.0.9 回填。
+
+---
+
+# English summary
+
+The ledger of deferred items ("only lists what it does NOT do").
+
+**A. Old debts** (recurring, by origin): piecewise/parametric/triangle-solving (P2),
+solid geometry & linear regression (P2), exact degree values sin40° / sin² / midpoint
+dot (P3 — Richardson-class discipline), irrational-root & interval certificates (P2+),
+browser host / highlight rendering / i18n / C++ perf core (P3), Win10+ repack items
+(pending), unifying the two state encodings / `map:` fate / `\subset` ambiguity
+(awaiting ruling), power set & Cantor diagonal in syntax, nested-set exactness,
+`⊨` vs `⊢` banks (P2), infinite-set expansion / SCH / pcf / forcing kernels (P2),
+upgrading `zf:/zfc:` to citable certificate chains (P2).
+
+**B. Ledger-only domains**: 28 domains flagged `[台账]` in `domains.tsv` — names on
+the map, zero judgment kernels; every judgment request inside them returns
+`UNDECIDED E-SCOPE-LEDGER-OLD`… precisely: `E-SCOPE-LEDGER-ONLY`. Zero new kernels,
+zero new operators, zero new short forms in that patch.
+
+**C. Set-theory experimental zone**: conditional L2 derivation via `by:` certificate
+chains (name-checking only today), power set / diagonal, nested sets, cofinality &
+SCH, forcing/inner-model/model-theory kernels — mapped, not implemented. `⊨` needs a
+certificate; `⊢` needs a map; infinite sets are never expanded or guessed.
+
+**D. Engineering**: Win10+ installer not rebuilt (same-source, `_WIN32` branch only
+fixes two stale version strings); Termux on-device re-verification pending per version;
+package management (uninstall, multi-version coexistence, incremental update, manifest
+diff) not built.
+
+**E. Closed cases** (no rollback): 0.0.6 reinforced (Termux clang++ 69/69, noexec
+relocation, dead-variable cleanup); 0.0.7 first (136/136 on-device, anti-sand, axiom
+modules, trigonometric-prisoner frozen scroll 10/10); 0.0.7 patch (5 silent
+false-verdict/statistic fixes, see RUNRESULT.md); patch 2 (evaluation/assertion code
+separation, literal-set quantifiers, `|` constructor, hook load path, title version
+alignment).
+
+**F. Still locked**: three states · self-produced truth · Richardson no-fake-verdicts ·
+code table read-only · core 11 files SHA `aecc9726…` untouched · frozen scroll 10/10 ·
+binary/containment/hook anchors unmoved.
+
+**0.0.8 / 0.0.9 entries**: landed — formalized definitions (signatures, well-formedness,
+termination, 8-step δ, BNF registration), multiverse atlas (registration-only),
+Goldbach dossier, seven-problem naming, `ltir.sh` rename, `LTIR_STAMP`, `VERSION`;
+implicit product, restricted comprehension, overflow classification, π/12 exact
+angles, `RAD2`, `E-SCOPE-ALGEBRAIC`, output modes, uninstall, `GITHUB_INTRO.md`,
+`fixtures/fix009.ltir`. Still pending: `RAD2` arithmetic, forcing/inner-model/modal
+kernels, infinite-set expansion, interval certificates, nested-set exactness, double
+`choice:`, same-line double declaration precedence, Win10+ repack, Termux re-verification.

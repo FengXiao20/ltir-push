@@ -297,3 +297,14 @@ L07 是 `card: {1, 2, 3}`；容器内 `by:` 的问题是**统计漏记**（`calc
 - Win10+ 包未重打；Termux clang++ 真机待回填。
 - 0.0.9 一键 `bash ltir.sh`：347 / 347 项满足，g++ -Wall -Wextra 0 warning / 0 error。
 - 0.0.9 主动探针两批共 58 例：隐式乘法 / 受限概括 / 溢出归类 / π/12 家族 / 四种输出模式，未发现新伪判。
+
+---
+
+# English summary
+
+Run records: per-version build evidence and SMOKE results, oldest first. Current
+state: full `ltir.sh` pipeline green — SHA gate → build → **SMOKE 347/347** → demo
+(0.0.9 lineage: 44 → 69 → 136 → 225 → 347 items, each generation zero breakage of the
+previous). Historical lines above may reference `速览-0.0.5-原件.md` (archived, removed
+from this repo) and `速览.md` (renamed to `QUICK_TOUR.md` on 2026-11-25) — they were
+true when written and are kept verbatim as records.

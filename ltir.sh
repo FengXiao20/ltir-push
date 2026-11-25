@@ -27,7 +27,7 @@ case "$(pwd)" in /storage/emulated/*|/sdcard/*|/mnt/sdcard/*)
           for f in ./core ./fixtures ./axioms ./src ./tests ./Makefile ./ltir.sh \
                    ./termux ./BACKLOG.md ./AXIOM_NOTES.md ./VERSION ./LTIR_STAMP \
                    ./uninstall.sh ./GITHUB_INTRO.md \
-                   ./RUN_core_sha.txt ./README.md ./SYNTAX.md ./速览.md \
+                   ./RUN_core_sha.txt ./README.md ./SYNTAX.md ./QUICK_TOUR.md \
                    ./lab_codes.tsv ./domains.tsv ./RUNRESULT.md; do
             [ -e "$f" ] && cp -r "$f" "$DEST.tmp/"
           done

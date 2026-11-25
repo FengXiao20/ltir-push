@@ -142,3 +142,11 @@ ltir006_setup.exe /U           （或 uninstall.exe /S 静默）
 
 详细数据与过程报备见 `RUNRESULT_WIN.md`。
 真机待回填：双击安装、双击 `.ltir`、`config --set`、卸载。有 bug 直接反馈。
+
+---
+
+# English summary
+
+Windows build instructions for the frozen `win10+` branch — see the Chinese text above
+for the legacy steps. The main line targets Linux + Termux; the Windows branch is
+frozen as of 0.0.6 and not rebuilt (see BACKLOG.md). The legacy package lives in `win/`.

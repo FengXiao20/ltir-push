@@ -372,3 +372,121 @@ CH 是希尔伯特第一题、不在 CMI 七问内，本版按独立命题专档
 - **卸载**：`./ltir006 uninstall` 只打印指引；实际删除由 `uninstall.sh` 执行，
   范围为 `~/ltir006_lab` 与 `~/bin/termux-file-editor`。
 - 短写表仍冻结；一个 `.ltir` 两种身份不变；新码只读消费。
+
+---
+
+# English Edition (abridged translation)
+
+> Scope: the 0.0.6+ language layer (`src/`). The eleven `core/` kernel files and the
+> v0.0.1 grammar are untouched, word for word. This layer is pure C++ / Linux + Termux;
+> the Windows branch is frozen.
+
+## 1. Three design constraints
+
+| Rule | Enforcement |
+|---|---|
+| English keywords | all line-head identity words are English or English abbreviations |
+| Abbreviate when possible | every keyword has a long name + short form; short form preferred |
+| Never a bare single letter | **bare single-letter keywords are forbidden**: must carry `:` or be multi-letter |
+
+Precise boundary: a lone `A`/`V`/`S`/`N` at line start → `E-UNK-LINE`, hard error exit 1;
+`A:` `V:` `id:` `der:` `seq:` are legal; `i e π x f R` are identifiers/constants — the
+ban is on keyword spellings, not on mathematical notation. The short-form table is
+frozen; new keywords get long names only.
+
+## 2. Line-head keywords (22 long names, frozen)
+
+Same table as §2 of the Chinese text: `assert:`(`A:`) asserts with self-produced truth;
+`value:`(`V:`/`val:`) pure evaluation; `at:` substitution scope; `ident:`(`id:`)
+polynomial identity; `numth:`(`N:`/`nt:`) number theory; `given:` `define:` `solve:`
+`derive:` `sum:` `seq:` `limit:` `vector:` `prob:` `stat:` `set:` `domain:` `case:`
+`check:` `const:` register or compute; `note:`(`#`) comments; `subject:`(`<s>`)
+problem container; `zf:`/`zfc:` ledger-only (reserved). The four-tag set
+`<calc>`/`<C_and_E>`/`<answer>`/`<subject>` with `cause:/effect:/by:` fields and the
+decorative shorthands `S: E: P: Q:` were reinstated by the B-ruling (the first draft's
+"explicitly not using S: E: P: Q:" clause was construction-side overreach, revoked and
+archived). Bare `C:` remains sealed. Containers are multi-segment state machines:
+Chinese prose acts as separator, all ASCII math segments are collected, and
+"设 x=5"-style bindings enter the environment (restored on container close — the fix
+that turned L06 from UNDECIDED into True).
+
+## 3. Single-character rule: an open set
+
+Single characters may only appear **inside expressions** (constants/variables/function
+names), never in the line-head identity slot. New symbols register once via `const:`
+(`i e π φ τ ∞ γ`, number sets `N Z Q R C`, variables `x y z t n k m`, coefficients
+`a b c d`, functions `f g h`, points `A B C P Q L` — all legal, none are keywords).
+
+## 4. Expression power (P1 implemented)
+
+Four operations, right-assoc `^`, factorial ≤ 20!, implicit products `2x / x(x+1)`,
+fractions/decimals, full comparison set (unsealed in 0.0.6), LaTeX `\frac{A}{B}`,
+Unicode math input normalization, exact trig special values, complex `i` (i²=-1),
+algebraic numbers `a+b√r`, `∞` as sentinel (`∞−∞`/`∞×0` → UNDECIDED), number-theory
+functions, function define/eval/derivative, polynomial identity, Richardson bound:
+non-special-angle transcendental equalities → UNDECIDED, no fake verdicts; `^0` folds
+before the Richardson test. **Truth is self-produced**: `-> True/False` are declaration
+words, washed out and recomputed; the vocabulary is position-locked after a line-end `->`.
+
+## 5. Three states & exit codes
+
+`True` (0) / `False` with reason code (0) / `UNDECIDED` — honest abstention, **never
+merged into False** (0) / `ERROR` hard syntax fault (1). Registration lines never enter
+verdict statistics; the verdict set is locked — no fourth state, ever.
+
+## 6. Code table (read-only)
+
+`lab_codes.tsv` is a separate namespace appended by the legislator only; `state`
+1=ERROR/2=False/3=UNDECIDED, `en`/`zh` columns follow the scroll's language,
+`{lhs} {rhs} {diff}` placeholders. Codes include `E-UNK-LINE` `E-SYN` `E-NAME` `E-EXT`
+`E-VAL-MISMATCH` `E-ID-DIFF` `E-SCOPE-*` `E-INF` `E-OVF` `E-RANGE` `E-PARADOX-RUSSELL`
+`E-AXIOM-CONFLICT` `E-CHOICE-*` `E-REF-*` `E-LOAD-*` `E-CEX-INVALID` `E-SCOPE-LEDGER-ONLY`
+and more — all consumed read-only by the engine.
+
+## 7. Input hygiene & domains
+
+Entry pipeline: CRLF→LF, BOM strip, full-width→half-width, math Unicode→ASCII aliases;
+Chinese / out-of-domain notation passes through unblocked. `domains.tsv` — shared by
+`<subject domain="X">` and top-level `domain: X`: 24 base domains (math, algebra, …,
+zfc, physics-math), extended by the 甲 patch to 55 registered with 28 **ledger-only**
+domains where every judgment request returns `UNDECIDED E-SCOPE-LEDGER-ONLY` (a name
+on the map is not a judgment kernel; honest abstention beats borrowing another
+domain's evaluator). Unknown domains register verbatim — no interception, no errors.
+Domains never change judgment logic.
+
+## 8. Unsealed / reserved / never
+
+Unsealed by order: `f(x)` functions, recurrence, `∑`, `< >` comparators, the tag set,
+24→55 domains. Reserved: `zf:`/`zfc:` ledger semantics. Never: ZF/ZFC axiom verdict
+kernel, symbolic solver, multivariate function equations, transcendental-equality fake
+verdicts, set-theory axiomatic arithmetic, i18n errors (1.x), C++ performance core
+(reserved slot, no order, no work).
+
+## 9. Phasing & later legislation
+
+P1 foundation delivered (keyword freeze, hygiene, exact ℚ/algebraic/complex, three
+states, code table, full keyword set). **0.0.7**: the set-theory guardrails were
+demoted to an experimental area — map coordinates (`system:`/`choice:`/`axiom:`/
+`ref:`/`⊢`/`⊨`), the global-V triple disambiguation (V is a proper class; `card(V)`
+→ `E-SCOPE-PROPER-CLASS`), exact finite-set cardinality & operators
+(`∈ ∉ ∪ ∩ ∖ ⊆ ⊂`, `\subset` normalizes to subseteq), finite quantifiers (`forall:`/
+`exists:`, native `∀ ∃`), restricted comprehension (`{x ∈ A | P(x)}`, unrestricted
+→ `E-PARADOX-RUSSELL`), counter-example register (`cex:`), finite mappings
+(`mapping:`/`inj:`/`surj:`/`bij:`), axiom modules (one `.ltir`, two identities:
+`module:` header, no `A:` inside, `preset:`/`load:`), the anti-"sand" ellipsis
+folding with tsundere easter egg, and academic calibrations (single Woodin < supercompact;
+I0 vs Reinhardt/Berkeley are not one ladder; Levy–Solovay is the theorem whose
+corollary is "large cardinals don't settle CH"; CH is Hilbert's 1st problem, not one
+of the CMI seven). **0.0.7 patch 2**: six new long-name keywords `exists: cex: inj:
+surj: bij: mapping:`; evaluation tags ≠ assertion tags (`V:` returning False carries
+no code; only `A:` conflicts get `E-VAL-MISMATCH`). **0.0.8**: formalized definitions
+(`sig:` `type:` `where:` `rule:` `grammar:` `expand:`, δ-expansion ≤ 8 steps,
+`E-DEF-*` codes) and the multiverse atlas (`multiverse:` `world:` `force:` `ground:`
+`mantle:` `reachable:`; S4.2 registered as patterns, no modal theorem prover; map
+hopping never unlocks absolute truth). **0.0.9**: implicit product (`2xy` → `2*x*y`),
+restricted-comprehension double syntax, overflow classification (`E-OVF`,
+`E-SCOPE-ALGEBRAIC`), the π/12 exact-angle family (dual-radical display, no arithmetic
+on `RAD2`), output modes (`--tri` / `--no-answer` / env vars), and uninstall
+(`./ltir006 uninstall` prints; `uninstall.sh` deletes `~/ltir006_lab` +
+`~/bin/termux-file-editor`). Short-form table stays frozen throughout; version numbers
+belong to the legislator — patches do not mint versions.
