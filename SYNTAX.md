@@ -524,3 +524,32 @@ belong to the legislator — patches do not mint versions.
 - **输出层契约**：stdout=题面+唯一回执，stderr=须知/人话；非 TTY 不弹交互；
   `json` / `ndjson` / `tri` / `default` 四模式；`\b` 进度条仅 TTY 且默认本地可见；
   全绿只给一行汇总，失败才展开能断案那一串。
+
+## 0.1.0 A 增量 · 公理本体化（本节覆盖 0.1.0 条文中 `theory_sig:` 的纯登记语义）
+
+立法点：一致性强度由 `lang` + **公理公式本体** + 推导规则给出，**不是名字给出**。
+补丁不铸版本号：`VERSION` / `LTIR_STAMP` / `--version` / JSON `"version"` 仍 `0.1.0`；
+`core/` 十一件与 `RUN_core_sha.txt` 一字不动（门禁 11/11）；短写表仍冻结。
+
+- **`lang:`**（新增长名）：登记理论语言签名，如 `lang: L_N = {0, S, +, *}`；
+  多次以 ` | ` 按声明顺序拼接；`load:` 模块内的 `lang:` 同样入册。登记行，不产三态。
+- **`axiom:` 扩写**：`axiom: Sep = forall x (x in A and P(x))` 把公式本体入 Ctx；
+  旧 `axiom: AC, Separation` 逐字保留（公式位空串亦入册）。`preset:` 内置表与
+  `load:` 外部模块走同一解析，公理本体不在加载时丢失。
+  公式内避免半角逗号（逗号仍是列表分隔符），可用中文逗号或分号。
+- **`theory_sig:` 升级**：按 `lang + 全部 name=formula（字典序） + rules（字典序）`
+  算 **FNV-1a 64** 内容指纹，16 位小写 hex；纯整数位运算、零浮点、跨平台一致，
+  声明/加载顺序不影响结果。`theory_sig:` / `theory_sig: ?` 只算不比；给期望 hex
+  （可带 `0x`）时比对，不符计入 `sig_mismatch`。**比对只登记**：不产三态行、
+  不并 False、不报错、exit 0。人话档显示的始终是实算指纹，不照抄声明值（真值自产）。
+- **JSON 结构恒定追加**：`axiom_bodies` / `lang` / `theory_sig` / `sig_mismatch`。
+  `--tri` / `--no-answer` / `--json` 均不被指纹行污染（摘要仅 default 档出现）。
+- **同名改一字公式 → 指纹变**：这是「不是符号给的」在机器侧的第一处落地。
+  解释证书校验仍留 L2，本增量不实现，也不解锁任何判定核。
+- **仍锁**：不判 `Con(T)` · 不构造公理推导判定核 · `translation:` 仍只登记 ·
+  `strength_le:` / `interprets:` 仍 `E-SCOPE-CONSISTENCY` · 跨图不搬真值 ·
+  码表零 append（比对不符只进 `sig_mismatch` 计数，不新增错误码）。
+- SMOKE `405 / 405`；三角囚徒冻结卷 `10 True`、demo `24 lines: 20/3/1` 逐字不漂。
+  UI 层按收尾行自适应总数，推版加断言不用改输出层。
+
+**示范卷**：`fixtures/theory_sig.ltir`。

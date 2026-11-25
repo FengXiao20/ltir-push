@@ -1,4 +1,4 @@
-// ltir006/src/ltir006.cpp —— 0.1.0 语言层（Linux + Termux / C++17 / 纯标准库）
+// ltir006/src/ltir006.cpp —— 0.1.1 语言层（Linux + Termux / C++17 / 纯标准库）
 // 0.0.7：集合论实验区开放（语法资产 L0/L1 + 有限集精确判定 + 诚实弃权）
 //        防「沙」省略号折叠 + 傲娇彩蛋；公理模块 preset:/load:；⊢ 地图坐标。
 //        Windows 10+ 分支本轮不重打，共用同一份源码、同一套资源表。
@@ -7,6 +7,9 @@
 // 语法关键词见 SYNTAX.md；用法见 速览.md；错误解释全部由 lab_codes.tsv 驱动。
 // 三态锁死：True / False / UNDECIDED，UNDECIDED 绝不并入 False。
 #include "value.hpp"
+
+/* 0.1.1：版本号单一来源——所有横幅/JSON/help 引用本宏，杜绝重复字面量 */
+#define LTIR_VER "0.1.1"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -20,6 +23,8 @@
 #include <cstring>
 #include <functional>
 #include <cstdint>
+#include <iomanip>
+#include <cctype>
 #ifdef _WIN32
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0A00   // Win10+：RegDeleteTreeA / RegCreateKeyExA 等
@@ -249,7 +254,9 @@ static bool isKeyword(const std::string& k) {
     "cat:","object:","arrow:","compose:","identity:","commute:",
     "functor:","nat:","preserves:","limit:","colimit:","product:",
     "equalizer:","pullback:","adj:","unit:","counit:","yoneda:",
-    "topos:","subobject:","monad:","algebra:","carrier:","structure:"
+    "topos:","subobject:","monad:","algebra:","carrier:","structure:",
+    /* 0.1.0 A 增量：理论语言签名（全英文长名，短写表仍冻结） */
+    "lang:"
   };
   return K.count(k)>0;
 }
@@ -660,10 +667,53 @@ struct Ctx {
   std::set<std::string> properClasses;
   std::vector<std::string> ledger;
   int sandFix=0;
+  /* 0.1.0 A 增量：公理本体化（只登记，不构造判定核） */
+  std::vector<std::pair<std::string,std::string>> axiomBodies; // name=formula，保留全部声明
+  std::string langSig;                 // lang: 语言签名，按声明顺序以 " | " 拼接
+  std::string theorySigHex;            // 最近一次内容指纹（FNV-1a 64，16 位 hex）
+  bool theorySigAsked=false;           // 卷内是否出现过 theory_sig:
+  int sigMismatch=0;                   // 期望指纹不符次数：只登记，绝不产三态
   bool inContainer() const { return !containers.empty(); }
   std::string curContainer() const { return containers.empty()?"":containers.back(); }
 };
 struct Result { int state=0; std::string line, out, code, detail, tag; }; // 1=True 0=False 2=UNDECIDED 3=ERROR -1=登记
+
+/* ══════════ 0.1.0 A 增量：公理本体化（只登记，不构造判定核） ══════════
+ * 立法点：一致性强度由 lang + 公理公式 + 推导规则这套本体给出，不是名字给出。
+ * 旧写法 axiom: AC, Separation 逐字保留；新写法 axiom: Sep = <公式> 把公式本体入册。
+ * 公式内请避免半角逗号（用中文逗号或分号），逗号仍是列表分隔符。
+ */
+static void absorbAxiomList(Ctx& c,const std::string& b){
+  std::stringstream ss(b); std::string x;
+  while(std::getline(ss,x,',')){
+    x=trim(x); if(x.empty()) continue;
+    const std::size_t eq=x.find('=');
+    if(eq==std::string::npos){ c.axiomsSeen.push_back(x); c.axiomBodies.push_back({x,""}); }
+    else {
+      const std::string nm=trim(x.substr(0,eq)), fm=trim(x.substr(eq+1));
+      if(nm.empty()) continue;
+      c.axiomsSeen.push_back(nm); c.axiomBodies.push_back({nm,fm});
+    }
+  }
+}
+/* FNV-1a 64：纯整数位运算，零浮点、跨平台一致；同一份卷重跑逐字一样。
+ * 输入按字典序归一，声明/加载顺序不影响指纹 —— 认的是内容，不是书写次序。 */
+static std::string computeTheorySig(const Ctx& c){
+  std::vector<std::string> ax,rl;
+  for(const auto&p:c.axiomBodies) ax.push_back(p.first+"="+p.second);
+  std::sort(ax.begin(),ax.end());
+  rl=c.rules; std::sort(rl.begin(),rl.end());
+  std::string s="LTIR-THEORY-SIG-v1\nlang:"+c.langSig+"\n";
+  for(const auto&a:ax) s+="axiom:"+a+"\n";
+  for(const auto&r:rl) s+="rule:"+r+"\n";
+  std::uint64_t h=1469598103934665603ULL;
+  for(unsigned char ch:s){ h^=ch; h*=1099511628211ULL; }
+  std::ostringstream os; os<<std::hex<<std::setw(16)<<std::setfill('0')<<h;
+  return os.str();
+}
+static std::string jesc(const std::string& s){
+  std::string o; for(char ch:s){ if(ch=='"'||ch=='\\') o+='\\'; o+=ch; } return o;
+}
 
 /* 领域注册表：语法层资产，非错误码表；本令授权扩增，不改 lab_codes.tsv */
 static void loadDomains(Ctx& c,const std::string& path) {
@@ -955,8 +1005,7 @@ static const Preset PRESETS[] = {
 static void absorbAxioms(Ctx& c,const std::string& sys,const std::string& ch,
                          const std::string& ax,const std::string& rf){
   c.system=sys; c.choice=ch;
-  std::stringstream sa(ax); std::string x;
-  while(std::getline(sa,x,',')){ x=trim(x); if(!x.empty()) c.axiomsSeen.push_back(x); }
+  absorbAxiomList(c,ax);
   std::stringstream sr(rf); std::string y;
   while(std::getline(sr,y,',')){ y=trim(y); if(!y.empty()) c.refsSeen.push_back(y); }
 }
@@ -989,8 +1038,8 @@ static void loadModuleFile(Ctx& c,const std::string& path,int depth){
     if(k=="module:"){ continue; }   // 外部模块首行：只认，不改顶层卷身份
     if(k=="system:"){ c.system=b; c.systemDeclared=true; continue; }
     if(k=="choice:"){ c.choice=b; continue; }
-    if(k=="axiom:"){ std::stringstream ss(b); std::string x;
-      while(std::getline(ss,x,',')){x=trim(x);if(!x.empty())c.axiomsSeen.push_back(x);} continue; }
+    if(k=="axiom:"){ absorbAxiomList(c,b); continue; }
+    if(k=="lang:"){ if(!b.empty()){ if(!c.langSig.empty()) c.langSig+=" | "; c.langSig+=b; } continue; }
     if(k=="ref:"){ c.refsSeen.push_back(b); continue; }
     if(k=="load:"){ loadModuleFile(c,b,depth+1); continue; }
     if(k=="preset:"){ continue; }
@@ -1288,7 +1337,7 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   }
   {
     static const std::set<std::string> REG = {
-      "equiconsistent:","translation:","theory_sig:","class:","proper_class:",
+      "equiconsistent:","translation:","class:","proper_class:",
       "cat:","object:","arrow:","compose:","identity:","functor:","nat:","preserves:",
       "limit:","colimit:","product:","equalizer:","pullback:","adj:","unit:","counit:",
       "yoneda:","topos:","subobject:","monad:","algebra:","carrier:","structure:",
@@ -1642,9 +1691,29 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   if (key=="system:") { c.system=body; c.systemDeclared=true; c.registered++; R.state=-1; return R; }
   if (key=="choice:") { c.choice=body; c.registered++; conflictCheck(c); R.state=-1; return R; }
   if (key=="axiom:") {
-    std::stringstream ss(body); std::string x;
-    while(std::getline(ss,x,',')){ x=trim(x); if(!x.empty()) c.axiomsSeen.push_back(x); }
+    absorbAxiomList(c,body);
     c.registered++; conflictCheck(c); R.state=-1; return R;
+  }
+  /* 0.1.0 A：理论语言签名（只登记，不产三态行） */
+  if (key=="lang:") {
+    const std::string v=trim(body);
+    if(!v.empty()){ if(!c.langSig.empty()) c.langSig+=" | "; c.langSig+=v; }
+    c.registered++; c.ledger.push_back("lang: "+v); R.state=-1; return R;
+  }
+  /* 0.1.0 A：按 lang + 公理公式 + rules 算内容指纹。
+   * 空 / ? → 只算；给定期望 hex → 比对计入 sig_mismatch（只登记，不判、不并 False）。 */
+  if (key=="theory_sig:") {
+    const std::string want=trim(body);
+    c.theorySigHex=computeTheorySig(c);
+    c.theorySigAsked=true;
+    if(!want.empty() && want!="?" && want!="auto"){
+      std::string w=want;
+      if(w.size()>2 && w[0]=='0' && (w[1]=='x'||w[1]=='X')) w=w.substr(2);
+      for(char&ch:w) ch=(char)std::tolower((unsigned char)ch);
+      if(w!=c.theorySigHex) c.sigMismatch++;
+    }
+    c.registered++; c.ledger.push_back("theory_sig: "+c.theorySigHex);
+    R.state=-1; return R;
   }
   if (key=="ref:") { c.refsSeen.push_back(body); c.registered++; R.state=-1; return R; }
   if (key=="module:") { c.isModule=true; c.registered++; R.state=-1; return R; }
@@ -2130,7 +2199,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
              <<",\"preserved\":"<<c.preserved.size()
              <<",\"inferences\":"<<c.inferences.size()
              <<",\"answers\":"<<c.answers.size()
-             <<",\"version\":\"0.1.0\""
+             <<",\"version\":\"" LTIR_VER "\""
              <<",\"base\":"<<c.base<<",\"ledger\":"<<c.ledger.size()
              <<",\"sand_fixed\":"<<c.sandFix
              <<",\"easter_egg\":\""<<(c.sandFix>0?(c.chinese?EGG_ZH:EGG_EN):"")<<"\""
@@ -2148,7 +2217,11 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
              <<",\"world_edges\":"<<c.worldEdges.size()
              <<",\"def_sigs\":"<<c.defSigs.size()
              <<",\"rules\":"<<c.rules.size()
-             <<",\"grammars\":"<<c.grammars.size()<<"}\n";
+             <<",\"grammars\":"<<c.grammars.size()
+             <<",\"axiom_bodies\":"<<c.axiomBodies.size()
+             <<",\"lang\":\""<<jesc(c.langSig)<<"\""
+             <<",\"theory_sig\":\""<<c.theorySigHex<<"\""
+             <<",\"sig_mismatch\":"<<c.sigMismatch<<"}\n";
     return err?1:0;
   }
   if(outMode==1){
@@ -2193,6 +2266,10 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
     std::cout<<"map: system="<<c.system<<" choice="<<c.choice
              <<" axioms="<<c.axiomsSeen.size()<<"\n";
   if(!c.setDefs.empty()) std::cout<<"set_defs: "<<c.setDefs.size()<<"\n";
+  if(c.theorySigAsked && outMode==0 && !jsonMode)
+    std::cout<<"theory_sig: "<<c.theorySigHex
+             <<"  (lang+axioms+rules, "<<c.axiomBodies.size()
+             <<" axiom bodies, mismatch="<<c.sigMismatch<<")\n";
   if(c.isModule && rs.empty() && !jsonMode)
     std::cout<<"module: 这是公理模块，请用 preset: / load: 加载（只登记，不判卷）\n";
   return err?1:0;
@@ -2261,7 +2338,7 @@ static bool winSaveCfg(const WinCfg& c) {
    <<"  \"associate_ltir\": "<<(c.associate?"true":"false")<<",\n"
    <<"  \"exit_mode\": \""<<c.exitMode<<"\",\n"
    <<"  \"auto_seconds\": "<<c.autoSeconds<<",\n"
-   <<"  \"version\": \"0.1.0\"\n"
+   <<"  \"version\": \"" LTIR_VER "\"\n"
    <<"}\n";
   return true;
 }
@@ -2295,7 +2372,7 @@ static bool winAssoc(bool on) {
     rSet(k,NULL,0,REG_SZ,(const BYTE*)cmd.c_str(),(DWORD)cmd.size()+1); rClose(k);
     HKEY k2=NULL;
     if(rCreate(HKEY_CURRENT_USER,"Software\\Classes\\LTIR.Document",0,NULL,0,KEY_WRITE,NULL,&k2,NULL)==ERROR_SUCCESS){
-      const char* desc="LTIR 0.1.0 判定卷";
+      const char* desc="LTIR " LTIR_VER " 判定卷";
       rSet(k2,NULL,0,REG_SZ,(const BYTE*)desc,(DWORD)strlen(desc)+1); rClose(k2);
     }
   } else {
@@ -2360,9 +2437,9 @@ static int winConfig(int argc,char** argv) {
 
 static void usage() {
 #ifdef _WIN32
-  std::cout<<"ltir006 0.1.0 — Windows 10+, C++17, core SHA gated\n";
+  std::cout<<"ltir006 " LTIR_VER " — Windows 10+, C++17, core SHA gated\n";
 #else
-  std::cout<<"ltir006 0.1.0 — Linux / Termux, C++17, core SHA gated\n";
+  std::cout<<"ltir006 " LTIR_VER " — Linux / Termux, C++17, core SHA gated\n";
 #endif
   std::cout
            <<"  ltir006 eval \"expr\"              单表达式求值\n"
@@ -2373,7 +2450,7 @@ static void usage() {
            <<"  LTIR_OUTPUT=tri | no-answer     当前终端全局输出模式\n"
            <<"四件套标签 calc/C_and_E/answer + S:E:P:Q: 装饰已并回；领域表见 domains.tsv\n"
            <<"语法关键词见 SYNTAX.md；用法见 速览.md；错误解释由 lab_codes.tsv 驱动\n"
-           <<"0.1.0：进制眼镜 / 赋值环境 / 一致性强度台账 / 试卷库\n";
+           <<LTIR_VER "：进制眼镜 / 赋值环境 / 一致性强度台账 / 试卷库\n";
 #ifdef _WIN32
   std::cout<<"  ltir006 config --show | --set exit=key|auto | --set seconds=N | --set associate=true|false\n"
            <<"  ltir006 open 卷.ltir         双击 .ltir 时由文件关联调用\n"
@@ -2396,7 +2473,7 @@ int main(int argc,char** argv){
     else if(v=="no-answer"||v=="check") envMode=2;
   }
   if(const char* e=std::getenv("LTIR_TRI")) if(std::string(e)=="1") envMode=1;
-  if(cmd=="--version"||cmd=="-V"){ std::cout<<"ltir006 0.1.0\n"; return 0; }
+  if(cmd=="--version"||cmd=="-V"){ std::cout<<"ltir006 " LTIR_VER "\n"; return 0; }
   if(cmd=="--help"||cmd=="-h"){ usage(); return 0; }
   std::string codes="lab_codes.tsv", domains="domains.tsv";
 #ifdef _WIN32
@@ -2411,7 +2488,7 @@ int main(int argc,char** argv){
   if(cmd=="uninstall") return winUninstallCmd();
   if(cmd=="open"){
     if(argc<3){ std::cerr<<"ltir006: open needs a .ltir file\n"; return 1; }
-    std::cout<<"LTIR 0.1.0 · "<<argv[2]<<"\n\n";
+    std::cout<<"LTIR " LTIR_VER " · "<<argv[2]<<"\n\n";
     const int rc=verify(argv[2],false,false,codes,domains,"auto",envMode);
     winWait(winLoadCfg());
     return rc;

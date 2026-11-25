@@ -162,3 +162,27 @@ SMOKE 分组标题去版本号（推 0.1.1 不再改标题）。
 留档（不进本包，等令）：换世界层（`carrier:` 有限结构判定核）、证明论序数、
 反推数学 Big Five、描述集合论 Wadge 度、模型论稳定性、类型论证书导入、
 HoTT universe、一般极限构造、2-范畴、∞-范畴、Win 重打。
+
+## 0.1.0 A 增量（公理本体化，已落）
+
+已落：`lang:` 语言签名 · `axiom: Name = <公式>` 公式本体 · `preset:`/`load:` 同源解析 ·
+`theory_sig:` 从空壳登记升级为 FNV-1a 64 内容指纹（按内容不按名字/顺序）·
+JSON 四字段 `axiom_bodies` / `lang` / `theory_sig` / `sig_mismatch` ·
+`fixtures/theory_sig.ltir` · SMOKE 405/405。`VERSION` 仍 `0.1.0`，core 11 件未动。
+
+**下版本草图 B / C / D（等令，不夹带）**
+- B：`depth: 12` 解开 δ 展开写死的 8 步上限；`trace:` 吐逐步展开轨迹，
+  供试卷库按过程打分；`rule:` 从 `by:` 白名单升为有限步可重写规则。
+- C：`<theory NAME> … </theory>` 局部理论块，公理集压栈-出栈恢复；
+  与进制眼镜 / 赋值环境同层，跨图仍不搬真值。
+- D：`axiom: X requires: Y, Z` 有限 DAG 环检测（真判 `E-AXIOM-CYCLE`，
+  不是弃权）；`load:` 拓扑排序；换一条公理自动算受影响的定义集。
+- L2（更远）：`translation:` + `preserves:` 升函子性证书校验；
+  `strength_le:` / `interprets:` 接解释证书链。**不取** `Con(T)` 判真。
+
+**已知欠账（小，收尾用，非方向）**：`--json --stdin | jq` 题面 6 行仍混 stdout
+（`--paper=PATH` 或 `tail -1` 可绕）；重搬守卫只比 STAMP + `ltir_ui.sh` 哈希，
+未盖 `src/ltir006.cpp` / `ltir_exam.sh`（MT 覆盖后建议 `rm -rf ~/ltir_lab` 全新重搬）；
+`src/ltir006.cpp` 第 7 行注释仍写「速览.md」；`ltir.sh` 第 9 行注释仍写
+「Windows 分支冻结，不维护」；`ltir_ui.sh` 的 `LTIR_SMOKE_TOTAL` 默认 387 只是
+进度条初始估算，收尾行自适应真实总数（405），无需改输出层。

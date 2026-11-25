@@ -62,6 +62,7 @@ ckc "11 条登记"  "$Z" 'registered: 11'
 ck  "不进三态统计" "$(printf '%s' "$Z" | grep -c '^L[0-9]')" '0'
 
 echo "== 入口防护：污染标本三份 =="
+VER="$(tr -d '\n' < VERSION 2>/dev/null || echo 0.1.1)"   # 版本单一来源：断言全部引用此值
 TMP="$(mktemp -d "${TMPDIR:-.}/ltir006_smoke.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 printf 'A: 2+2=4 -> True\nV: 1/3+1/6\n' > "$TMP/base.ltir"
@@ -96,7 +97,7 @@ MB="$($BIN verify "$TMP/maybe.ltir")"
 ckc "词库外不判定不报错，报实算真值" "$MB" 'L01 True'
 
 echo "== 版本锚点（以 --version 为准） =="
-ck  "0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
+ck  "版本归 VERSION" "$($BIN --version)" "ltir006 $VER"
 
 echo "== 【强化修复版】L06 代入 bug（逐字复现立法者截图） =="
 cat > "$TMP/test_006.ltir" <<'EOF'
@@ -306,7 +307,7 @@ ckc "主断言未伪判成 True（采样不蕴涵全称）" "$TP" '10 True'
 echo "== 回归锁定 =="
 ckc "69 条回归：demo 汇总逐字不变" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "69 条回归：内核门禁文案" "$(sha256sum -c RUN_core_sha.txt --quiet && echo yes)" 'yes'
-ck  "版本" "$($BIN --version)" 'ltir006 0.1.0'
+ck  "版本" "$($BIN --version)" "ltir006 $VER"
 
 echo "== 修 bug：用户卷逐字复现 =="
 cat > "$TMP/logic.ltir" <<'EOF'
@@ -402,8 +403,8 @@ ck  "hook 不写死旧版本号" "$(grep -c '0\.0\.6' termux/termux-file-editor)
 ck  "收容清单含 ./termux 与 BACKLOG" "$(grep -c './termux ./BACKLOG.md' ltir.sh)" '1'
 
 echo "== 版本锚点（版本号推进） =="
-ck  "--version 归 0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
-ckc "JSON 版本归 0.1.0" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.1.0"'
+ck  "--version 归 VERSION" "$($BIN --version)" "ltir006 $VER"
+ckc "JSON 版本归 VERSION" "$($BIN verify "$TMP/test_006.ltir" --json)" "\"version\":\"$VER\""
 ck  "未推进到 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
 echo "== Bug 1：V: 求假无码（求值标签 ≠ 断言标签） =="
@@ -502,15 +503,15 @@ ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir
 ckc "demo 24 行不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "码表新增两行" "$(cat lab_codes.tsv)" 'E-SCOPE-CODOMAIN'
 ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
-ck  "--version 仍 0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
-ckc "JSON 版本仍 0.1.0" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.1.0"'
+ck  "--version 仍 VERSION" "$($BIN --version)" "ltir006 $VER"
+ckc "JSON 版本仍 VERSION" "$($BIN verify "$TMP/test_006.ltir" --json)" "\"version\":\"$VER\""
 ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
 echo "== 工程三件：ltir.sh / VERSION / LTIR_STAMP =="
 ck  "ltir.sh 存在" "$([ -f ltir.sh ] && echo yes)" 'yes'
 ck  "旧脚本名退役" "$([ ! -f ltir006.sh ] && echo yes)" 'yes'
-ck  "VERSION = 0.1.0" "$(tr -d '\n' < VERSION)" '0.1.0'
-ck  "LTIR_STAMP 含版本" "$(grep -c '^ltir-0.1.0$' LTIR_STAMP)" '1'
+ck  "VERSION 非空" "$(tr -d '\n' < VERSION)" "$VER"
+ck  "LTIR_STAMP 含版本" "$(grep -c "^ltir-$VER$" LTIR_STAMP)" '1'
 ckc "清单含底片与版本文件" "$(cat ltir.sh)" './VERSION ./LTIR_STAMP'
 ckc "底片比对启用" "$(cat ltir.sh)" 'cmp -s ./LTIR_STAMP'
 ckc "底片不一致自动重搬" "$(cat ltir.sh ltir_ui.sh)" '自动重搬'
@@ -521,8 +522,8 @@ ckc "hook 提示改名" "$(cat termux/termux-file-editor)" 'bash ltir.sh'
 ckc "hook 三锚点：收容目录" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ckc "hook 三锚点：可执行名" "$(cat termux/termux-file-editor)" '$LAB/ltir006'
 ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
-ck  "--version = 0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
-ckc "JSON 版本 0.1.0" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.1.0"'
+ck  "--version = VERSION" "$($BIN --version)" "ltir006 $VER"
+ckc "JSON 版本 VERSION" "$($BIN verify "$TMP/test_006.ltir" --json)" "\"version\":\"$VER\""
 
 echo "== 形式化定义：签名 / 良构性 / 终止性 / δ 展开 =="
 printf 'sig: sq : Num -> Num\ntype: sq : Polynomial\ngrammar: expr ::= term | expr + term\nrule: ModusPonens\ndefine: sq(x : Num) : Num = x*x\nexpand: sq(3)\nA: 2+2==4 -> True by: ModusPonens\n' > "$TMP/d8.ltir"
@@ -763,6 +764,42 @@ ckc "空卷 0 分" "$(bash ./ltir_exam.sh "$TMP/empty.ltir" --json --no-clock --
 ck  "0 分仍 exit 0" "$(bash ./ltir_exam.sh "$TMP/empty.ltir" --json --no-clock --human=n >/dev/null 2>&1; echo $?)" '0'
 ck  "--list 可用" "$(bash ./ltir_exam.sh --list 2>/dev/null | grep -c 'very-hard')" '1'
 ckc "tri 模式 stdout 只给三态" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --tri --no-clock --human=n 2>/dev/null)" 'True'
+
+echo "== 公理本体化：内容指纹只登记，不判真假 =="
+printf 'lang: L_N = {0, S, +, *}\naxiom: Sep = forall x (x in A and P(x))\nrule: ModusPonens\ntheory_sig: ?\n' > "$TMP/sig1.ltir"
+S1="$($BIN verify "$TMP/sig1.ltir")"
+J1="$($BIN verify "$TMP/sig1.ltir" --json)"
+ckc "公式本体入册"              "$J1" '"axiom_bodies":1'
+ckc "语言签名进 JSON"            "$J1" '"lang":"L_N = {0, S, +, *}"'
+ckc "指纹 FNV 16 位且确定"       "$S1" 'theory_sig: e34a93f0257ea42d'
+ckc "登记行不产三态"             "$S1" '── 0 lines: 0 True, 0 False, 0 UNDECIDED ──'
+ck  "tri 不吐指纹"               "$($BIN verify "$TMP/sig1.ltir" --tri | grep -c theory_sig)" '0'
+printf 'lang: L_N = {0, S, +, *}\naxiom: Sep = forall x (x in A or P(x))\nrule: ModusPonens\ntheory_sig: ?\n' > "$TMP/sig2.ltir"
+H1="$(printf '%s' "$S1" | grep -o 'theory_sig: [0-9a-f]*' | cut -d' ' -f2)"
+H2="$($BIN verify "$TMP/sig2.ltir" | grep -o 'theory_sig: [0-9a-f]*' | cut -d' ' -f2)"
+ck  "同名改一字公式指纹变"       "$([ "$H1" != "$H2" ] && echo yes)" 'yes'
+printf 'lang: L_N = {0, S, +, *}\naxiom: Sep = forall x (x in A and P(x))\nrule: ModusPonens\nrule: Cut\ntheory_sig: ?\n' > "$TMP/sig3.ltir"
+H3="$($BIN verify "$TMP/sig3.ltir" | grep -o 'theory_sig: [0-9a-f]*' | cut -d' ' -f2)"
+ck  "推导规则入指纹"             "$([ "$H1" != "$H3" ] && echo yes)" 'yes'
+printf 'lang: L_ZF = {in}\naxiom: Sep = forall x (x in A and P(x))\nrule: ModusPonens\ntheory_sig: ?\n' > "$TMP/sig4.ltir"
+H4="$($BIN verify "$TMP/sig4.ltir" | grep -o 'theory_sig: [0-9a-f]*' | cut -d' ' -f2)"
+ck  "语言签名入指纹"             "$([ "$H1" != "$H4" ] && echo yes)" 'yes'
+printf 'preset: ZFC\naxiom: AC, Separation\ntheory_sig: ?\n' > "$TMP/sig5.ltir"
+ckc "旧公理写法不回退"           "$($BIN verify "$TMP/sig5.ltir")" 'map: system=ZFC choice=on axioms=10'
+ckc "preset 公理也入本体"        "$($BIN verify "$TMP/sig5.ltir" --json)" '"axiom_bodies":10'
+printf 'load: axioms/ZF.ltir\ntheory_sig: ?\n' > "$TMP/sig6.ltir"
+J6="$($BIN verify "$TMP/sig6.ltir" --json)"
+ckc "模块公理进本体"             "$J6" '"axiom_bodies":7'
+ck  "ZF 模块与 ZFC 预设内容不同"  "$([ "$(printf '%s' "$J6" | grep -o '"theory_sig":"[0-9a-f]*"' | cut -d'"' -f4)" != "$($BIN verify "$TMP/sig5.ltir" --json | grep -o '"theory_sig":"[0-9a-f]*"' | cut -d'"' -f4)" ] && echo yes)" 'yes'
+printf 'lang: L_N = {0, S, +, *}\naxiom: Sep = forall x (x in A and P(x))\nrule: ModusPonens\ntheory_sig: e34a93f0257ea42d\n' > "$TMP/sig7.ltir"
+ckc "期望指纹一致 mismatch=0"    "$($BIN verify "$TMP/sig7.ltir")" 'mismatch=0'
+printf 'lang: L_N = {0, S, +, *}\naxiom: Sep = forall x (x in A and P(x))\nrule: ModusPonens\ntheory_sig: deadbeefdeadbeef\n' > "$TMP/sig8.ltir"
+S8="$($BIN verify "$TMP/sig8.ltir")"
+ckc "期望不符只登记不并 False"   "$S8" '── 0 lines: 0 True, 0 False, 0 UNDECIDED ──'
+ckc "不符计入 mismatch"          "$S8" 'mismatch=1'
+ckc "JSON 带 sig_mismatch"       "$($BIN verify "$TMP/sig8.ltir" --json)" '"sig_mismatch":1'
+ckc "三角囚徒冻结卷不漂"         "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
+ckc "demo 24 行不漂"             "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"

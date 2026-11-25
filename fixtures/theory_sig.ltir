@@ -1,0 +1,7 @@
+# 0.1.0 A 增量 · 公理本体化示范（只登记，不判真假）
+# 强度由 lang + 公理公式本体 + 推导规则给出，不是由名字给出。
+lang: L_N = {0, S, +, *}
+axiom: Sep = forall x (x in A and P(x))
+rule: ModusPonens
+theory_sig: e34a93f0257ea42d
+# 把 Sep 的 and 改成 or，指纹即变；给错期望值只记 mismatch=1，不产三态、不并 False。
