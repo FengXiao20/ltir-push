@@ -18,7 +18,7 @@
 LTIR_BIN=${LTIR_BIN:-./ltir006}
 LTIR_WIDTH=${LTIR_WIDTH:-18}
 LTIR_UI_DIR=${LTIR_UI_DIR:-./.ltir_ui}
-LTIR_SMOKE_TOTAL=${LTIR_SMOKE_TOTAL:-347}
+LTIR_SMOKE_TOTAL=${LTIR_SMOKE_TOTAL:-387}
 LTIR_DEMO_BASE=${LTIR_DEMO_BASE:-'24 lines: 20 True, 3 False, 1 UNDECIDED'}
 
 # 帧宽 = '[' + LTIR_WIDTH + ']' + ' ' + '%3d%%'(4)
@@ -106,7 +106,7 @@ ui_t() {
       move_same)   printf 'Stamp + UI hash match -> reuse %s (no re-stage)' "$2" ;;
       move_diff)   printf 'Stamp/UI mismatch -> auto re-stage -> %s' "$2" ;;
       miss)       printf 'E-MOVE: required file missing: %s' "$2" ;;
-      unknown)     printf 'Unknown command: %s (b/c/t/d/v/R/u/ui/env/verbose/tri, blank = all)' "$2" ;;
+      unknown)     printf 'Unknown command: %s (b/c/t/d/v/R/u/ui/env/verbose/tri/exam, blank = all)' "$2" ;;
       tri1)        printf 'Run in this terminal: every verify prints only True/False/UNDECIDED' ;;
       tri2)        printf 'Restore: export LTIR_OUTPUT=normal' ;;
       *)           printf '%s' "$k" ;;
@@ -218,6 +218,10 @@ ltir_ui_smoke() {
   done < <( { set +e; bash "$script" 2>&1; r=$?; printf '__LTIR_RC__=%s\n' "$r"; } )
 
   rc=$(cat "$rcf")
+  # 真实计数以 SMOKE 自己的收尾行为准，推版加断言不用改输出层
+  local real_total
+  real_total=$(grep -E '^[0-9]+ / [0-9]+ 项满足' "$log" 2>/dev/null | tail -1 | sed 's#.* / \([0-9]*\) 项满足.*#\1#')
+  [ -n "$real_total" ] && total="$real_total"
   _ltir_draw 20 20
   _ltir_end
 
@@ -336,7 +340,7 @@ MOCK
 
   printf '[5/6] \\b 条：等宽帧 / 零 \\r / 零 \\033[K ... ' >&2
   local barout
-  barout=$( LTIR_FORCE_TTY=1 LTIR_UI_DIR="$d/w3" bash -c '
+  barout=$( CI= TERM=xterm LTIR_FORCE_TTY=1 LTIR_UI_DIR="$d/w3" bash -c '
     . "$1" >/dev/null 2>&1
     _ltir_draw 1 4; _ltir_draw 4 4; _ltir_end
   ' _ "$0" 2>&1 )

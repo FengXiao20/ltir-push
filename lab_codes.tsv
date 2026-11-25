@@ -48,3 +48,18 @@ E-DEF-UNBOUND	3	free identifier in definition body	定义体含未绑定自由�
 E-DEF-NONTERM	3	recursive definition has no termination check	递归定义无终止性保证：诚实弃权
 E-DEF-DEPTH	3	delta-expansion depth limit exceeded	δ 展开超出有限步上界：诚实弃权
 E-SCOPE-ALGEBRAIC	3	dual-radical exact value does not yet join arithmetic/comparison	双根式精确值暂不参与四则/比较：诚实弃权
+
+# ── 0.1.0 新增：进制 / 赋值 / 一致性强度 / 势 / 真类 / 范畴论 / 试卷 ──
+E-LITERAL-BASE	1	digit out of range for current radix	当前进制下出现非法数字
+E-SCOPE-UNCLOSED	1	radix container not closed	进制容器未闭合
+E-BIND-REDEFINED	1	binding redefined; kept the old value	绑定重名；保留旧值不静默覆盖
+E-SCOPE-CONSISTENCY	3	no interpretation certificate; honest abstain	无解释证书：诚实弃权
+E-SCOPE-CARDINAL	3	no injection/bijection certificate; honest abstain	无单射或双射证书：诚实弃权
+E-SCOPE-PROPER-CLASS	3	proper class has no cardinality	真类不可取势
+E-SCOPE-UNIVERSAL	3	universal property needs a certificate	泛性质需证书：诚实弃权
+E-CAT-NONCOMMUTE	2	diagram does not commute	交换图不交换
+E-EXAM-CONFIG	1	bad exam.json or wrong option	exam.json 配置错误
+E-EXAM-EMPTY	1	no paper in this difficulty	该难度题库为空
+E-EXAM-DUP-ID	1	duplicate problem id	题号重复
+E-EXAM-DIFFICULTY	1	unknown difficulty	未知难度档
+E-EXAM-OUTPUT	1	conflicting output modes	输出模式冲突

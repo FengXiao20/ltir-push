@@ -1,0 +1,7 @@
+exam: de-moivre-quintic
+by: rule: de-moivre-substitution
+rule: x = u - a/u, a = 2
+rule: (u+v)^5 cancels middle terms
+rule: t^5 - 32/t^5 - 4 = 0 -> t^5 = 8
+UNDECIDED: 2^(1/5) 落不进 RAD2，诚实弃权；不伪判 True
+submit:

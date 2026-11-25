@@ -1,0 +1,7 @@
+# LTIR 0.1.0 试卷 · 简单
+problem: restricted-comprehension
+difficulty: easy
+hint: 竖线右边也能绑域
+hint: 别当成无域构造式
+# 题面：算出 T
+set: T = {x | x in {1,2,3,4} and x > 2}

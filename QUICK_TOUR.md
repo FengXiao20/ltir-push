@@ -138,10 +138,11 @@ preserved / inferences / answers`，每行带 `tag`；简明档末尾只在显�
 | 版本 | 状态 | 一句话 |
 |---|---|---|
 | 0.0.1–0.0.2 | 冻结 | ℚ 域四则内核 + 五头六 cpp，SHA `aecc9726…` |
-| 0.0.4-lab | 试验 | C++ 能力扩展：变量/幂/数论/∞/ZF 台账 |
-| 0.0.5 | 试验 | 行短写 / 容器+人话 / LaTeX / 三角 / ZFC 台账 |
-| **0.0.6** | 已交 | 纯 C++ 自包含、英文关键词冻结、高中体量 P1 地基 |
-| **0.0.6 强化修复版** | **本版** | L06 修复 / 标签并回 / 24 领域 / Termux clang++ 取证 / 69 条 SMOKE |
+| 0.0.4-lab | 历史 | C++ 能力扩展：变量/幂/数论/∞/ZF 台账 |
+| 0.0.5 | 历史 | 行短写 / 容器+人话 / LaTeX / 三角 / ZFC 台账 |
+| 0.0.6 强化修复版 | 历史 | L06 修复 / 标签并回 / 24 领域 / Termux clang++ 取证 / 69 条 SMOKE |
+| 0.0.7 / 0.0.8 / 0.0.9 | 历史 | 集合论地图 / 形式化定义与多宇宙 / 隐式乘法与输出模式（347 SMOKE） |
+| **0.1.0** | **本版（正式版）** | 试卷库 / 进制眼镜 / 赋值环境 / 一致性强度台账 / 387 SMOKE |
 
 旧 JS 文本层 / Python 验真 / MCP 嘴已按删除令退场，销案不回退。
 立法文本见 `SYNTAX.md`，实跑记录见 `RUNRESULT.md`，错误解释由 `lab_codes.tsv` 驱动。
@@ -369,10 +370,10 @@ registered, never judged). Extra ellipses collapse to one `...` + tsundere easte
 ## 6. How to run
 
 ```bash
-bash ltir.sh          # SHA gate -> build -> SMOKE (347/347) -> demo
+bash ltir.sh          # SHA gate -> build -> SMOKE (0.1.0) -> demo
 bash ltir.sh b / t    # build only / SMOKE only (Termux auto-switches to clang++)
 ./ltir006 verify 卷.ltir --explain / --json / --tri / --lang=en
-./ltir006 --version   # ltir006 0.0.9
+./ltir006 --version   # ltir006 0.1.0
 ```
 
 **Termux**: `pkg install clang make`; keep off `/storage/emulated/0` (noexec) —
@@ -383,7 +384,8 @@ the script relocates to `~/ltir_lab` automatically.
 Frozen ℚ kernel (0.0.1–2) → capability extension (0.0.4-lab) → shorthand/containers/
 LaTeX/trig/ZFC ledger (0.0.5) → self-contained C++ layer (0.0.6 reinforced, 69 SMOKE)
 → set-theory map + quantifiers (0.0.7, 136→225 SMOKE) → formal defs + multiverse
-(0.0.8) → implicit product, π/12 exact angles, `--tri` output modes (0.0.9, 347 SMOKE).
+(0.0.8) → implicit product, π/12 exact angles, `--tri` output modes (0.0.9, 347 SMOKE)
+→ exam library, radix glasses, binding env, strength ledger (0.1.0, 387 SMOKE).
 
 Still not doing (listed, not forgotten): piecewise functions, parametric/polar,
 triangle solving, solid geometry, linear regression, distribution tables, highlighted

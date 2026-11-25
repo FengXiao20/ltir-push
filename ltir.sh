@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# ltir.sh —— 一键启动（自带寻址 + 底片收容，0.0.9）
+# ltir.sh —— 一键启动（自带寻址 + 底片收容，0.1.0）
 #   ./ltir.sh           一键：SHA 门禁 → 编译 → SMOKE → 演示
 #                       本地默认就画 \b 进度条；全绿只吐一行汇总，失败才展开
 #   ./ltir.sh b / t / d / c   只编译 / 只自测 / 只演示 / 只查 SHA
 #   ./ltir.sh verbose   满屏 ✓（与进度条互斥）   ./ltir.sh env   自报识别到的环境
 #   ./ltir.sh v / u / tri     版本 / 卸载 / 三态输出设置命令
+#   ./ltir.sh exam [卷.ltir]   试卷库（抽题 / 交卷 / 打分，见 ltir_exam.sh）
 #   LTIR_LANG=zh|en bash ltir.sh   或  ./ltir.sh --lang=en verbose
 #   LTIR_UI_BAR=off / LTIR_UI=off / CI=1   关条 / 全静默
 # 平台：Linux + Termux，单包交付
@@ -55,14 +56,14 @@ case "$(pwd)" in /storage/emulated/*|/sdcard/*|/mnt/sdcard/*)
           ui_t move_diff "$DEST" >&2; printf '\n' >&2
           rm -rf "$DEST.tmp"; mkdir -p "$DEST.tmp"
           for f in ./core ./fixtures ./axioms ./src ./tests ./Makefile ./ltir.sh \
-                   ./ltir_ui.sh ./termux ./BACKLOG.md ./AXIOM_NOTES.md ./VERSION ./LTIR_STAMP \
-                   ./uninstall.sh ./GITHUB_INTRO.md \
+                   ./ltir_ui.sh ./ltir_exam.sh ./termux ./BACKLOG.md ./AXIOM_NOTES.md ./VERSION ./LTIR_STAMP \
+                   ./uninstall.sh ./GITHUB_INTRO.md ./exams ./exam.json ./RELEASE_0.1.0.md \
                    ./RUN_core_sha.txt ./README.md ./SYNTAX.md ./QUICK_TOUR.md \
                    ./lab_codes.tsv ./domains.tsv ./RUNRESULT.md; do
             [ -e "$f" ] && cp -r "$f" "$DEST.tmp/"
           done
-          for f in Makefile src core axioms termux BACKLOG.md lab_codes.tsv domains.tsv \
-                   VERSION LTIR_STAMP ltir.sh ltir_ui.sh uninstall.sh GITHUB_INTRO.md; do
+          for f in Makefile src core axioms termux exams BACKLOG.md lab_codes.tsv domains.tsv \
+                   VERSION LTIR_STAMP ltir.sh ltir_ui.sh ltir_exam.sh uninstall.sh GITHUB_INTRO.md exam.json; do
             [ -e "$DEST.tmp/$f" ] || { ui_t miss "$f" >&2; printf '\n' >&2; rm -rf "$DEST.tmp"; exit 1; }
           done
           [ -d "$DEST" ] && rm -rf "$DEST"
@@ -108,6 +109,7 @@ case "${1:-run}" in
   u) exec bash ./uninstall.sh ;;
   ui) bash ./ltir_ui.sh selftest ;;
   env) bash ./ltir_ui.sh env ;;
+  exam) shift; exec bash ./ltir_exam.sh "$@" ;;
   verbose) export LTIR_UI_VERBOSE=1; exec bash ./ltir.sh ;;
   tri) printf '%s\n' 'export LTIR_OUTPUT=tri' "$(ui_t tri1)" "$(ui_t tri2)" ;;
   run|"")

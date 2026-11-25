@@ -75,7 +75,7 @@ Single-binary C++17, stdlib only. Linux / Termux: `bash ltir.sh`.
 ## D 版 · 极客硬核版
 
 ```
-LTIR 0.0.9
+LTIR 0.1.0
   verdicts      True | False | UNDECIDED        (UNDECIDED never folds into False)
   truth         self-computed; "-> True" is a claim, not a certificate
   arithmetic    ℚ / RAD / RAD2 / CPX, exact; Richardson-style abstain
@@ -108,6 +108,6 @@ LTIR 0.0.9
   `axioms/` 公理模块 · `fixtures/` 示范卷 · `tests/` 自测 ·
   `termux/termux-file-editor` 文件管理器钩子 · `SYNTAX.md` 语法条文 ·
   `AXIOM_NOTES.md` 学术口径 · `BACKLOG.md` 欠账
-- **Release 标题建议**：`LTIR 0.0.9 — 隐式乘法 / π/12 精确角 / 三态输出 / 卸载`
+- **Release 标题建议**：`LTIR 0.1.0 — 隐式乘法 / π/12 精确角 / 三态输出 / 卸载`
 - **别写进 README 的**：不要承诺「判定 CH」「证明哥德巴赫」；
   这些在台账里是 `independent` / `open`，只登记不判 —— 这正是项目的立场。

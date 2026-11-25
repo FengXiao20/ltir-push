@@ -352,7 +352,7 @@ CH 是希尔伯特第一题、不在 CMI 七问内，本版按独立命题专档
 
 ## 0.0.9 条文
 
-- 版本 `0.0.9`；`VERSION` 纯文本、`LTIR_STAMP` 底片、`ltir.sh` 入口不变。
+- 本节记录 0.0.9 增量；当前版本 `0.1.0`，条文见文末「0.1.0 条文」。
 - **隐式乘法**：多项式层把连写变量 `2xy` 拆作 `2*x*y`；函数名、常量
   （`pi`/`i`/`e`/`oo`/`N`/`R`…）与已知单名不拆。`eval` 数值层原已支持。
 - **受限概括**：`{x in A | P(x)}`、`{x | x in A and P(x)}`、
@@ -490,3 +490,37 @@ on `RAD2`), output modes (`--tri` / `--no-answer` / env vars), and uninstall
 (`./ltir006 uninstall` prints; `uninstall.sh` deletes `~/ltir_lab` +
 `~/bin/termux-file-editor`). Short-form table stays frozen throughout; version numbers
 belong to the legislator — patches do not mint versions.
+
+## 0.1.0 条文
+
+- 版本 `0.1.0`；`core/` 十一件与 `RUN_core_sha.txt` 一字不动，门禁 11/11。
+- **进制眼镜**：`radix: N`（2–16）设全文；`<2_nary>` / `<3_nary>` / `<二进制>` /
+  `<八进制>` / `<十六进制>` / `<base=16>` 为局部容器，压栈-出栈，出栈恢复外层。
+  只重解析数字字面量：base2 `1010`→10，base3 `0.1`→`(1/3)`，base16 `10`→16。
+  标识符、函数名、符号常量（`pi`/`e`/`i`/`oo`）、`0x..`、`1..10` 不参与。
+  非法数字 `E-LITERAL-BASE`；未闭合 `E-SCOPE-UNCLOSED`。默认 base=10 是全等 no-op。
+- **赋值环境表**：顶层裸 `a=1+1` 绑定进 Ctx.env，跨行继承、不产三态行；
+  `=` 只绑定、`==` 只判定；重名 `E-BIND-REDEFINED` 且保留旧值。纯函数式单卷。
+- **一致性强度轴**：`con:` `equiconsistent:` `strength_le:` `interprets:`
+  `translation:` `theory_sig:`。只登记相对一致性与解释请求，不判 `Con(T)`。
+  `con: T -> T` 由结构护栏拦下（Gödel II 不是外挂 if）；`-> True` 只触发校验、
+  不提供真值；无证书 → `UNDECIDED E-SCOPE-CONSISTENCY`，绝不并入 False。
+- **势轴**：`card_le:` / `card_eq:`，证书为单射/双射；无限集或无证书 →
+  `E-SCOPE-CARDINAL`。`class:` / `proper_class:` 登记真类，真类谈势 →
+  `E-SCOPE-PROPER-CLASS`。注意 ZF/ZFC 里集合之间仍可比势，禁的是真类取势。
+- **范畴论轴**：`cat: object: arrow: compose: identity: commute: functor: nat:
+  preserves: limit: colimit: product: equalizer: pullback: adj: unit: counit:
+  yoneda: topos: subobject: monad: algebra:`，`id:` 已被恒等式行占用，恒等态射
+  只认 `identity:`。有限交换图能判就判（`commute: f != g` → `False
+  E-CAT-NONCOMMUTE`），泛性质无证书 → `E-SCOPE-UNIVERSAL`。
+- **CS 结构**：`carrier:` / `structure:` 登记有限结构；换世界层（逢 7 回头）
+  留档不落，不跨结构搬真值。
+- **试卷库**：`exams/{trivial,easy,normal,hard,very-hard,prize}/*.ltir` +
+  `exams/keys/` + `exam.json` + `ltir_exam.sh`。题面头 `problem: / difficulty: /
+  hint: / attribution: / exam:`；答卷单独一行 `submit:` 交卷，EOF 不算交卷。
+  交卷前零回显；空卷/全错 0 分且 **exit 0**；漏 `submit:` exit 3；
+  配置错 exit 2；输出模式冲突 exit 4。`human=y|n` 为君子协议，只进时间/难度
+  基线分组、不进分数；`--no-clock` 固定 `elapsed_s=0` 供快照回归。
+- **输出层契约**：stdout=题面+唯一回执，stderr=须知/人话；非 TTY 不弹交互；
+  `json` / `ndjson` / `tri` / `default` 四模式；`\b` 进度条仅 TTY 且默认本地可见；
+  全绿只给一行汇总，失败才展开能断案那一串。

@@ -1,0 +1,5 @@
+exam: restricted-comprehension
+by: rule: restricted-comprehension
+set: T = {x | x in {1,2,3,4} and x > 2}
+V: T
+submit:

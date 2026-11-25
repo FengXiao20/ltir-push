@@ -1,0 +1,7 @@
+exam: injection-check
+by: rule: finite-injection-check
+mapping: f = {1->2, 2->3, 3->2} on {2,3}
+inj: f
+surj: f
+bij: f
+submit:

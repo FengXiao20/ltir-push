@@ -1,0 +1,7 @@
+# LTIR 0.1.0 试卷 · 普通
+problem: injection-check
+difficulty: normal
+hint: 先看有没有陪域
+hint: 有限映射逐元素查表
+# 题面：分别写出 f 的单射 / 满射 / 双射判定
+mapping: f = {1->2, 2->3, 3->2} on {2,3}

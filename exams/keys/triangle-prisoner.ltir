@@ -1,0 +1,5 @@
+exam: triangle-prisoner
+by: rule: sampling-is-not-universal
+cex: x = pi/7
+A: forall: x in R -> True
+submit:

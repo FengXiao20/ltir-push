@@ -289,7 +289,7 @@ L07 是 `card: {1, 2, 3}`；容器内 `by:` 的问题是**统计漏记**（`calc
 
 ## 0.0.9 交付取证（Linux / Termux 侧）
 
-- 版本推进 `ltir006 0.0.9`；`VERSION` / `LTIR_STAMP` 同步。
+- 版本推进 `ltir006 0.1.0`；`VERSION` / `LTIR_STAMP` 同步。
 - 入口 `tests/smoke009.sh`；core 11 件 SHA 门禁仍 `OK: 11 文件与取证一致`。
 - 三角囚徒冻结卷 `10 / 10 True / 0 False / 0 UNDECIDED` 不漂；
   demo `24 lines: 20 True, 3 False, 1 UNDECIDED` 逐字未动。
@@ -308,3 +308,17 @@ state: full `ltir.sh` pipeline green — SHA gate → build → **SMOKE 347/347*
 previous). Historical lines above may reference `速览-0.0.5-原件.md` (archived, removed
 from this repo) and `速览.md` (renamed to `QUICK_TOUR.md` on 2026-11-25) — they were
 true when written and are kept verbatim as records.
+
+## 0.1.0 交付取证（正式版）
+
+- 干净快照重放：`CI=1 TERM=dumb bash ltir.sh` → rc=0，core SHA 11/11，编译 4/4 阶段，
+  SMOKE **387 / 387**，demo 24 行冻结基线一致。
+- pty 实测：`\b` 进度条 22 帧、帧宽恒 25 列、`\b` 525 次、孤立 `\r` 0、`\033[K` 0。
+- `bash ltir_ui.sh selftest` → 6/6；时区 `Asia/Shanghai→zh` / `UTC→en` /
+  `LTIR_LANG=en` 硬覆盖均生效。
+- 试卷库：`--json --no-clock --seed=42 --human=n` 回执含
+  `submit=true / score / verdicts / elapsed_s=0`；漏 `submit:` exit 3；
+  空卷 0 分仍 exit 0；`--list` 六档齐。
+- `strings ./ltir006 | grep -c '0\.1\.1'` = 0（未越版）；
+  `bash -n` 六个脚本全过；55 域 / 28 台账域冻结基线未动。
+- 正式版：无 beta / RC / experimental / 试验 标记，不打预发布 tag。

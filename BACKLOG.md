@@ -151,3 +151,14 @@ angles, `RAD2`, `E-SCOPE-ALGEBRAIC`, output modes, uninstall, `GITHUB_INTRO.md`,
 `fixtures/fix009.ltir`. Still pending: `RAD2` arithmetic, forcing/inner-model/modal
 kernels, infinite-set expansion, interval certificates, nested-set exactness, double
 `choice:`, same-line double declaration precedence, Win10+ repack, Termux re-verification.
+
+## 0.1.0 归编
+
+已落：试卷库六档 + `exam.json` + `submit:` + 考前声明 + 延迟反馈 + 结构打分 +
+Agent 契约；进制眼镜；顶层赋值环境表；一致性强度/势/真类/范畴论 L0 台账；
+`\b` 进度条；时区识别中英文 UI；demo 纯检查；`~/ltir_lab` 收容目录；
+SMOKE 分组标题去版本号（推 0.1.1 不再改标题）。
+
+留档（不进本包，等令）：换世界层（`carrier:` 有限结构判定核）、证明论序数、
+反推数学 Big Five、描述集合论 Wadge 度、模型论稳定性、类型论证书导入、
+HoTT universe、一般极限构造、2-范畴、∞-范畴、Win 重打。

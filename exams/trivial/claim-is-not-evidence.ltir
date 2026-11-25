@@ -1,0 +1,7 @@
+# LTIR 0.1.0 试卷 · 简单到爆
+problem: claim-is-not-evidence
+difficulty: trivial
+hint: 声明词不算证据
+hint: 别被行尾那个 True 带跑
+# 题面：下面这行，机器该判什么？
+A: 2+2=5 -> True

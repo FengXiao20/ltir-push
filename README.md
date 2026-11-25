@@ -24,14 +24,14 @@ L03  UNDECIDED  E-SCOPE-INFINITE  (quantifier over an infinite set — abstained
 ## Quick start
 
 ```bash
-bash ltir.sh                    # gate check -> build -> SMOKE (347/347) -> demo
+bash ltir.sh                    # gate check -> build -> SMOKE (0.1.0) -> demo
 ./ltir006 eval "1/3+1/6"        # 1/2
 ./ltir006 verify paper.ltir     # verify a scroll
 ./ltir006 check paper.ltir      # verdicts only, suppress answer values
 ./ltir006 verify paper.ltir --tri      # bare True/False/UNDECIDED per line
 ./ltir006 verify paper.ltir --explain  # verbose: caret pointer + code-table reason
 ./ltir006 verify paper.ltir --json     # structured output
-./ltir006 --version            # ltir006 0.0.9
+./ltir006 --version            # ltir006 0.1.0
 ```
 
 C++17, standard library only. Linux + Termux (`pkg install clang make`; keep the
@@ -100,7 +100,7 @@ math segment is fed to the parser, and "设 x=5"-style segments bind the substit
 scope. Decorative shorthands `S:`(solution) `E:`(let) `P:`(proof) `Q:`(QED) are
 kept verbatim, machine-skipped.
 
-### Set theory as a map (0.0.7+ experimental layer)
+### Set theory as a map (0.0.7+ ledger layer)
 
 ```
 system: ZFC                 declare which map you stand on
@@ -145,15 +145,39 @@ into `False`. Abstention is a feature, not a bug.
 | `core/` | the eleven frozen ℚ-domain kernel files (SHA-gated, untouched) |
 | `axioms/` | loadable axiom modules (`.ltir`, registration-only) |
 | `fixtures/` | demo & regression scrolls |
-| `tests/` | SMOKE suite — 347/347 green |
+| `tests/` | SMOKE suite — 387/387 green |
 | `SYNTAX.md` | full legislation text (Chinese, with English edition appended) |
 | `QUICK_TOUR.md` | one-page quick tour (bilingual 中英) |
 | `PATCH_009.md` | the implicit-power binding patch |
 
 ## Version
 
-**0.0.9** — see `VERSION` (plain text) and `LTIR_STAMP` (build stamp).
+**0.1.0** — see `VERSION` (plain text) and `LTIR_STAMP` (build stamp).
 Lineage: frozen ℚ kernel (0.0.1–2) → capability extension (0.0.4-lab) → shorthand,
 containers, LaTeX, trig, ZFC ledger (0.0.5) → self-contained C++ layer (0.0.6,
 reinforced) → set-theory map & quantifiers (0.0.7) → formal defs & multiverse (0.0.8)
-→ implicit product, π/12 exact angles, output modes (0.0.9). MIT licensed.
+→ implicit product, π/12 exact angles, output modes (0.0.9) → exam library,
+radix glasses, binding environment, consistency-strength ledger (0.1.0, 387 SMOKE). MIT licensed.
+
+## 0.1.0 at a glance
+
+```bash
+bash ltir.sh                       # gate -> build -> SMOKE 387/387 -> demo
+bash ltir.sh exam --list           # six difficulty folders
+bash ltir.sh exam --json --no-clock --human=n --seed=42   # agent-friendly, one JSON receipt
+```
+
+- **Exam library** `exams/`: six difficulty folders, `exam.json`, `submit:` hand-in,
+  pre-exam notice on stderr, delayed feedback, structure-based scoring,
+  deterministic seeded draw. Runner `ltir_exam.sh` is shell-only — the kernel is untouched.
+- **Radix glasses**: `radix: 2`, `<2_nary>`, `<3_nary>`, `<二进制>`, `<base=16>`.
+  Only the *reading* of numeric literals changes (`0.1` in base 3 is `1/3`);
+  everything stays exact rationals, zero floating point. Invalid digit → `E-LITERAL-BASE`,
+  unclosed container → `E-SCOPE-UNCLOSED`.
+- **Binding environment**: top-level `a=1+1` binds, `==` still judges;
+  redefinition → `E-BIND-REDEFINED`, never silently overwritten.
+- **L0 ledgers**: consistency strength, cardinality, proper classes, category theory.
+  `con: ZFC -> ZFC` is blocked by a structural Gödel-II guard; a handwritten `-> True`
+  never supplies truth; missing certificate → `UNDECIDED`, never folded into `False`.
+- Relocation directory is now `~/ltir_lab` (version-decoupled). Project name,
+  executable name and `core/` SHA gate are unchanged.

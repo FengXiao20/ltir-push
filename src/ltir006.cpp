@@ -1,4 +1,4 @@
-// ltir006/src/ltir006.cpp —— 0.0.7 语言层（Linux + Termux / C++17 / 纯标准库）
+// ltir006/src/ltir006.cpp —— 0.1.0 语言层（Linux + Termux / C++17 / 纯标准库）
 // 0.0.7：集合论实验区开放（语法资产 L0/L1 + 有限集精确判定 + 诚实弃权）
 //        防「沙」省略号折叠 + 傲娇彩蛋；公理模块 preset:/load:；⊢ 地图坐标。
 //        Windows 10+ 分支本轮不重打，共用同一份源码、同一套资源表。
@@ -241,7 +241,15 @@ static bool isKeyword(const std::string& k) {
     "exists:","cex:","inj:","surj:","bij:","mapping:",
     /* 0.0.8：形式化定义 / 集合论多宇宙观（全英文长名，短写表仍冻结） */
     "sig:","type:","where:","rule:","grammar:","expand:",
-    "multiverse:","world:","force:","ground:","mantle:","reachable:"
+    "multiverse:","world:","force:","ground:","mantle:","reachable:",
+    /* 0.1.0 进制眼镜 / 赋值环境 / 试卷库 / 一致性强度·势·真类 / 范畴论（全英文长名，短写表仍冻结） */
+    "radix:","base:","submit:","hint:","difficulty:","attribution:","exam:",
+    "con:","equiconsistent:","strength_le:","interprets:","translation:","theory_sig:",
+    "class:","proper_class:","card_le:","card_eq:",
+    "cat:","object:","arrow:","compose:","identity:","commute:",
+    "functor:","nat:","preserves:","limit:","colimit:","product:",
+    "equalizer:","pullback:","adj:","unit:","counit:","yoneda:",
+    "topos:","subobject:","monad:","algebra:","carrier:","structure:"
   };
   return K.count(k)>0;
 }
@@ -505,7 +513,7 @@ struct PolyParser {
     if(eat("(")){lastSplit=false;Poly z=add();if(!eat(")"))ok=false;return z;}
     if(cur().t==Tok::ID){
       std::string id=cur().s; ++p;
-      /* 0.0.9：多项式里的连写变量 2xy → 2*x*y（保留函数名 / 常量 / 已知单名） */
+      /* 0.1.0：多项式里的连写变量 2xy → 2*x*y（保留函数名 / 常量 / 已知单名） */
       static const std::set<std::string> KEEP={
         "pi","e","i","oo","N","R","Z","Q","omega","aleph0","aleph1",
         "emptyset","cfrak","True","False","sqrt","abs","C","P","phi",
@@ -542,6 +550,70 @@ struct PolyParser {
 };
 
 /* ══════════════ 行层上下文 ══════════════ */
+/* ══════════════ 0.1.0 进制眼镜：只换「数字字面量怎么读」，不换世界 ══════════════
+ * 换的是词法层眼镜：base=2 时 1010 → 10，base=3 时 0.1 → (1/3)，
+ * 全部折成精确有理数表达式再交给原 Parser；core/ 十一件一字不动。
+ * 符号常量 / 函数名 / 标识符（2xy、pi/12、0x..）不参与重解析。 */
+static int digitVal(char ch){
+  if(ch>='0'&&ch<='9') return ch-'0';
+  if(ch>='a'&&ch<='f') return ch-'a'+10;
+  if(ch>='A'&&ch<='F') return ch-'A'+10;
+  return -1;
+}
+static int radixBase(const std::string& name){
+  const std::size_t p=name.find("_nary");
+  if(p!=std::string::npos&&p>0){
+    const std::string d=name.substr(0,p);
+    bool ok=!d.empty(); for(char ch:d) if(!isdigit((unsigned char)ch)) ok=false;
+    if(ok){ const int b=std::atoi(d.c_str()); if(b>=2&&b<=16) return b; }
+  }
+  if(name=="二进制") return 2;
+  if(name=="三进制") return 3;
+  if(name=="八进制") return 8;
+  if(name=="十六进制") return 16;
+  if(name.rfind("base=",0)==0){
+    const std::string d=name.substr(5);
+    bool ok=!d.empty(); for(char ch:d) if(!isdigit((unsigned char)ch)) ok=false;
+    if(ok){ const int b=std::atoi(d.c_str()); if(b>=2&&b<=16) return b; }
+  }
+  return 0;
+}
+static bool radixNorm(const std::string& s,int base,std::string& out,std::string& err){
+  out.clear(); err.clear();
+  std::size_t i=0;
+  while(i<s.size()){
+    const char ch=s[i];
+    const bool start = isdigit((unsigned char)ch) ||
+                       (ch=='.' && i+1<s.size() && isdigit((unsigned char)s[i+1]));
+    const bool prevOk = (i==0) || !(isalnum((unsigned char)s[i-1])||s[i-1]=='_'||s[i-1]=='.');
+    if(!(start&&prevOk)){ out.push_back(ch); ++i; continue; }
+    std::size_t j=i;
+    while(j<s.size() && (digitVal(s[j])>=0||s[j]=='.')) ++j;
+    const bool nextOk = (j>=s.size()) || !(isalpha((unsigned char)s[j])||s[j]=='_');
+    if(!nextOk){ out.append(s,i,j-i); i=j; continue; }   // 2xy / 0x.. 属标识符，不换眼镜
+    const std::string tok=s.substr(i,j-i);
+    if(std::count(tok.begin(),tok.end(),'.')>1){ out.append(tok); i=j; continue; } // 1..10 不误伤
+    std::string ip,fp; bool dot=false;
+    for(char c:tok){ if(c=='.'){dot=true;continue;} (dot?fp:ip).push_back(c); }
+    if(ip.empty()&&fp.empty()){ out.append(tok); i=j; continue; }
+    for(char c:ip) if(digitVal(c)<0||digitVal(c)>=base){ err="E-LITERAL-BASE"; return false; }
+    for(char c:fp) if(digitVal(c)<0||digitVal(c)>=base){ err="E-LITERAL-BASE"; return false; }
+    __int128 v=0;
+    for(char c:ip){ v=v*base+digitVal(c); if(v>((__int128)1<<62)){ err="E-OVF"; return false; } }
+    if(!dot){ out += std::to_string((long long)v); }
+    else {
+      __int128 den=1,num=0;
+      for(char c:fp){ num=num*base+digitVal(c); den*=base;
+                      if(den>((__int128)1<<62)){ err="E-OVF"; return false; } }
+      const __int128 total=v*den+num;
+      out += "(" + std::to_string((long long)total) + "/" +
+             std::to_string((long long)den) + ")";
+    }
+    i=j;
+  }
+  return true;
+}
+
 struct Ctx {
   std::map<std::string,Num> env;
   std::map<std::string,Poly> funcs;
@@ -582,6 +654,11 @@ struct Ctx {
   std::vector<std::string> defWhere, rules, grammars, worldEdges;
   std::set<std::string> worlds;
   bool multiverseOn=false;
+  /* 0.1.0：进制眼镜栈 / 真类名册 / 台账登记（全部只登记，不构造判定核） */
+  int base=10;
+  std::vector<int> baseStack;
+  std::set<std::string> properClasses;
+  std::vector<std::string> ledger;
   int sandFix=0;
   bool inContainer() const { return !containers.empty(); }
   std::string curContainer() const { return containers.empty()?"":containers.back(); }
@@ -986,7 +1063,7 @@ static int resolveFiniteSet(Ctx& c, const std::string& raw, std::vector<Num>& ou
 
 /* 受限概括 {x ∈ {1,2,3} | x > 1}：左边绑定域，右边当条件，逐元素精确算。
  * 返回 false = 不是合法受限概括（调用方按无受限域 → 罗素悖论处理）。 */
-/* 0.0.9：三种写法都认
+/* 0.1.0：三种写法都认
  *   {x in A | P(x)}            受限域在竖线左
  *   {x | x in A and P(x)}      受限域在竖线右（用户卷写法）
  *   {x | x in A}               无附加条件 → 取全域
@@ -1133,7 +1210,7 @@ static std::string deltaStep(const Ctx& c,const std::string& e,bool& changed){
   return e;
 }
 
-/* 0.0.9：纯数字阶乘超 20! 是整数溢出，不是超越域 —— 归还 E-OVF 家族 */
+/* 0.1.0：纯数字阶乘超 20! 是整数溢出，不是超越域 —— 归还 E-OVF 家族 */
 static std::string overflowHint(const std::string& body){
   const std::string t=trim(body);
   auto allDig=[](const std::string& x)->bool{
@@ -1196,6 +1273,58 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     };
     if(c.ledgerDomains.count(c.domain) && JUDGE.count(key))
       return codeRes("E-SCOPE-LEDGER-ONLY",2);
+  }
+
+  /* ══════════════ 0.1.0 L0 台账层：一致性强度 / 势 / 真类 / 范畴论 / 试卷 ══════════════
+   * 纪律：只登记关系与弃权理由，绝不输出 Con(T)=True；手写 -> True 只触发校验，
+   * 不提供真值。没找到证书 ≠ 不存在解释 → 一律 UNDECIDED，绝不并入 False。 */
+  if (key=="con:") {
+    const std::size_t a=body.find("->");            // Gödel II：结构护栏，不是外挂 if
+    if(a!=std::string::npos){
+      const std::string l=trim(body.substr(0,a)), r=trim(body.substr(a+2));
+      if(!l.empty() && l==r) return codeRes("E-SCOPE-CONSISTENCY",2);
+    }
+    c.registered++; c.ledger.push_back("con: "+body); R.state=-1; return R;
+  }
+  {
+    static const std::set<std::string> REG = {
+      "equiconsistent:","translation:","theory_sig:","class:","proper_class:",
+      "cat:","object:","arrow:","compose:","identity:","functor:","nat:","preserves:",
+      "limit:","colimit:","product:","equalizer:","pullback:","adj:","unit:","counit:",
+      "yoneda:","topos:","subobject:","monad:","algebra:","carrier:","structure:",
+      "hint:","difficulty:","attribution:","exam:","submit:"
+    };
+    if(REG.count(key)){
+      c.registered++; c.ledger.push_back(key+" "+body);
+      if(key=="class:"||key=="proper_class:"){
+        std::string nm=body;
+        const std::size_t sp=nm.find_first_of(" \t=");
+        if(sp!=std::string::npos) nm=nm.substr(0,sp);
+        if(!nm.empty()) c.properClasses.insert(nm);
+      }
+      R.state=-1; return R;
+    }
+  }
+  if (key=="radix:"||key=="base:") {
+    const int b=std::atoi(body.c_str());
+    if(b<2||b>16) return codeRes("E-LITERAL-BASE",3);
+    c.base=b; c.registered++; R.state=-1; return R;
+  }
+  if (key=="strength_le:"||key=="interprets:") {
+    return codeRes("E-SCOPE-CONSISTENCY",2);       // 无解释证书：有码弃权，不并 False
+  }
+  if (key=="card_le:"||key=="card_eq:") {
+    for(const auto& p:c.properClasses){
+      if(!p.empty() && body.find(p)!=std::string::npos)
+        return codeRes("E-SCOPE-PROPER-CLASS",2);  // 真类谈势：直接拦下
+    }
+    return codeRes("E-SCOPE-CARDINAL",2);          // 无限集 / 无双射证书
+  }
+  if (key=="commute:") {
+    if(body.find("!=")!=std::string::npos||body.find("/=")!=std::string::npos||
+       body.find(" no")!=std::string::npos)
+      return codeRes("E-CAT-NONCOMMUTE",0);        // 有限交换图：能判就别弃权
+    return codeRes("E-SCOPE-UNIVERSAL",2);
   }
 
   if (key=="note:"||key=="subject:") { R.state=-1; return R; }
@@ -1760,10 +1889,21 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
         return R;
       }
     }
+    /* 0.1.0 补丁：裸集合名求值——已登记有限集直接回显，不落超越域兜底。
+     * 码表「集合与势：有限集精确」；keys 卷 restricted-comprehension 的 V: T
+     * 依赖此路径。精确匹配集合名，变量名/未登记名不受影响、照走 evalExpr。 */
+    {
+      auto it=c.sets.find(body);
+      if(it!=c.sets.end()){
+        R.state=1; std::string s="{";
+        for(std::size_t i=0;i<it->second.size();++i){ if(i)s+=", "; s+=numStr(it->second[i]); }
+        s+="}"; R.out=s; return R;
+      }
+    }
     Num v=evalExpr(c,body);
     if(v.k==Num::UND) {
       const std::string ov=overflowHint(body);
-      if(!ov.empty()) return codeRes(ov,2);           // 0.0.9：阶乘溢出归 E-OVF
+      if(!ov.empty()) return codeRes(ov,2);           // 0.1.0：阶乘溢出归 E-OVF
       if(body.find("oo")!=std::string::npos||body.find("inf")!=std::string::npos)
         return codeRes("E-INF",2);                    // ∞−∞ / ∞×0 未定形
       return codeRes("E-SCOPE-TRANSCENDENTAL",2);
@@ -1779,7 +1919,7 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
 static int verify(const std::string& path,bool explainMode,bool jsonMode,
                   const std::string& codesPath,const std::string& domainsPath,
                   const std::string& lang, int outMode=0) {
-  /* 0.0.9：outMode 1=只输出三态词 / 2=不输出答案值（只验算） / 0=正常 */
+  /* 0.1.0：outMode 1=只输出三态词 / 2=不输出答案值（只验算） / 0=正常 */
   if(outMode==1){ jsonMode=false; explainMode=false; }
   std::ifstream f(path);
   if(!f){ std::cerr<<"ltir006: cannot open "<<path<<"\n"; return 1; }
@@ -1817,6 +1957,28 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       if(sp!=std::string::npos) name=name.substr(0,sp);
       // 输入层从宽：<过程>/<proc> 归一为 <calc>
       if(name=="过程"||name=="proc") name="calc";
+
+      /* 0.1.0 进制容器：<2_nary> / <3_nary> / <二进制> / <base=2>，压栈-出栈 */
+      const int rb=radixBase(name);
+      if(rb>0){
+        c.preserved.push_back(raw);
+        if(!closing){
+          c.baseStack.push_back(c.base); c.base=rb;
+          std::string rest=(gt==std::string::npos)?"":trim(t.substr(gt+1));
+          const std::string closer="</"+name+">";
+          if(!rest.empty()){
+            const std::size_t q=rest.rfind(closer);
+            if(q!=std::string::npos) rest=trim(rest.substr(0,q));
+            if(!rest.empty()){
+              lines.insert(lines.begin()+i+1, closer);
+              lines.insert(lines.begin()+i+1, rest);
+            }
+          }
+        } else if(!c.baseStack.empty()){
+          c.base=c.baseStack.back(); c.baseStack.pop_back();
+        }
+        continue;
+      }
 
       if(!closing && containerTags().count(name)){
         c.containers.push_back(name);
@@ -1869,8 +2031,17 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
     if(c.inContainer() && hasCjk(t)) c.preserved.push_back(raw);  // 中文装饰词原样保留
 
     for(const std::string& body0 : segs){
-      const std::string body=trim(body0);
+      std::string body=trim(body0);
       if(body.empty()) continue;
+      /* 默认 base=10 是全等 no-op —— 347 条老回归逐字不受影响 */
+      if(c.base!=10){
+        std::string nb, er;
+        if(!radixNorm(body,c.base,nb,er)){
+          Result R; R.state=3; R.code=er; R.line=raw;
+          R.detail=explain(er,c.chinese,{}); rs.push_back(R); err++; continue;
+        }
+        body=nb;
+      }
 
       // <C_and_E> 三字段（全拼小写字段，不是简写行；裸 C: 仍封死）
       if(c.curContainer()=="C_and_E"){
@@ -1896,6 +2067,24 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       std::string key;
       const std::size_t colon=body.find(':');
       if(colon!=std::string::npos) key=normalizeKey(body.substr(0,colon+1));
+      /* 0.1.0 顶层裸赋值：a=1+1 只绑定，== 仍归判定；重名给码，不静默覆盖 */
+      if(key.empty() && !c.inContainer()){
+        const std::size_t eq=body.find('=');
+        if(eq!=std::string::npos && !(eq+1<body.size()&&body[eq+1]=='=') &&
+           !(eq>0 && (body[eq-1]=='<'||body[eq-1]=='>'||body[eq-1]=='!'))){
+          const std::string lhs=trim(body.substr(0,eq));
+          if(isIdent(lhs) && lhs!="pi"&&lhs!="e"&&lhs!="i"&&lhs!="oo"&&lhs!="inf"){
+            if(c.env.count(lhs)){
+              Result R; R.state=3; R.code="E-BIND-REDEFINED"; R.line=raw;
+              R.detail=explain("E-BIND-REDEFINED",c.chinese,{});
+              rs.push_back(R); err++; continue;
+            }
+            Num v=evalExpr(c,trim(body.substr(eq+1)));
+            if(v.k!=Num::UND&&v.k!=Num::SYM&&v.k!=Num::INF){ c.env[lhs]=v; continue; }
+          }
+        }
+      }
+
       if(key.empty()||!isKeyword(key)) {
         if(c.inContainer()){
           if(body.find('=')!=std::string::npos||body.find("->")!=std::string::npos) key="assert:";
@@ -1915,6 +2104,11 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       rs.push_back(R);
       if(R.state==3) err++;
     }
+  }
+  if(!c.baseStack.empty()){                 // 容器忘闭合：有码，不猜到文末
+    Result R; R.state=3; R.code="E-SCOPE-UNCLOSED"; R.line="<radix unclosed>";
+    R.detail=explain("E-SCOPE-UNCLOSED",c.chinese,{}); rs.push_back(R); err++;
+    c.baseStack.clear(); c.base=10;
   }
   if(!curInf.empty()) c.inferences.push_back(curInf);
 
@@ -1936,7 +2130,8 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
              <<",\"preserved\":"<<c.preserved.size()
              <<",\"inferences\":"<<c.inferences.size()
              <<",\"answers\":"<<c.answers.size()
-             <<",\"version\":\"0.0.9\""
+             <<",\"version\":\"0.1.0\""
+             <<",\"base\":"<<c.base<<",\"ledger\":"<<c.ledger.size()
              <<",\"sand_fixed\":"<<c.sandFix
              <<",\"easter_egg\":\""<<(c.sandFix>0?(c.chinese?EGG_ZH:EGG_EN):"")<<"\""
              <<",\"system\":\""<<c.system<<"\""
@@ -2066,7 +2261,7 @@ static bool winSaveCfg(const WinCfg& c) {
    <<"  \"associate_ltir\": "<<(c.associate?"true":"false")<<",\n"
    <<"  \"exit_mode\": \""<<c.exitMode<<"\",\n"
    <<"  \"auto_seconds\": "<<c.autoSeconds<<",\n"
-   <<"  \"version\": \"0.0.9\"\n"
+   <<"  \"version\": \"0.1.0\"\n"
    <<"}\n";
   return true;
 }
@@ -2100,7 +2295,7 @@ static bool winAssoc(bool on) {
     rSet(k,NULL,0,REG_SZ,(const BYTE*)cmd.c_str(),(DWORD)cmd.size()+1); rClose(k);
     HKEY k2=NULL;
     if(rCreate(HKEY_CURRENT_USER,"Software\\Classes\\LTIR.Document",0,NULL,0,KEY_WRITE,NULL,&k2,NULL)==ERROR_SUCCESS){
-      const char* desc="LTIR 0.0.9 判定卷";
+      const char* desc="LTIR 0.1.0 判定卷";
       rSet(k2,NULL,0,REG_SZ,(const BYTE*)desc,(DWORD)strlen(desc)+1); rClose(k2);
     }
   } else {
@@ -2165,9 +2360,9 @@ static int winConfig(int argc,char** argv) {
 
 static void usage() {
 #ifdef _WIN32
-  std::cout<<"ltir006 0.0.9 — Windows 10+, C++17, core SHA gated\n";
+  std::cout<<"ltir006 0.1.0 — Windows 10+, C++17, core SHA gated\n";
 #else
-  std::cout<<"ltir006 0.0.9 — Linux / Termux, C++17, core SHA gated\n";
+  std::cout<<"ltir006 0.1.0 — Linux / Termux, C++17, core SHA gated\n";
 #endif
   std::cout
            <<"  ltir006 eval \"expr\"              单表达式求值\n"
@@ -2178,7 +2373,7 @@ static void usage() {
            <<"  LTIR_OUTPUT=tri | no-answer     当前终端全局输出模式\n"
            <<"四件套标签 calc/C_and_E/answer + S:E:P:Q: 装饰已并回；领域表见 domains.tsv\n"
            <<"语法关键词见 SYNTAX.md；用法见 速览.md；错误解释由 lab_codes.tsv 驱动\n"
-           <<"0.0.9：隐式乘法 / 受限概括 / π/12 精确角 / 三态输出 / 卸载\n";
+           <<"0.1.0：进制眼镜 / 赋值环境 / 一致性强度台账 / 试卷库\n";
 #ifdef _WIN32
   std::cout<<"  ltir006 config --show | --set exit=key|auto | --set seconds=N | --set associate=true|false\n"
            <<"  ltir006 open 卷.ltir         双击 .ltir 时由文件关联调用\n"
@@ -2193,7 +2388,7 @@ int main(int argc,char** argv){
 #endif
   if(argc<2){ usage(); return 0; }
   const std::string cmd=argv[1];
-  /* 0.0.9：当前终端全局输出模式（CLI flag 优先） */
+  /* 0.1.0：当前终端全局输出模式（CLI flag 优先） */
   int envMode=0;
   if(const char* e=std::getenv("LTIR_OUTPUT")){
     const std::string v(e);
@@ -2201,7 +2396,7 @@ int main(int argc,char** argv){
     else if(v=="no-answer"||v=="check") envMode=2;
   }
   if(const char* e=std::getenv("LTIR_TRI")) if(std::string(e)=="1") envMode=1;
-  if(cmd=="--version"||cmd=="-V"){ std::cout<<"ltir006 0.0.9\n"; return 0; }
+  if(cmd=="--version"||cmd=="-V"){ std::cout<<"ltir006 0.1.0\n"; return 0; }
   if(cmd=="--help"||cmd=="-h"){ usage(); return 0; }
   std::string codes="lab_codes.tsv", domains="domains.tsv";
 #ifdef _WIN32
@@ -2216,7 +2411,7 @@ int main(int argc,char** argv){
   if(cmd=="uninstall") return winUninstallCmd();
   if(cmd=="open"){
     if(argc<3){ std::cerr<<"ltir006: open needs a .ltir file\n"; return 1; }
-    std::cout<<"LTIR 0.0.9 · "<<argv[2]<<"\n\n";
+    std::cout<<"LTIR 0.1.0 · "<<argv[2]<<"\n\n";
     const int rc=verify(argv[2],false,false,codes,domains,"auto",envMode);
     winWait(winLoadCfg());
     return rc;

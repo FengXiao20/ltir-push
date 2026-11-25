@@ -1,0 +1,11 @@
+# LTIR 0.1.0 试卷 · 困难
+problem: triangle-prisoner
+difficulty: hard
+hint: 采样点全 True 不蕴涵全称
+hint: 主断言该弃权就弃权，别硬写 True
+# 题面：三角囚徒冻结卷（完整卷见 fixtures/triangle_prisoner.ltir）
+# 请在答卷里写清「为什么有限采样不能替代全称证书」
+<calc>
+设 x = pi/6
+V: sin(2*x)
+</calc>

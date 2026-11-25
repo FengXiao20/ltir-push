@@ -1,0 +1,12 @@
+# LTIR 0.1.0 试卷 · 非常难
+problem: de-moivre-quintic
+difficulty: very-hard
+attribution: folklore
+hint: 一般五次无根式公式，别硬凑
+hint: 盯 10 和 20 像不像 5a、5a²
+hint: 把 x 拆成两项、让乘积固定
+# 题面：x⁵+10x³+20x−4=0，x=？
+# 注意：引擎不判这个根（2^(1/5) 落不进 RAD2，只会诚实弃权）。
+# 标准答案卷写「换元证书」：by: + rule: 登记 (u+v)⁵ 抵消与二次方程解。
+x^5+10x^3+20x-4=0
+x=？

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ltir006/tests/smoke009.sh —— 0.0.9 SMOKE（276 回归 + V09 组）
+# ltir006/tests/smoke009.sh —— 0.1.0 SMOKE（回归 + V010 组）
 # Linux: g++  / Termux: clang++（由 ltir.sh 传入）
 # 入口：ltir.sh t（tests/smoke008.sh 保留为历史取证）
 set -u
@@ -96,7 +96,7 @@ MB="$($BIN verify "$TMP/maybe.ltir")"
 ckc "词库外不判定不报错，报实算真值" "$MB" 'L01 True'
 
 echo "== 版本锚点（以 --version 为准） =="
-ck  "0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
+ck  "0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
 
 echo "== 【强化修复版】L06 代入 bug（逐字复现立法者截图） =="
 cat > "$TMP/test_006.ltir" <<'EOF'
@@ -306,7 +306,7 @@ ckc "主断言未伪判成 True（采样不蕴涵全称）" "$TP" '10 True'
 echo "== 回归锁定 =="
 ckc "69 条回归：demo 汇总逐字不变" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "69 条回归：内核门禁文案" "$(sha256sum -c RUN_core_sha.txt --quiet && echo yes)" 'yes'
-ck  "版本" "$($BIN --version)" 'ltir006 0.0.9'
+ck  "版本" "$($BIN --version)" 'ltir006 0.1.0'
 
 echo "== 修 bug：用户卷逐字复现 =="
 cat > "$TMP/logic.ltir" <<'EOF'
@@ -402,9 +402,9 @@ ck  "hook 不写死旧版本号" "$(grep -c '0\.0\.6' termux/termux-file-editor)
 ck  "收容清单含 ./termux 与 BACKLOG" "$(grep -c './termux ./BACKLOG.md' ltir.sh)" '1'
 
 echo "== 版本锚点（版本号推进） =="
-ck  "--version 归 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
-ckc "JSON 版本归 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
-ck  "未推进到 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "--version 归 0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
+ckc "JSON 版本归 0.1.0" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.1.0"'
+ck  "未推进到 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
 echo "== Bug 1：V: 求假无码（求值标签 ≠ 断言标签） =="
 printf 'V: 1 == 2\nV: 2 ∈ ∅\nV: 3 > 5\n' > "$TMP/b1.ltir"
@@ -502,15 +502,15 @@ ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir
 ckc "demo 24 行不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "码表新增两行" "$(cat lab_codes.tsv)" 'E-SCOPE-CODOMAIN'
 ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
-ck  "--version 仍 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
-ckc "JSON 版本仍 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
-ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "--version 仍 0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
+ckc "JSON 版本仍 0.1.0" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.1.0"'
+ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
 echo "== 工程三件：ltir.sh / VERSION / LTIR_STAMP =="
 ck  "ltir.sh 存在" "$([ -f ltir.sh ] && echo yes)" 'yes'
 ck  "旧脚本名退役" "$([ ! -f ltir006.sh ] && echo yes)" 'yes'
-ck  "VERSION = 0.0.9" "$(tr -d '\n' < VERSION)" '0.0.9'
-ck  "LTIR_STAMP 含版本" "$(grep -c '^ltir-0.0.9$' LTIR_STAMP)" '1'
+ck  "VERSION = 0.1.0" "$(tr -d '\n' < VERSION)" '0.1.0'
+ck  "LTIR_STAMP 含版本" "$(grep -c '^ltir-0.1.0$' LTIR_STAMP)" '1'
 ckc "清单含底片与版本文件" "$(cat ltir.sh)" './VERSION ./LTIR_STAMP'
 ckc "底片比对启用" "$(cat ltir.sh)" 'cmp -s ./LTIR_STAMP'
 ckc "底片不一致自动重搬" "$(cat ltir.sh ltir_ui.sh)" '自动重搬'
@@ -520,9 +520,9 @@ ckc "R 强制重搬兜底" "$(cat ltir.sh)" 'R) rm -rf'
 ckc "hook 提示改名" "$(cat termux/termux-file-editor)" 'bash ltir.sh'
 ckc "hook 三锚点：收容目录" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ckc "hook 三锚点：可执行名" "$(cat termux/termux-file-editor)" '$LAB/ltir006'
-ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
-ck  "--version = 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
-ckc "JSON 版本 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
+ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "--version = 0.1.0" "$($BIN --version)" 'ltir006 0.1.0'
+ckc "JSON 版本 0.1.0" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.1.0"'
 
 echo "== 形式化定义：签名 / 良构性 / 终止性 / δ 展开 =="
 printf 'sig: sq : Num -> Num\ntype: sq : Polynomial\ngrammar: expr ::= term | expr + term\nrule: ModusPonens\ndefine: sq(x : Num) : Num = x*x\nexpand: sq(3)\nA: 2+2==4 -> True by: ModusPonens\n' > "$TMP/d8.ltir"
@@ -693,8 +693,76 @@ ckc "多宇宙边未回归" "$($BIN verify "$TMP/mv.ltir" --json)" '"world_edges
 ckc "哥德巴赫 open 未回归" "$($BIN verify "$TMP/gb.ltir")" 'E-SCOPE-OPEN'
 ckc "用户卷汇总不漂" "$($BIN verify "$TMP/logic.ltir")" '── 7 lines: 4 True, 1 False, 2 UNDECIDED ──'
 ck  "core SHA 门禁" "$(sha256sum -c RUN_core_sha.txt --quiet >/dev/null 2>&1; echo $?)" '0'
-ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 ck  "GITHUB_INTRO 多版文案在包里" "$([ -f GITHUB_INTRO.md ] && echo yes)" 'yes'
+
+echo "== 【0.1.0】进制眼镜：只换读法，不换世界 =="
+printf 'radix: 2\nA: 1010+1=1011 -> True\n' > "$TMP/rb1.ltir"
+ckc "base2 连写判定" "$($BIN verify "$TMP/rb1.ltir")" 'L01 True'
+printf '<3_nary>\nV: 0.1\n</3_nary>\nV: 0.1\n' > "$TMP/rb2.ltir"
+ckc "base3 0.1 = 1/3" "$($BIN verify "$TMP/rb2.ltir")" 'L01 True  1/3'
+ckc "出栈恢复十进制" "$($BIN verify "$TMP/rb2.ltir")" 'L02 True  1/10'
+printf '<二进制>\nV: 1010\n</二进制>\n' > "$TMP/rb3.ltir"
+ckc "中文标签同义" "$($BIN verify "$TMP/rb3.ltir")" 'L01 True  10'
+printf '<base=16>\nV: 10\n</base=16>\n' > "$TMP/rb4.ltir"
+ckc "base=16 写法" "$($BIN verify "$TMP/rb4.ltir")" 'L01 True  16'
+printf '<2_nary>\nV: 102\n</2_nary>\n' > "$TMP/rb5.ltir"
+ckc "非法数字有码" "$($BIN verify "$TMP/rb5.ltir")" 'E-LITERAL-BASE'
+printf '<2_nary>\nV: 1010\n' > "$TMP/rb6.ltir"
+ckc "忘闭合有码" "$($BIN verify "$TMP/rb6.ltir")" 'E-SCOPE-UNCLOSED'
+ckc "JSON base 字段" "$($BIN verify "$TMP/rb1.ltir" --json)" '"base":2'
+ckc "默认十进制 demo 不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
+
+echo "== 【0.1.0】赋值环境表 =="
+printf 'a=1+1\nb=2+2\nA: a+b == 6 -> True\n' > "$TMP/as1.ltir"
+ckc "跨行绑定求值" "$($BIN verify "$TMP/as1.ltir")" 'L01 True'
+printf 'x=5\nA: x == 5 -> True\n' > "$TMP/as2.ltir"
+ckc "== 仍归判定不误绑" "$($BIN verify "$TMP/as2.ltir")" 'L01 True'
+printf 'a=1\na=2\n' > "$TMP/as3.ltir"
+ckc "重名不静默覆盖" "$($BIN verify "$TMP/as3.ltir")" 'E-BIND-REDEFINED'
+ckc "绑定不产三态行" "$($BIN verify "$TMP/as1.ltir")" '── 1 lines:'
+
+echo "== 【0.1.0】一致性强度 / 势 / 真类 / 范畴论（L0 台账） =="
+printf 'class: V\ncard_eq: V = V\n' > "$TMP/lg1.ltir"
+ckc "真类谈势拦下" "$($BIN verify "$TMP/lg1.ltir")" 'E-SCOPE-PROPER-CLASS'
+printf 'card_le: A <= B by: f\n' > "$TMP/lg2.ltir"
+ckc "无双射证书有码弃权" "$($BIN verify "$TMP/lg2.ltir")" 'E-SCOPE-CARDINAL'
+printf 'strength_le: Q <= PA -> True\n' > "$TMP/lg3.ltir"
+ckc "手写 True 不提供真值" "$($BIN verify "$TMP/lg3.ltir")" 'E-SCOPE-CONSISTENCY'
+ckc "绝不并入 False" "$($BIN verify "$TMP/lg3.ltir")" '── 1 lines: 0 True, 0 False, 1 UNDECIDED ──'
+printf 'con: ZFC -> ZFC\n' > "$TMP/lg4.ltir"
+ckc "Gödel II 结构护栏" "$($BIN verify "$TMP/lg4.ltir")" 'E-SCOPE-CONSISTENCY'
+printf 'con: ZF, ZFC\nequiconsistent: ZF, ZFC\n' > "$TMP/lg5.ltir"
+ckc "等一致性只登记" "$($BIN verify "$TMP/lg5.ltir")" '── 0 lines:'
+ckc "JSON ledger 字段" "$($BIN verify "$TMP/lg5.ltir" --json)" '"ledger":2'
+printf 'cat: Set\nobject: A\narrow: f\ncommute: f != g\n' > "$TMP/lg6.ltir"
+ckc "有限交换图判 False" "$($BIN verify "$TMP/lg6.ltir")" 'E-CAT-NONCOMMUTE'
+printf 'commute: f g\n' > "$TMP/lg7.ltir"
+ckc "泛性质需证书" "$($BIN verify "$TMP/lg7.ltir")" 'E-SCOPE-UNIVERSAL'
+
+echo "== 【0.1.0】试卷库（shell 层，core 不动） =="
+ck  "六档目录齐" "$([ -d exams/trivial ] && [ -d exams/easy ] && [ -d exams/normal ] && [ -d exams/hard ] && [ -d exams/very-hard ] && [ -d exams/prize ] && echo yes)" 'yes'
+ck  "exam.json 存在" "$([ -f exam.json ] && echo yes)" 'yes'
+ck  "ltir_exam.sh 存在" "$([ -f ltir_exam.sh ] && echo yes)" 'yes'
+ck  "正式版说明存在" "$([ -f RELEASE_0.1.0.md ] && echo yes)" 'yes'
+ckc "题面头带难度" "$(cat exams/very-hard/de-moivre-quintic.ltir)" 'difficulty: very-hard'
+ckc "folklore 归属不写成定理" "$(cat exams/very-hard/de-moivre-quintic.ltir)" 'attribution: folklore'
+ckc "收容清单含 exams" "$(cat ltir.sh)" './exams'
+ckc "入口有 exam 子命令" "$(cat ltir.sh)" 'exam) shift'
+printf 'exam: injection-check\nby: rule: finite-injection-check\nA: 2+2=4 -> True\nsubmit:\n' > "$TMP/ans.ltir"
+EXJ="$(bash ./ltir_exam.sh "$TMP/ans.ltir" --json --no-clock --seed=42 --human=n 2>/dev/null)"
+ckc "交卷回执 submit=true" "$EXJ" '"submit":true'
+ckc "回执带 score" "$EXJ" '"score":'
+ckc "回执带 verdicts" "$EXJ" '"verdicts":'
+ckc "--no-clock 固定时钟" "$EXJ" '"elapsed_s":0'
+ck  "交卷完成 exit 0（含成绩）" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --json --no-clock --seed=42 --human=n >/dev/null 2>&1; echo $?)" '0'
+printf 'exam: x\nA: 2+2=5 -> True\n' > "$TMP/nosub.ltir"
+ck  "EOF 不算交卷 exit 3" "$(bash ./ltir_exam.sh "$TMP/nosub.ltir" --json --no-clock --human=n >/dev/null 2>&1; echo $?)" '3'
+printf 'submit:\n' > "$TMP/empty.ltir"
+ckc "空卷 0 分" "$(bash ./ltir_exam.sh "$TMP/empty.ltir" --json --no-clock --human=n 2>/dev/null)" '"score":0'
+ck  "0 分仍 exit 0" "$(bash ./ltir_exam.sh "$TMP/empty.ltir" --json --no-clock --human=n >/dev/null 2>&1; echo $?)" '0'
+ck  "--list 可用" "$(bash ./ltir_exam.sh --list 2>/dev/null | grep -c 'very-hard')" '1'
+ckc "tri 模式 stdout 只给三态" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --tri --no-clock --human=n 2>/dev/null)" 'True'
 
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"
