@@ -95,7 +95,7 @@ printf 'A: 2+2=4 -> Maybe\n' > "$TMP/maybe.ltir"
 MB="$($BIN verify "$TMP/maybe.ltir")"
 ckc "词库外不判定不报错，报实算真值" "$MB" 'L01 True'
 
-echo "== 版本（0.0.9：隐式乘法 / π/12 / 三态输出 / 卸载） =="
+echo "== 版本锚点（以 --version 为准） =="
 ck  "0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
 
 echo "== 【强化修复版】L06 代入 bug（逐字复现立法者截图） =="
@@ -157,7 +157,7 @@ ck  "value.hpp 无 den,t 残留" "$(grep -c 'den,t;' src/value.hpp)" '0'
 ck  "编译产物存在" "$([ -x ./ltir006 ] && echo yes)" 'yes'
 
 
-echo "== 【0.0.7】防「沙」：多打省略号折叠 + 傲娇彩蛋 =="
+echo "== 防「沙」：多打省略号折叠 + 傲娇彩蛋 =="
 printf 'set: N = {0,1,2,......}\n' > "$TMP/sand.ltir"
 SZ="$($BIN verify "$TMP/sand.ltir" --lang=zh)"
 ckc "6 个点折叠为单个省略号（不伪判）" "$SZ" '── 0 lines:'
@@ -180,7 +180,7 @@ ckc "LaTeX \\dots 重复同样折叠" "$($BIN verify "$TMP/ltx.ltir" --lang=zh)"
 ck  "1..10 两点范围不误伤" "$($BIN eval '1+2+3')" '6'
 ckc "sum: 范围回归" "$($BIN verify fixtures/demo.ltir)" 'L07 True  120'
 
-echo "== 【0.0.7】新关键词（全英文长名，短写表冻结） =="
+echo "== 新关键词（全英文长名，短写表冻结） =="
 cat > "$TMP/reg.ltir" <<'EOF'
 system: ZFC
 choice: on
@@ -207,7 +207,7 @@ ckc "map_declared 点亮" "$RJ" '"map_declared":true'
 printf 'X\n' > "$TMP/bare007.ltir"
 ckc "护栏：裸单字母关键字仍拒收" "$($BIN verify "$TMP/bare007.ltir" 2>&1)" 'E-UNK-LINE'
 
-echo "== 【0.0.7】公理模块 preset: / load: =="
+echo "== 公理模块 preset: / load: =="
 printf 'preset: ZFC\nA: 2+2==4 -> True\n' > "$TMP/p1.ltir"
 P1="$($BIN verify "$TMP/p1.ltir")"
 ckc "preset: ZFC 内置按名加载" "$P1" 'presets: ZFC'
@@ -231,7 +231,7 @@ printf 'preset: ZFC\naxiom: Reinhardt\n' > "$TMP/cf2.ltir"
 ckc "Kunen 不相容登记" "$($BIN verify "$TMP/cf2.ltir")" 'E-AXIOM-CONFLICT'
 ckc "冲突记为 UNDECIDED 而非 False" "$($BIN verify "$TMP/cf2.ltir")" '── 0 lines:'
 
-echo "== 【0.0.7】引用 by: / ⊢ 地图 / 全称弃权 =="
+echo "== 引用 by: / ⊢ 地图 / 全称弃权 =="
 printf 'preset: ZFC\nA: 2+2==4 -> True by: AC\n' > "$TMP/by.ltir"
 BY="$($BIN verify "$TMP/by.ltir")"
 ckc "行尾 by: 不再被吞" "$BY" 'by_refs: 1 checked, 0 unknown'
@@ -261,7 +261,7 @@ ckc "有限集 ∀ 逐元素可判" "$($BIN verify "$TMP/fq.ltir")" 'L01 True'
 printf 'forall: x, y, z\n' > "$TMP/fq2.ltir"
 ckc "连续域 ∀ 仍弃权" "$($BIN verify "$TMP/fq2.ltir")" 'E-SCOPE-QUANTIFIER'
 
-echo "== 【0.0.7】集合论实验：有限集精确 / 构造式不伪判 =="
+echo "== 集合论实验：有限集精确 / 构造式不伪判 =="
 cat > "$TMP/set.ltir" <<'EOF'
 set: A = {1,2}
 set: B = {2,3}
@@ -296,19 +296,19 @@ ckc "⊨ 语义蕴涵需证书" "$($BIN verify "$TMP/mod2.ltir")" 'E-SCOPE-SEMAN
 printf 'set: U = {1,2,3,4,5,6,7,8,9,10}\nuniv: U = {1,2,3,4,5,6,7,8,9,10}\n' > "$TMP/univ.ltir"
 ckc "univ: 有限全集登记" "$($BIN verify "$TMP/univ.ltir" --json)" '"registered":2'
 
-echo "== 【0.0.7】三角囚徒冻结卷：重跑同一份文件验收 =="
+echo "== 三角囚徒冻结卷：重跑同一份文件验收 =="
 TP="$($BIN verify fixtures/triangle_prisoner.ltir)"
 ckc "0.0.7：10 True / 0 UNDECIDED" "$TP" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "内联 <C_and_E> 拿回身份" "$($BIN verify fixtures/triangle_prisoner.ltir --json)" '"inferences":4'
 ckc "领域 inequality 认到" "$($BIN verify fixtures/triangle_prisoner.ltir --json)" '"domain":"inequality"'
 ckc "主断言未伪判成 True（采样不蕴涵全称）" "$TP" '10 True'
 
-echo "== 【0.0.7】回归锁定 =="
+echo "== 回归锁定 =="
 ckc "69 条回归：demo 汇总逐字不变" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "69 条回归：内核门禁文案" "$(sha256sum -c RUN_core_sha.txt --quiet && echo yes)" 'yes'
 ck  "版本" "$($BIN --version)" 'ltir006 0.0.9'
 
-echo "== 【0.0.7 补丁】修 bug：用户卷逐字复现 =="
+echo "== 修 bug：用户卷逐字复现 =="
 cat > "$TMP/logic.ltir" <<'EOF'
 # 1. 测试逻辑与公理系统
 system: ZFC
@@ -347,7 +347,7 @@ ckc "L07 card: {1,2,3} 得 3（不再 E-REF-UNKNOWN）" "$LG" 'L07 True  3'
 ckc "容器内 by: 并入引用账" "$LG" 'by_refs: 2 checked, 0 unknown'
 ckc "防沙与地图坐标未回归" "$LG" 'map: system=ZFC choice=unset axioms=2'
 
-echo "== 【0.0.7 补丁】修 bug：V: 短写接入有限集语义 =="
+echo "== 修 bug：V: 短写接入有限集语义 =="
 printf 'V: {1,2} ∩ {2,3}\n' > "$TMP/vi.ltir"
 ckc "V: 交集输出 {2}（不再伪输出 1）" "$($BIN verify "$TMP/vi.ltir")" 'L01 True  {2}'
 printf 'V: {1,2} ∪ {2,3}\n' > "$TMP/vu.ltir"
@@ -369,7 +369,7 @@ VC="$($BIN verify "$TMP/vc.ltir")"
 ckc "V: 带声明词先剥再判（真值自产）" "$VC" 'L01 True'
 ck  "声明词一致时不残留 E-VAL-MISMATCH" "$(printf '%s' "$VC" | grep -c 'L01 True  E-VAL-MISMATCH')" '0'
 
-echo "== 【0.0.7 补丁】修 bug：by: 两处共用一本账 =="
+echo "== 修 bug：by: 两处共用一本账 =="
 printf '<C_and_E>\ncause: a\neffect: b\nby: Zorn\n</C_and_E>\n' > "$TMP/cby.ltir"
 ckc "容器内未登记引用标出" "$($BIN verify "$TMP/cby.ltir")" 'by_refs: 1 checked, 1 unknown'
 printf 'preset: ZFC\nA: 2+2==4 -> True by: AC\n' > "$TMP/by3.ltir"
@@ -377,7 +377,7 @@ ckc "行尾 by: 统计未回归" "$($BIN verify "$TMP/by3.ltir")" 'by_refs: 1 ch
 printf 'A: 2+2==4 -> True by: Zorn\n' > "$TMP/by4.ltir"
 ckc "未登记引用计数未回归" "$($BIN verify "$TMP/by4.ltir")" 'by_refs: 1 checked, 1 unknown'
 
-echo "== 【0.0.7 补丁】甲：扩域表 + 台账 + 弃权码 =="
+echo "== 甲：扩域表 + 台账 + 弃权码 =="
 ckc "55 域注册" "$($BIN verify "$TMP/test_006.ltir" --json)" '"domains_registered":55'
 ck  "28 个域标 [台账]" "$(grep -c '\[台账\]$' domains.tsv)" '28'
 ckc "弃权码已入表" "$(cat lab_codes.tsv)" 'E-SCOPE-LEDGER-ONLY'
@@ -392,7 +392,7 @@ ckc "老域不串台（trigonometry 照常判）" "$($BIN verify "$TMP/dset.ltir
 ckc "未知领域仍标黄放行" "$($BIN verify "$TMP/dnew.ltir"; echo "RC=$?")" 'RC=0'
 ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 
-echo "== 【0.0.7 补丁】老账本归编 / hook 随包 =="
+echo "== 老账本归编 / hook 随包 =="
 ck  "BACKLOG.md 已归编" "$([ -f BACKLOG.md ] && echo yes)" 'yes'
 ck  "termux-file-editor 随包" "$([ -f termux/termux-file-editor ] && echo yes)" 'yes'
 ckc "hook 锚点：收容目录不变" "$(cat termux/termux-file-editor)" '$HOME/ltir006_lab'
@@ -401,12 +401,12 @@ ckc "hook 标题读 --version" "$(cat termux/termux-file-editor)" 'VER="$("$BIN"
 ck  "hook 不写死旧版本号" "$(grep -c '0\.0\.6' termux/termux-file-editor)" '0'
 ck  "收容清单含 ./termux 与 BACKLOG" "$(grep -c './termux ./BACKLOG.md' ltir.sh)" '1'
 
-echo "== 【0.0.9】版本锚点（版本号推进） =="
+echo "== 版本锚点（版本号推进） =="
 ck  "--version 归 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
 ckc "JSON 版本归 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
 ck  "未推进到 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
-echo "== 【0.0.7 补丁二】Bug 1：V: 求假无码（求值标签 ≠ 断言标签） =="
+echo "== Bug 1：V: 求假无码（求值标签 ≠ 断言标签） =="
 printf 'V: 1 == 2\nV: 2 ∈ ∅\nV: 3 > 5\n' > "$TMP/b1.ltir"
 B1="$($BIN verify "$TMP/b1.ltir")"
 ckc "V: 求假仍进 False 三态" "$B1" '── 3 lines: 0 True, 3 False, 0 UNDECIDED ──'
@@ -416,7 +416,7 @@ ckc "A: 声明词冲突仍挂码（不回退）" "$($BIN verify "$TMP/b1a.ltir")
 printf 'V: 2 ∈ ∅ -> False\n' > "$TMP/b1b.ltir"
 ckc "V: 带声明词一致仍判 True" "$($BIN verify "$TMP/b1b.ltir")" 'L01 True'
 
-echo "== 【0.0.7 补丁二】Bug 2：forall: 字面量有限集 =="
+echo "== Bug 2：forall: 字面量有限集 =="
 printf 'set: A = {1, 2, 3}\nforall: x in A: x^2 > 0\nforall: x in {1, 2, 3}: x^2 > 0\nforall: x in R: x^2 > 0\nforall: x in {0,1,2,...}: x >= 0\n' > "$TMP/b2.ltir"
 B2="$($BIN verify "$TMP/b2.ltir")"
 ckc "具名有限集 ∀ 逐元素可判" "$B2" 'L02 True'
@@ -428,7 +428,7 @@ B2F="$($BIN verify "$TMP/b2f.ltir")"
 ckc "∀ 判假仍进 False" "$B2F" 'L01 False'
 ck  "∀ 判假无码（不蔓延 Bug 1）" "$(printf '%s' "$B2F" | grep -c 'E-VAL-MISMATCH')" '0'
 
-echo "== 【0.0.7 补丁二】私货 1：受限概括 | 与罗素悖论闭环 =="
+echo "== 私货 1：受限概括 | 与罗素悖论闭环 =="
 printf 'set: R = {x ∈ {1,2,3} | x > 1}\n' > "$TMP/s1a.ltir"
 ckc "受限概括算出 {2, 3}" "$($BIN verify "$TMP/s1a.ltir")" 'L01 True  {2, 3}'
 printf 'set: E = {y ∈ {1,2,3,4} | y <= 2}\n' > "$TMP/s1b.ltir"
@@ -450,7 +450,7 @@ ckc "Naive 模块加载生效（cwd 已归位）" "$NV" 'map: system=Naive'
 ckc "Naive 卷两行都弃权" "$NV" '── 2 lines: 0 True, 0 False, 2 UNDECIDED ──'
 ck  "Naive 卷无 E-LOAD-MISSING" "$(printf '%s' "$NV" | grep -c 'E-LOAD-MISSING')" '0'
 
-echo "== 【0.0.7 补丁二】私货 2：原生量词符号 ∀ / ∃ =="
+echo "== 私货 2：原生量词符号 ∀ / ∃ =="
 printf 'A: ∀ x ∈ {1,2,3}, x^2 > 0 -> True\n' > "$TMP/s2a.ltir"
 ckc "∀ 符号转译给内部量词逻辑" "$($BIN verify "$TMP/s2a.ltir")" 'L01 True'
 printf 'A: ∃ x ∈ {1,2,3}, x == 2 -> True\n' > "$TMP/s2b.ltir"
@@ -464,7 +464,7 @@ ckc "连续域符号 ∀ 仍弃权" "$($BIN verify "$TMP/s2e.ltir")" 'E-SCOPE-IN
 printf 'A: ∀ x ∈ {1,2,3} x^2 > 0 -> True\n' > "$TMP/s2f.ltir"
 ckc "缺分隔符不误伤（QUANTIFIER 弃权）" "$($BIN verify "$TMP/s2f.ltir")" 'E-SCOPE-QUANTIFIER'
 
-echo "== 【0.0.7 补丁二】私货 3：cex: 反例登记册（法庭纪律） =="
+echo "== 私货 3：cex: 反例登记册（法庭纪律） =="
 printf 'A: x > 0 -> True\ncex: x = -1\n' > "$TMP/s3a.ltir"
 ckc "反例代入使命题失效 → 有效" "$($BIN verify "$TMP/s3a.ltir")" 'L02 True  counter-example valid'
 printf '# 反例\nA: x > 0 -> True\ncex: x = -1\n' > "$TMP/s3zh.ltir"
@@ -476,7 +476,7 @@ ckc "换一个值反例成立" "$($BIN verify "$TMP/s3c.ltir")" 'L02 True'
 printf 'cex: x = 1\n' > "$TMP/s3d.ltir"
 ckc "无上一行断言 → 有码弃权" "$($BIN verify "$TMP/s3d.ltir")" 'E-REF-UNKNOWN'
 
-echo "== 【0.0.7 补丁二】私货 4：mapping: / inj: / surj: / bij: =="
+echo "== 私货 4：mapping: / inj: / surj: / bij: =="
 printf 'mapping: f = {1->2, 2->3, 3->4} on {2,3,4}\ninj: f\nsurj: f\nbij: f\n' > "$TMP/s4a.ltir"
 S4="$($BIN verify "$TMP/s4a.ltir")"
 ckc "有限映射定义只登记不产三态行" "$S4" '── 3 lines:'
@@ -496,7 +496,7 @@ ckc "R -> R 性质判定弃权" "$($BIN verify "$TMP/s4d.ltir")" 'E-SCOPE-INFINI
 printf 'mapping: k = {1->2}\nsurj: k\n' > "$TMP/s4e.ltir"
 ckc "缺陪域 → surj 有码弃权" "$($BIN verify "$TMP/s4e.ltir")" 'E-SCOPE-CODOMAIN'
 
-echo "== 【0.0.7 补丁二】回归锁定 / 版本 007 焊死 =="
+echo "== 回归锁定 / 版本不漂移 =="
 ckc "用户卷汇总不漂" "$($BIN verify "$TMP/logic.ltir")" '── 7 lines: 4 True, 1 False, 2 UNDECIDED ──'
 ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "demo 24 行不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
@@ -506,15 +506,15 @@ ck  "--version 仍 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
 ckc "JSON 版本仍 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
 ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
-echo "== 【0.0.8】工程三件：ltir.sh / VERSION / LTIR_STAMP =="
+echo "== 工程三件：ltir.sh / VERSION / LTIR_STAMP =="
 ck  "ltir.sh 存在" "$([ -f ltir.sh ] && echo yes)" 'yes'
 ck  "旧脚本名退役" "$([ ! -f ltir006.sh ] && echo yes)" 'yes'
 ck  "VERSION = 0.0.9" "$(tr -d '\n' < VERSION)" '0.0.9'
 ck  "LTIR_STAMP 含版本" "$(grep -c '^ltir-0.0.9$' LTIR_STAMP)" '1'
 ckc "清单含底片与版本文件" "$(cat ltir.sh)" './VERSION ./LTIR_STAMP'
 ckc "底片比对启用" "$(cat ltir.sh)" 'cmp -s ./LTIR_STAMP'
-ckc "底片不一致自动重搬" "$(cat ltir.sh)" '自动重搬'
-ckc "入口切 smoke009" "$(cat ltir.sh)" 'bash tests/smoke009.sh'
+ckc "底片不一致自动重搬" "$(cat ltir.sh ltir_ui.sh)" '自动重搬'
+ckc "入口切 smoke009" "$(cat ltir.sh)" 'tests/smoke009.sh'
 ckc "v 子命令读 VERSION" "$(cat ltir.sh)" 'v) cat VERSION'
 ckc "R 强制重搬兜底" "$(cat ltir.sh)" 'R) rm -rf'
 ckc "hook 提示改名" "$(cat termux/termux-file-editor)" 'bash ltir.sh'
@@ -524,7 +524,7 @@ ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 ck  "--version = 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
 ckc "JSON 版本 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
 
-echo "== 【0.0.8】形式化定义：签名 / 良构性 / 终止性 / δ 展开 =="
+echo "== 形式化定义：签名 / 良构性 / 终止性 / δ 展开 =="
 printf 'sig: sq : Num -> Num\ntype: sq : Polynomial\ngrammar: expr ::= term | expr + term\nrule: ModusPonens\ndefine: sq(x : Num) : Num = x*x\nexpand: sq(3)\nA: 2+2==4 -> True by: ModusPonens\n' > "$TMP/d8.ltir"
 D8="$($BIN verify "$TMP/d8.ltir")"
 ckc "登记行不产三态行" "$D8" '── 2 lines:'
@@ -547,7 +547,7 @@ ckc "未定义函数展开有码" "$($BIN verify "$TMP/d8f.ltir")" 'E-NAME'
 ckc "旧 define: 写法不回退" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "码表 E-DEF-DEPTH" "$(cat lab_codes.tsv)" 'E-DEF-DEPTH'
 
-echo "== 【0.0.8】集合论多宇宙观：图册只登记，不跨图搬真值 =="
+echo "== 集合论多宇宙观：图册只登记，不跨图搬真值 =="
 printf 'multiverse: on\nworld: W0 = ZFC\nworld: W1 = ZFC + not-CH\nforce: W0 -> W1 by: Cohen1963\nground: W1 -> W0\nmantle: W0\nreachable: CH in W1\nA: □ CH -> True\nA: ◇ CH -> True\n' > "$TMP/mv.ltir"
 MV="$($BIN verify "$TMP/mv.ltir")"
 ckc "图册登记不产三态行" "$MV" '── 3 lines: 0 True, 0 False, 3 UNDECIDED ──'
@@ -566,7 +566,7 @@ ckc "示范卷 multiverse.ltir 只登记" "$($BIN verify fixtures/multiverse.lti
 ckc "模块 Multiverse 不产三态行" "$($BIN verify axioms/Multiverse.ltir)" '── 0 lines:'
 ckc "码表 E-SCOPE-CROSS-WORLD" "$(cat lab_codes.tsv)" 'E-SCOPE-CROSS-WORLD'
 
-echo "== 【0.0.8】哥德巴赫专档 / 七问口径正名 =="
+echo "== 哥德巴赫专档 / 七问口径正名 =="
 printf 'system: PA\nproblem: Goldbach-binary\nstatus: open\nA: PA ⊢ Goldbach -> True\nA: ZFC ⊢ PvsNP -> True\nA: ZFC ⊢ CH -> True\n' > "$TMP/gb.ltir"
 GB="$($BIN verify "$TMP/gb.ltir")"
 ckc "哥德巴赫 open 专档" "$GB" 'E-SCOPE-OPEN'
@@ -576,14 +576,14 @@ ckc "三行全弃权不并入 False" "$GB" '── 3 lines: 0 True, 0 False, 3 U
 ckc "哥德巴赫示范卷只登记" "$($BIN verify fixtures/goldbach.ltir)" '── 0 lines:'
 ckc "码表 E-SCOPE-OPEN" "$(cat lab_codes.tsv)" 'E-SCOPE-OPEN'
 
-echo "== 【0.0.8】回归锁定 =="
+echo "== 回归锁定 =="
 ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "防沙彩蛋未回归" "$(printf 'set: N = {0,1,2,......}\n' > "$TMP/sand8.ltir"; $BIN verify "$TMP/sand8.ltir" --lang=zh)" '才不是帮你呢。'
 ckc "用户卷汇总不漂" "$($BIN verify "$TMP/logic.ltir")" '── 7 lines: 4 True, 1 False, 2 UNDECIDED ──'
 ck  "core SHA 门禁" "$(sha256sum -c RUN_core_sha.txt --quiet >/dev/null 2>&1; echo $?)" '0'
 
 
-echo "== 【0.0.9】Bug 1：多项式隐式乘法 2xy = 2*x*y =="
+echo "== Bug 1：多项式隐式乘法 2xy = 2*x*y =="
 printf 'id: (x+y)^2 == x^2 + 2xy + y^2\nid: (x+y)^2 == x^2 + 2*x*y + y^2\n' > "$TMP/m9.ltir"
 M9="$($BIN verify "$TMP/m9.ltir")"
 ckc "连写 2xy 判 True" "$M9" 'L01 True'
@@ -598,7 +598,7 @@ printf 'id: (x+y)^2 == x^2+y^2\n' > "$TMP/m9e.ltir"
 ckc "旧恒等式仍判 False" "$($BIN verify "$TMP/m9e.ltir")" 'L01 False  E-VAL-MISMATCH'
 ckc "demo 24 行不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 
-echo "== 【0.0.9】Bug 2：受限概括（限定域在竖线右侧） =="
+echo "== Bug 2：受限概括（限定域在竖线右侧） =="
 printf 'set: T = {x | x in {1,2,3,4} and x > 2}\n' > "$TMP/c9a.ltir"
 ckc "域在右侧算出 {3, 4}" "$($BIN verify "$TMP/c9a.ltir")" 'L01 True  {3, 4}'
 printf 'set: U = {x in {1,2,3} | x > 1}\n' > "$TMP/c9b.ltir"
@@ -614,7 +614,7 @@ ckc "真·无受限域仍是罗素塌图" "$($BIN verify "$TMP/c9f.ltir")" 'E-PA
 ckc "罗素卷不产 True/False" "$($BIN verify "$TMP/c9f.ltir")" '── 1 lines: 0 True, 0 False, 1 UNDECIDED ──'
 ckc "复现卷 fix009 可跑" "$($BIN verify fixtures/fix009.ltir)" 'L01 True'
 
-echo "== 【0.0.9】Bug 3：阶乘 / 幂溢出归 E-OVF =="
+echo "== Bug 3：阶乘 / 幂溢出归 E-OVF =="
 printf 'V: 20!\nV: 21!\nV: 100!\nA: 100! -> True\nV: 2^64\n' > "$TMP/o9.ltir"
 O9="$($BIN verify "$TMP/o9.ltir")"
 ckc "20! 仍精确" "$O9" 'L01 True  2432902008176640000'
@@ -625,7 +625,7 @@ ckc "2^64 同属溢出家族" "$O9" 'L05 UNDECIDED  E-OVF'
 ckc "不再戴超越域帽子" "$(printf 'V: 100!\n' > "$TMP/o9b.ltir"; $BIN verify "$TMP/o9b.ltir" | grep -c 'E-SCOPE-TRANSCENDENTAL')" '0'
 ckc "码表含 E-OVF" "$(cat lab_codes.tsv)" 'E-OVF'
 
-echo "== 【0.0.9】Bug 4：π/12 家族精确角（双根式 RAD2） =="
+echo "== Bug 4：π/12 家族精确角（双根式 RAD2） =="
 printf 'V: sin(pi/12)\nV: cos(pi/12)\nV: tan(pi/12)\n' > "$TMP/t9.ltir"
 T9="$($BIN verify "$TMP/t9.ltir")"
 ckc "sin(pi/12) = (√6 - √2)/4" "$T9" 'L01 True  (√6 - √2)/4'
@@ -644,7 +644,7 @@ printf 'V: sin(pi/12) + 1\n' > "$TMP/t9d.ltir"
 ckc "双根式四则有码弃权" "$($BIN verify "$TMP/t9d.ltir")" 'E-SCOPE-ALGEBRAIC'
 ckc "码表含 E-SCOPE-ALGEBRAIC" "$(cat lab_codes.tsv)" 'E-SCOPE-ALGEBRAIC'
 
-echo "== 【0.0.9】新功能 A：卸载脚本与命令 =="
+echo "== 新功能 A：卸载脚本与命令 =="
 ck  "uninstall.sh 存在" "$([ -f uninstall.sh ] && echo yes)" 'yes'
 ckc "uninstall.sh 只删收容目录" "$(cat uninstall.sh)" '$HOME/ltir006_lab'
 ckc "uninstall.sh 删 hook" "$(cat uninstall.sh)" '$HOME/bin/termux-file-editor'
@@ -654,12 +654,12 @@ ckc "收容清单含卸载脚本" "$(cat ltir.sh)" './uninstall.sh'
 ckc "CLI uninstall 给指引" "$($BIN uninstall)" 'bash uninstall.sh'
 TMPHOME="$(mktemp -d)"; mkdir -p "$TMPHOME/ltir006_lab" "$TMPHOME/bin"
 printf 'x' > "$TMPHOME/ltir006_lab/keep"; printf 'x' > "$TMPHOME/bin/termux-file-editor"
-HOME="$TMPHOME" bash uninstall.sh > /tmp/un9.log 2>&1
+HOME="$TMPHOME" bash uninstall.sh > "$TMPHOME/un9.log" 2>&1
 ck  "卸载后收容目录消失" "$([ ! -d "$TMPHOME/ltir006_lab" ] && echo yes)" 'yes'
 ck  "卸载后 hook 消失" "$([ ! -f "$TMPHOME/bin/termux-file-editor" ] && echo yes)" 'yes'
 rm -rf "$TMPHOME"
 
-echo "== 【0.0.9】新功能 B：当前终端只输出三态 =="
+echo "== 新功能 B：当前终端只输出三态 =="
 printf 'V: 2+2\nA: 2+2==5 -> True\nset: N = {0,1,2,......}\n' > "$TMP/mode9.ltir"
 TRI="$($BIN verify "$TMP/mode9.ltir" --tri)"
 ck  "tri 恰好两行" "$(printf '%s\n' "$TRI" | grep -c .)" '2'
@@ -676,7 +676,7 @@ ckc "ltir.sh tri 打印 export" "$(bash ltir.sh tri)" 'export LTIR_OUTPUT=tri'
 ck  "--tri 覆盖 --json" "$($BIN verify "$TMP/mode9.ltir" --tri --json | sed -n 1p)" 'True'
 ck  "--tri 覆盖 --explain" "$($BIN verify "$TMP/mode9.ltir" --tri --explain | grep -c '^  ')" '0'
 
-echo "== 【0.0.9】新功能 C：只验算、不输出答案 =="
+echo "== 新功能 C：只验算、不输出答案 =="
 ckc "check 命令不给答案" "$($BIN check "$TMP/mode9.ltir" | sed -n 2p)" 'L01 True'
 ck  "check 首行无 4" "$($BIN check "$TMP/mode9.ltir" | sed -n 2p | grep -c '4')" '0'
 ckc "check 仍给三态汇总" "$($BIN check "$TMP/mode9.ltir")" '── 2 lines: 1 True, 1 False, 0 UNDECIDED ──'
@@ -685,7 +685,7 @@ ckc "env no-answer" "$(LTIR_OUTPUT=no-answer $BIN verify "$TMP/mode9.ltir" | sed
 ckc "check 保留错误码" "$($BIN check "$TMP/mode9.ltir")" 'E-VAL-MISMATCH'
 ck  "normal 仍给答案" "$($BIN verify "$TMP/mode9.ltir" --normal | sed -n 2p | grep -c '  4')" '1'
 
-echo "== 【0.0.9】回归锁定 =="
+echo "== 回归锁定 =="
 ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "防沙彩蛋未回归" "$($BIN verify "$TMP/sand8.ltir" --lang=zh)" '才不是帮你呢。'
 ckc "δ 展开未回归" "$($BIN verify "$TMP/d8.ltir")" 'L01 True  9'

@@ -1,3 +1,4 @@
 ltir006
 *.o
 *.tmp
+.ltir_ui/
