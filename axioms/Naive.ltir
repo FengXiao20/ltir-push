@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · Naive（只登记，不产三态行）
+module: Naive
+system: Naive
+choice: unset
+axiom: Comprehension(unrestricted)
+ref: Russell1901, Frege

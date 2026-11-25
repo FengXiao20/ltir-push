@@ -1,0 +1,10 @@
+# 0.0.8 集合论多宇宙观：图册只登记，不跨图搬真值
+domain: foundations
+system: ZFC
+multiverse: on
+world: W0 = ZFC
+world: W1 = ZFC + not-CH
+force: W0 -> W1 by: Cohen1963
+ground: W1 -> W0
+mantle: W0
+ref: Hamkins2012, HamkinsLoewe2008

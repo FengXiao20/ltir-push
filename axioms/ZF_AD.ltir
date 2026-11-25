@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · ZF_AD（只登记，不产三态行）
+module: ZF_AD
+system: ZF
+choice: off
+axiom: ZF, AD
+ref: MycielskiSteinhaus1962, Kechris1984

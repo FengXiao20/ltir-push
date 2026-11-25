@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · ZFC（只登记，不产三态行）
+module: ZFC
+system: ZFC
+choice: on
+axiom: Extensionality, Separation, Powerset, Union, Infinity, Replacement, Foundation, AC
+ref: Zermelo1904, Fraenkel1922, Godel1940, Cohen1963

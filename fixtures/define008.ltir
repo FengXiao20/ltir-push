@@ -1,0 +1,8 @@
+# 0.0.8 形式化定义：签名 / 规则 / BNF / 有限步 δ 展开
+sig: sq : Num -> Num
+type: sq : Polynomial
+grammar: expr ::= term | expr + term
+rule: ModusPonens
+define: sq(x : Num) : Num = x*x
+expand: sq(3)
+A: 2+2==4 -> True by: ModusPonens

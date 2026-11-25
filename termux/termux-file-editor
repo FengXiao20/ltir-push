@@ -1,0 +1,25 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# LTIR 文件管理器钩子 · 随包交付，三锚点焊死，不随版本改
+# 安装：cp ./termux/termux-file-editor ~/bin/termux-file-editor && chmod +x ~/bin/termux-file-editor
+(
+  F="$1"
+  case "$F" in
+    *.ltir)
+      LAB="$HOME/ltir006_lab"
+      BIN="$LAB/ltir006"
+      if [ ! -x "$BIN" ]; then
+        echo "E-HOOK: $BIN 不在，先跑一次 bash ltir.sh"
+        read -r -p "回车退出" _
+        exit 1
+      fi
+      VER="$("$BIN" --version 2>/dev/null)"
+      echo "=== 正在验算(${VER:-ltir006}): $F ==="
+      "$BIN" verify "$F" \
+        --codes="$LAB/lab_codes.tsv" \
+        --domains="$LAB/domains.tsv"
+      echo
+      read -r -p "— 判卷完毕，按回车退出 —" _
+      ;;
+    *) termux-open "$F" ;;
+  esac
+)

@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · ZF_Reinhardt（只登记，不产三态行）
+module: ZF_Reinhardt
+system: ZF
+choice: off
+axiom: ZF, j:V->V (Reinhardt)
+ref: Kunen1971

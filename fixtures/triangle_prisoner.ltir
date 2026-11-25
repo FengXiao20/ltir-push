@@ -1,0 +1,26 @@
+# 三角囚徒 · 冻结验收卷（一个字节不改，0.0.6 → 0.0.7 重跑）
+# 题：x,y,z>=0 且 x+2y+3z<=6，证 xyz(x+y)(y+z)(x+y+z)<=27
+# 主断言为全称量化：采样点全 True 不蕴涵全称成立，0.0.7 仍诚实弃权
+# 取等点 t1=2√3·sin40°，t2=2√3·sin20°，t3=4sin²20°（只登记，不复核数学）
+<subject domain="inequality">
+given: x>0, y>0, z>0
+at: x=1, y=1, z=1
+A: x+2y+3z == 6 -> True
+A: x*y*z*(x+y)*(y+z)*(x+y+z) == 12 -> True
+at: x=2, y=1, z=0
+A: x+2y+3z == 4 -> True
+A: x*y*z*(x+y)*(y+z)*(x+y+z) == 0 -> True
+at: x=0, y=2, z=0
+A: x+2y+3z == 4 -> True
+A: x*y*z*(x+y)*(y+z)*(x+y+z) == 0 -> True
+</subject>
+<subject domain="inequality">
+given: x>0
+at: x=1, y=1, z=1
+A: <C_and_E> x+2y+3z == 6 -> True
+A: <C_and_E> x*y*z*(x+y)*(y+z)*(x+y+z) == 12 -> True
+at: x=2, y=1, z=0
+A: <C_and_E> x+2y+3z == 4 -> True
+A: <C_and_E> x*y*z*(x+y)*(y+z)*(x+y+z) == 0 -> True
+at:
+</subject>

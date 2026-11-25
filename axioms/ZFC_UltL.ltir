@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · ZFC_UltL（只登记，不产三态行）
+module: ZFC_UltL
+system: ZFC
+choice: on
+axiom: ZFC, Ultimate-L
+ref: Woodin

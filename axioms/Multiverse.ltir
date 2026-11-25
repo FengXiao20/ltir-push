@@ -1,0 +1,5 @@
+# 0.0.8 公理模块 · 集合论多宇宙观（只登记，不产三态行）
+module: Multiverse
+system: ZFC
+axiom: ZFC
+ref: Hamkins2012, HamkinsLoewe2008, FuchsHamkinsReitz2015

@@ -1,0 +1,374 @@
+# LTIR 0.0.6 语法立法文本（关键词冻结表）
+
+> 适用范围：0.0.6 新语言层（`src/`）。`core/` 十一件内核与 v0.0.1 文法一字不动。
+> 语言跟层走：本层纯 C++ / Linux + Termux。Windows 分支冻结。
+
+---
+
+## 一、三条设计约束
+
+| 令 | 落成规则 |
+|---|---|
+| 用英文做关键字 | 所有行首身份词一律英文或英文缩写，不用中文当关键字 |
+| 能简写就尽量简写 | 每个关键词给「长名 + 短写」两形，短写优先用 |
+| 不能简写到只有一个单字母 | **禁止裸单字母关键字**：关键字必须带 `:` 或本身多字母 |
+
+**禁令精确边界**（最易读歪的一条）：
+
+- ❌ 行首孤零零 `A` / `V` / `S` / `N`（无附号）→ `E-UNK-LINE`，硬错退出 1
+- ✅ `A:` `V:` `id:` `der:` `seq:`（带冒号 / 多字母）
+- ✅ `i` `e` `π` `x` `f` `R` —— **标识符 / 常量**，不是关键字，禁令管不到
+
+即：**禁的是关键字写法，不是数学符号写法**。两者靠「行首身份位 vs 表达式内部」分开，
+不靠白名单枚举。短写表冻结，新增关键词默认只给长名。
+
+---
+
+## 二、行首关键词表（定稿，22 长名）
+
+| 长名 | 短写 | 职责 | 写法 | 结果 |
+|---|---|---|---|---|
+| `assert:` | `A:` | 断言判定，**真值自产** | `A: 2+2=5 -> True` | `False E-VAL-MISMATCH` |
+| `value:` | `V:` / `val:` | 纯求值，不判对错 | `V: 1/3+1/6` | `1/2` |
+| `at:` | `at:` | 代入环境，到下一个 `at:`（空行清空） | `at: x=3, y=2/3` | 登记 |
+| `ident:` | `id:` | 恒等判定（符号多项式 canonical 比） | `id: (x+1)^2 == x^2+2x+1` | `True` |
+| `numth:` | `N:` / `nt:` | 数论求值 / 判定 | `N: factors(360)` | `2^3 × 3^2 × 5` |
+| `given:` | — | 已知条件登记 | `given: a>0, b>0` | 登记 |
+| `define:` | — | 定义函数（多项式） | `define: f(x)=x^2-3x+2` | 登记 |
+| `solve:` | — | 一元二次不等/方程求解 | `solve: x^2-5x+6 < 0` | `x ∈ (2, 3)` |
+| `derive:` | — | 求导 | `derive: f'(x)` | `2*x - 3` |
+| `sum:` | — | 求和（∑ 的 ASCII 关键字形） | `sum: n=1..10 of a_n` | `120` |
+| `seq:` | — | 数列 / 递推登记 | `seq: a_n = 2n+1` | 登记 |
+| `limit:` | — | 极限（有理式最高次系数比） | `limit: n->inf of 1/n` | `0` |
+| `vector:` | — | 向量点积 / 叉积 | `vector: cross([1,0,0],[0,2,0])` | `(0, 0, 2)` |
+| `prob:` | — | 排列组合 / 概率 | `prob: C(5,2)*(1/2)^5` | `5/16` |
+| `stat:` | — | 均值 / 方差 | `stat: mean([1,2,3,4])` | `5/2` |
+| `set:` | — | 有限集登记 | `set: A = {1,2,3}` | `{1, 2, 3}` |
+| `domain:` | — | 领域设定 / 列表 / 查函数定义域 | `domain: trigonometry` `domain: ?` `domain: f` | 登记 / `24 domains registered` / `R` |
+| `case:` | — | 分类讨论分支登记 | `case: x>=0 -> ...` | 登记 |
+| `check:` | — | 人的验根（**不产真值**） | `check: x=1 in sqrt(x+3)=x-3` | 登记 |
+| `const:` | — | 单字符数学符号开放注册 | `const: phi = (1+sqrt(5))/2` | 登记 |
+| `note:` | `#` | 注释，机器跳过、原样保留 | `# 这题分类讨论` | 跳过 |
+| `subject:` | `<s>` | 题目标签容器 | `<s> ... </s>` | 容器 |
+| `zf:` / `zfc:` | — | 台账登记，**只记不判**（保留项） | `zf: Riemann: ...` | `registered` |
+
+**沿用不改**：`A:` `at:` `id:` `V:` `N:` `<a>` 容器、`<subject>`/`<s>`、`#`、三态。
+
+> **【强化修复版·乙裁决】撤销首版越界条款**
+> 首版第 56 行写过「明确不用 `S: E: P: Q:`（跨层串台源）」—— 那是**施工侧自行否决
+> 旧标签体系**，立法者从未授权。本版按乙裁决整套并回，该行作废、记档不复用。
+> 裸 `C:` 仍封死（字段不配简写，规约 2）。
+
+**四件套标签（解题文本层，并回 0.0.6）**
+
+| 标签 | 职责 | 行为 |
+|---|---|---|
+| `<calc>` / `<a>` | 演算 | 算式段照抽；`<过程>` / `<proc>` 输入层归一为 `<calc>` |
+| `<C_and_E>` | 推理 | `cause:` / `effect:` / `by:` 三字段登记；**不产三态行** |
+| `<answer>` | 答卷 | `A:` 归一化的存档态；`--json` 带 `tag:"answer"` |
+| `<subject domain="…">` / `<s>` | 题目 | `domain` 属性进 Ctx，可查 |
+
+**装饰简写（整行，机器跳过、原样保留、渲染加粗）**
+
+| 简写 | 中文 | 位置 |
+|---|---|---|
+| `S:` | 解 | `<calc>` 内 |
+| `E:` | 存在 / 设 | `<calc>` 内 |
+| `V:` | 验 / 检验 | `<calc>` 内 —— 0.0.6 里**仍是 `value:` 求值短写**，只额外登记装饰身份 |
+| `P:` | 证明 | `<C_and_E>` 内 |
+| `Q:` | 证毕 | `<C_and_E>` 结尾 |
+
+字段全拼小写（`effect:`）与简写行（`E:`）靠大小写 + 全拼分界，互不越权；
+中文装饰词（解：设：答：）容器内免标记自由书写，原文进 `preserved` 可查。
+
+**容器是多段状态机，不是「挑一段」**：中文 / 中文标点当分隔符，收集**全部** ASCII
+算式段。容器内「设 / 令 / 取 `x=5`」形如「单标识符 = 可求值数值」的段绑定环境
+（容器闭合恢复，不跨容器泄漏）；`x^2=25` / `2+2=4` / `1/3=1/2` 左侧非单标识符，
+不会误绑。这是 L06 从 UNDECIDED 修成 True 的关键一刀。
+
+---
+
+## 三、单字符特例：开放集合（「不止三个」）
+
+不写死 i / e / π，改用两条机制：
+
+**① 位置限定**：单字符只许出现在**表达式内部**（常量 / 变量 / 函数名 / 点名位），
+永不出现在行首身份位。行首解析器见孤字母即 `E-UNK-LINE`，不管它是不是数学符号。
+
+**② 注册入口 `const:`**：新符号登记一次即可用，清单天然开放。
+
+```
+const: i     = sqrt(-1)      const: e   = exp(1)
+const: pi    = 圆周率符号位   const: phi = (1+sqrt(5))/2
+const: tau   = 2*pi          const: inf = 1/0
+const: N     = {0,1,2,...}   const: R   = ℝ
+```
+
+实证六类，全合法、全不是关键字：
+- 常量 `i e π φ τ ∞ γ`
+- 数集 `N Z Q R C` / `ℕ ℤ ℚ ℝ ℂ`
+- 变量 `x y z t n k m`
+- 系数 `a b c d`
+- 函数 `f g h`
+- 点 / 事件 `A B C P Q L`
+
+---
+
+## 四、表达式能力（P1 已实现）
+
+```
+四则 + - * /      幂 ^（右结合）        阶乘 !（≤20!，21! 弃权）
+隐式乘 2x / x(x+1) / 2(x+1)            分数小数 1/2 / 0.25
+比较 = == != < > <= >=（0.0.6 解禁）  LaTeX \frac{A}{B}
+√ π ∞ × ÷ − ⇒ ² ³ ≤ ≥ ≠（入口归一）  三角特殊角精确值 sin/cos/tan
+复数 i（i²=-1）                       代数数 a+b√r
+∞ 哨兵（1/0 → ∞；∞−∞ / ∞×0 → UNDECIDED）
+数论 isprime nextprime factors gcd lcm phi modpow C P
+函数 define f(x) / f(3) / f'(3)       多项式恒等 id: / 求导 derive:
+ Richardson 界：含 π/e 的非特殊角等式 → UNDECIDED，禁止伪判定
+ ^0 常量折叠发生在 Richardson 判据之前（π^0 → 1，不误杀）
+```
+
+**真值自产铁律**：`-> True/False` 只是**声明词**，引擎洗净后实算核对；
+词库 = `True / False / true / false / 成立 / 不成立 / 真 / 假`，**位置双锁**（仅行尾
+`->` 后），词库外不判定不报错。`=True` 写法不产生判定记号，按普通表达式处理。
+
+---
+
+## 五、三态与退出码
+
+| 结果 | 含义 | 退出码 |
+|---|---|---|
+| `True` | 实算与断言一致 | 0 |
+| `False` | 实算不符（附码表解释） | 0 |
+| `UNDECIDED` | 越界 / 溢出 / 未定形，诚实弃权，**严禁并入 False** | 0 |
+| `ERROR` | 语法立法硬错（`E-UNK-LINE` / `E-SYN` / `E-NAME` / `E-EXT`） | **1** |
+
+登记行（zf/zfc/given/case/check/const/define/seq/set）**不进三态统计**，
+只在 `registered:` 计数里出现 —— 三态锁死不许加第四态。
+
+---
+
+## 六、码表（只读）
+
+`lab_codes.tsv` 独立命名空间，不改 002 的冻结表；`state` 1=ERROR / 2=False /
+3=UNDECIDED，`en`/`zh` 双列由卷内中文自动跟随，`{lhs} {rhs} {diff}` 为占位符。
+码：`E-UNK-LINE` `E-SYN` `E-NAME` `E-EXT` `E-VAL-MISMATCH` `E-ID-DIFF`
+`E-SCOPE-TRANSCENDENTAL` `E-SCOPE-SYMBOLIC` `E-INF` `E-OVF` `E-RANGE`。
+**append 权在立法者，引擎不得改码表。**
+
+---
+
+## 七、入口防护（进管线第一件事）
+
+1. CRLF → LF
+2. BOM（`\uFEFF`）剥离
+3. 全角 → 半角（`Ａ：→A:`、`＃→#`、全角空格收掉），中文 IME 主路径不静默漏判
+4. 数学 Unicode → ASCII 别名；中文 / 域外记号 `∪∩⊆` 原样保留，**不拦截不验证不解释**
+5. 逐行扫描建立在归一化后的文本上，管线内部不再考虑兼容
+
+---
+
+## 七之二、领域注册表（`domains.tsv`，强化修复版扩增）
+
+`<subject domain="X">` 与顶层 `domain: X` 共用一张表，**24 个领域**：
+
+```
+math            algebra        equation       inequality     polynomial
+function        sequence       limit-calculus trigonometry   vector
+complex         geometry       solid-geometry analytic       combinatorics
+probability     statistics     number-theory  set            logic
+induction       linear-algebra zfc            physics-math
+```
+
+- 属性与顶层设定都写进 `Ctx.domain`，`--json` 带出 `domain / domains_registered / domains_seen`
+- `domain: ?` 列出已注册领域数；`domain: f` 仍查函数定义域（首版行为，未回归）
+- **未知领域原样登记、不拦截不报错不解释**（域外记号标黄放行精神）
+- 领域表是**语法层资产，不是错误码表**：扩增不改 `lab_codes.tsv`，append 权在立法者
+- 领域只做登记与可查，**不改判定逻辑** —— 域能差不靠转换硬抹平
+
+## 八、解禁 / 保留 / 永久不做
+
+**按「继续扩大功能」令解禁**（旧令里属 v1.2 / 禁手，高中体量绕不开）：
+`f(x)` 函数定义与求值、递推 `a_n`、`∑` 求和、`< >` 比较符。
+
+**按强化修复版·乙裁决解禁**：`S: E: P: Q:` 装饰简写、`<calc>` / `<C_and_E>` /
+`<answer>` 四件套、`cause:/effect:/by:` 三字段、`<过程>/<proc>` 归一、领域表扩增到 24 个。
+首版「明确不用」条款作废，见第二节撤销记档。
+
+**保留不动**：`zf:` / `zfc:` 台账语义（只登记不判）。
+**按最新令覆盖**：三门语言架构表（JS 脸 / Python 心 / MCP 嘴）已退场，纯 C++ 自包含。
+
+**永久不做**：ZF/ZFC 公理判定核、符号求解器、多变量函数方程、超越等式伪判定、
+集合论公理化运算、i18n 多语言报错（1.x 议）、C++ 性能核（预留位，无令不动工）。
+
+---
+
+## 九、分期（一本高中数学体量）
+
+- **P1 地基（本令已交）**：关键词冻结、入口防护、精确 ℚ/代数数/复数、三态、码表、
+  define/at/derive/solve/sum/seq/三角/数论/向量/概率统计/集合/ZF 保留
+- **P1 强化修复版**：四件套标签并回、装饰简写整行跳过、容器内多段状态机与代入绑定、
+  领域表 24 个、Termux clang++ 真机取证、L06 修复、69/69 SMOKE
+- **P2 主体**：分段函数、参数方程与极坐标、解三角形、立体几何、线性回归、分布列、
+  复合 LaTeX 的 AST 级折叠
+- **P3 边界**：输出渲染标黄、浏览器宿主、中文数学术语词典、`--lang` 全量解释
+
+每期只列不做，等新令。
+
+## 0.0.7 · 集合论实验区（本令：护栏降级，不是本体封条）
+
+旧条文（002 铁律 4「∪∩⊆ 标黄放行」、003 禁区「集合论运算永久不做」、
+`SYNTAX.md:202` 公理化判定核永久不做、`zf:/zfc:` 只登记不判）**原为控步子的范围护栏**，
+0.0.7 起整批降级为实验区；历史交付物的验收记录不回退。**仍锁**：三态锁死、
+真值自产、Richardson 不伪判、码表只读消费、core 11 件 SHA `aecc9726…` 零改动。
+
+### 语法总则（沿用）
+全英文关键字、禁裸单字母行首身份位；`i e π x y z A U` 是标识符不是关键字；
+**新增词只给长名，短写表维持冻结**；`V:` 仍是 `value:` 求值短写，`-V` 仍是版本参数，
+`V=L` 整串保留不拆。
+
+### 地图坐标
+`system:` 显式声明地图；`choice: on|off|dc|cc|bpi` 选择公理图层；
+`axiom:` 本图启用公理；`ref:` 外部证书；`⊢` 标「在图内相对可推导」，
+`⊨` 标语义蕴涵（需证书，弃权）。两者都不产第四态。
+无 `system:` 而用 `⊢` / 大基数 / 全局 V → `E-SCOPE-NO-MAP`。
+
+### 全局 V（三重消歧）
+`universe: V` 仅在 `set / foundations / zfc / model-theory / naive / logic` 域且
+显式 `system:` 下成立；V 是**真类**不是集合。`univ: U = {…}` 是有限/相对全集；
+`card(V)` / `V ∈ V` / `|V|` → `E-SCOPE-PROPER-CLASS`。
+非集合论域写 V → `E-SCOPE-DOMAIN`（V 专属门禁，不推翻「未知领域标黄放行」）。
+
+### 集合与势（有限集精确，无限集诚实弃权）
+`∈ ∉ ∪ ∩ ∖ ⊆ ⊇ ⊂ ⊃` 升格为输入算子；`⊆`=子集、`⊂`=真子集，**不合并**。
+`\subset` 学术上常作子集 → 归一为 `subseteq`。
+`card(A)` / `|A|` 精确判有限集势；`|A| <= |B|` 势比较；
+无 AC 地图下基数不可比 → `E-CHOICE-INCOMPARABLE`（不落 False）。
+`{2n : n ∈ N}` / `{0,1,2,...}` 构造式**只登记、不猜通项、不自动展开**；
+嵌套集合不压平 → `E-SCOPE-NESTED`。未登记符号 → `E-REF-UNKNOWN`（严禁并入 False）。
+
+### 量化与引用
+`forall: t in A: expr` 有限集逐元素可判；连续域 `forall: x, y, z` /
+`claim:` → `E-SCOPE-QUANTIFIER`。`under:` 约束域先只登记；
+`cert:` / `witness:` / `problem:` / `status:` / `theory:` / `inner:` /
+`map:` / `independent:` / `model:` / `cite:` 只登记不产三态行。
+`by:` 行尾引用查「已加载公理表 + ref:」，**只是名字不是免算金牌**；
+未登记 → `ref_unknown` 计数，不替引擎判真假。
+
+### 公理模块（一个 `.ltir`，两种身份）
+`axioms/` 放模块，`fixtures/` 放卷；**不新开后缀**（后缀是给 OS 看的，不是给引擎看的）。
+模块首行 `module:` 声明身份，**禁止含 `A:`/`V:` 断言行**，只含
+`system:/choice:/axiom:/ref:`；加载只动 `registered`/公理表，三态一位不许变。
+`preset: NAME` 内置按名加载（跨端零路径分歧、幂等）；
+`load: axioms/NAME.ltir` 外部 `.ltir`。循环 → `E-LOAD-CYCLE`、
+缺失 → `E-LOAD-MISSING`、断言行 → `E-LOAD-ASSERT`、公理打架 → 登记元定理弃权。
+
+### 防「沙」（省略号折叠 + 彩蛋）
+连续 n 个省略号（`......` / `... ...` / `… …` / `\dots\dots`）一律折叠成**单个 `...`**；
+保护 `1..10`（两点）与 `0.5`（一点）。触发时吐一句：
+中文「你多打了省略号，已经补全了。才不是帮你呢。」／英文
+"You typed extra ellipses; normalized to one. N-not like I did it for you or anything!"
+**末句傲娇是彩蛋**，`--json` 单列 `easter_egg`；`--lang=zh|en|auto` 跟随语言。
+
+### 错误码（append，只读消费）
+`E-SCOPE-*`（QUANTIFIER / INFINITE / INDEPENDENT / INCOMPLETE / NO-MAP /
+DOMAIN / PROPER-CLASS / ABSOLUTE / SEMANTIC / NESTED / SINGULAR）、
+`E-PARADOX-RUSSELL`、`E-AXIOM-CONFLICT`、`E-CHOICE-*`（REQUIRED /
+CONFLICT / INCOMPARABLE / STRENGTH）、`E-REF-*`、`E-LOAD-*`、
+`E-SET-COMPREHENSION`。全部 `UNDECIDED`，**严禁并入 False**。
+码表 state 列仅文档口径，运行时以 `codeRes` 调用处为准（两套编码统一待裁）。
+
+### 学术口径修正（已核对，详见 AXIOM_NOTES.md）
+单个 Woodin 弱于超紧，只有「真类多 Woodin」才更强；I0 在 ZFC 内、与
+Reinhardt/Berkeley（ZF 无 AC 线）**不是线性台阶**；Levy–Solovay 只封杀
+「真值可被小 forcing 改变」的命题，「大基数不决定 CH」是其推论；
+SCH / Silver / pcf 上界均带「强极限 / 不可数共尾度」限定词。
+CH 是希尔伯特第一题、不在 CMI 七问内，本版按独立命题专档登记。
+
+## 0.0.7 补丁 · 甲条文（实验区续）
+
+1. **仅台账域**：`domains.tsv` 第三列以 `[台账]` 结尾者为「仅台账域」。此类域只有名字与
+   范围，**没有判定核**。域内 `A:` / `V:` / `N:` / `claim:` / `forall:` / `card:` /
+   `prob:` / `stat:` / `solve:` / `limit:` / `vector:` / `sum:` / `seq:` / `derive:` /
+   `ident:` 一律 `UNDECIDED E-SCOPE-LEDGER-ONLY`；登记类行照常登记、不产三态行。
+2. **不跨域串台**：仅台账域不复用 `math` 域求值器。能算 `2+2==4` 不等于「懂 analysis」，
+   诚实弃权优先于借别域的判定核粉饰。
+3. **三态锁死不变**：弃权不是 False、不是硬错、exit 0；`-> True` 仍只是声明词。
+4. **老域逐字不变**：原有 27 域的判定与汇总不受扩域影响；未知领域仍标黄放行。
+5. **码表只读消费**：`E-SCOPE-LEDGER-ONLY` 由 append 落表，引擎不硬编码解释文本，
+   `--lang=zh|en` 跟随码表。
+6. **短写表仍冻结**：甲不开新短写、不新增判定算子、不新增关键字；`V:` 语义不回退。
+7. **集合语义入口归一**：`A:` / `V:` / `N:` 共享有限集语义块；带 `-> True/False` 时先剥
+   声明词再判集合，真值自产不变，声明词与实算一致时不得残留错误码。
+8. **防「沙」纪律不变**：多打省略号折叠为单个 `...`，中英傲娇彩蛋单列 JSON，
+   单个 `...` 与 `1..10` 两点范围不误伤。
+
+
+## 0.0.7 补丁二 · 集合论实验区（本节覆盖甲阶段第 6 条「不新增关键字」）
+
+版本 `0.0.7` **一字不动**，无新后缀。新增 6 个全英文长名关键字，短写表仍冻结：
+`exists:` `cex:` `inj:` `surj:` `bij:` `mapping:`
+
+1. **求值标签 ≠ 断言标签**：`V:` / `N:` 算出 False 是合法求值结果，
+   **不挂** `E-VAL-MISMATCH`；该码只属于 `A:` 声明词与实算冲突。
+   `forall:` / `exists:` / `inj:` 等逐元素判假同样无码。
+2. **有限集量词**：`forall: x in A: P(x)` / `exists: x in A: P(x)`；
+   域可是具名有限集或字面量 `{...}`，按**花括号配对**取域（避开 `{1,2,3}` 内部逗号）；
+   连续域 / `...` 构造式 / 未登记名一律 `E-SCOPE-INFINITE`。
+3. **原生量词符号**：`A: ∀ x ∈ {1,2,3}, P(x) -> True`，`∃` 同路（遍历找见证即可）；
+   gate 归一为 `forall ` / `exists ` / ` in `。字面集合域后必须**显式跟 `,` 或 `:`**，
+   缺分隔符 → `E-SCOPE-QUANTIFIER`（防误伤，不宽松吞裸表达式）。
+4. **受限概括**：`set: R = {x ∈ {1,2,3} | x > 1}` 左边绑定域、右边当条件，
+   逐元素精确算，输出 `{2, 3}`。无受限域的 `{x | x ∉ x}` → `E-PARADOX-RUSSELL`；
+   该名字之后的 `∈` / 势判断按词边界一律弃权（塌图登记，不判真假）。
+5. **反例登记册**：`cex: x = -1` 把值代入上一行 `A:` 的 lhs（剥完声明词）；
+   使命题失效 → `True` + `反例有效` / `counter-example valid`（语言跟随）；
+   仍成立 → `False E-CEX-INVALID`；无上一行 → `E-REF-UNKNOWN`。
+6. **有限映射性质**：`mapping: f = {1->2, 2->3} on {2,3}` 定义有限映射（只登记，
+   不产三态行，陪域用 `on {...}`）；`inj:` / `surj:` / `bij:` 查表判 True/False；
+   `R -> R` 或非 `{...}` 定义 → `E-SCOPE-INFINITE`；`surj:`/`bij:` 缺陪域 →
+   `E-SCOPE-CODOMAIN`。判假无码。
+7. **仍锁**：三态 · 真值自产 · Richardson 不伪判 · 码表只读消费 · core 11 件 SHA
+   · 三角囚徒冻结卷 `10/10` · 原 175 条回归 · 版本 007 焊死 · `./ltir006` /
+   `~/ltir006_lab` / hook 三锚点不动。
+
+## 0.0.8 条文（形式化定义 / 多宇宙图册）
+
+- 版本 `0.0.8`；版本身份另存 `VERSION`，底片 `LTIR_STAMP` 驱动收容重搬。
+- 启动脚本 `ltir.sh`；二进制名 `ltir006`、收容目录 `~/ltir006_lab`、hook 三锚点不动。
+- 新关键词（全英文长名，短写表仍冻结）：`sig: type: where: rule: grammar: expand:`
+  `multiverse: world: force: ground: mantle: reachable:`。
+- `define:` 支持 `define: f(x : Num) : Num = ...`；签名不符 → `E-DEF-SIG`，
+  自由标识符 → `E-DEF-UNBOUND`，自引用递归 → `E-DEF-NONTERM`，
+  `expand:` 最多 8 步 δ 展开，超界 → `E-DEF-DEPTH`。
+- `rule:` 登记的名字进入 `by:` 证书链白名单；`grammar:` 只登记 BNF，不生成解析器。
+- 多宇宙：`world:` 登记世界，`force:/ground:` 登记可达边（缺世界 → `E-SCOPE-NO-MAP`），
+  `reachable:` → `E-SCOPE-CROSS-WORLD`，□◇ → `E-SCOPE-MODAL`。
+  S4.2 / K·T·4·.2 只作 `rule:` 模式登记，**不实现模态定理证明器**。
+- 图间模式**不**解锁绝对真值：`⊢` 仍是相对可推导，`-> True` 仍是声明词。
+- `IND[]` 收缩为 CH / Continuum / 哥德尔不完备；七问、哥德巴赫改走 `E-SCOPE-OPEN`。
+- 一个 `.ltir` 两种身份不变；`axioms/Multiverse.ltir` 为登记模块，不产三态行。
+
+## 0.0.9 条文
+
+- 版本 `0.0.9`；`VERSION` 纯文本、`LTIR_STAMP` 底片、`ltir.sh` 入口不变。
+- **隐式乘法**：多项式层把连写变量 `2xy` 拆作 `2*x*y`；函数名、常量
+  （`pi`/`i`/`e`/`oo`/`N`/`R`…）与已知单名不拆。`eval` 数值层原已支持。
+- **受限概括**：`{x in A | P(x)}`、`{x | x in A and P(x)}`、
+  `{x | x in A}` 三种写法共用逐元素精确判定；`A` 为无限/构造域 →
+  `E-SCOPE-INFINITE`；真·无受限域 → `E-PARADOX-RUSSELL`（塌图登记，不判真假）。
+- **溢出归类**：纯数字阶乘 >20!、纯数字幂在 `power()` 判 UND → `E-OVF`；
+  双根式参与四则/比较 → `E-SCOPE-ALGEBRAIC`；非特殊角仍 Richardson 弃权。
+- **π/12 家族**：`sin/cos/tan(k*pi/12)`（k=1,5,7,11,13,17,19,23）给精确值；
+  `RAD2 = a + b√r + c2√r2` 是展示用精确类型，不参与四则运算（弃权不伪判）。
+- **输出模式**（CLI flag 优先于环境变量）：
+  - `--tri` / `LTIR_OUTPUT=tri` / `LTIR_TRI=1` → 每行只输出
+    `True` / `False` / `UNDECIDED`，无行号、码、答案、汇总、彩蛋；
+    硬错行在此模式折叠显示为 `UNDECIDED`（内部计数不变）
+  - `--no-answer` / `check 卷.ltir` / `LTIR_OUTPUT=no-answer` →
+    抑制答案值 `R.out`，三态与码照出
+  - `--normal` 恢复；`--tri` 覆盖 `--json` / `--explain`
+- **卸载**：`./ltir006 uninstall` 只打印指引；实际删除由 `uninstall.sh` 执行，
+  范围为 `~/ltir006_lab` 与 `~/bin/termux-file-editor`。
+- 短写表仍冻结；一个 `.ltir` 两种身份不变；新码只读消费。

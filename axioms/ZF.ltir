@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · ZF（只登记，不产三态行）
+module: ZF
+system: ZF
+choice: off
+axiom: Extensionality, Separation, Powerset, Union, Infinity, Replacement, Foundation
+ref: Zermelo1904, Fraenkel1922

@@ -1,0 +1,50 @@
+# ltir006 实验室码表 · 独立命名空间（不改 002 的 verify_codes.frozen.tsv）
+# state: 1=ERROR(exit 1)  2=False  3=UNDECIDED
+# en / zh 由卷内是否含中文自动跟随；{lhs} {rhs} {diff} 为格式化占位符
+# 本表只读消费，append 权在立法者
+code	state	en	zh
+E-UNK-LINE	1	unknown line kind; use an english keyword with ':'	未知行类型；请使用带冒号的英文关键字
+E-SYN	1	syntax violation	语法违规
+E-NAME	1	unknown identifier or naming conflict	未知标识符或命名冲突
+E-EXT	1	extraction failed	抽取失败
+E-VAL-MISMATCH	2	LHS evaluates to {lhs}, not {rhs}	左边实算为 {lhs}，不是 {rhs}
+E-ID-DIFF	2	difference = {diff} ≠ 0	差式 = {diff} ≠ 0
+E-SCOPE-TRANSCENDENTAL	3	transcendental or undecidable domain: honest abstain	超越或不可判定域：诚实弃权
+E-SCOPE-SYMBOLIC	3	symbolic solving out of scope: honest abstain	符号求解越界：诚实弃权
+E-INF	3	infinity indeterminate form: honest abstain	∞ 未定形：诚实弃权
+E-OVF	3	integer overflow: honest abstain	整数溢出：诚实弃权
+E-RANGE	3	range out of bounds	范围越界
+E-SCOPE-QUANTIFIER	3	quantified claim outside decidable domain	全称量化主断言：超出可判定域，诚实弃权
+E-SCOPE-INFINITE	3	infinite or axiomatic set request out of scope	无限集/公理化集合请求：超出可判定域，诚实弃权
+E-SCOPE-INDEPENDENT	3	statement independent of the current map	该命题独立于当前地图：诚实弃权（外部证书登记）
+E-SCOPE-INCOMPLETE	3	Godel incompleteness: undecidable inside the system	哥德尔不完备：系统内不可判定，诚实弃权
+E-SCOPE-NO-MAP	3	no system: declared for map-dependent notation	未声明 system:，地图相关记号无法定位：诚实弃权
+E-SCOPE-DOMAIN	3	notation not valid in current domain	该记号在当前领域不成立：诚实弃权
+E-SCOPE-PROPER-CLASS	3	proper class cannot be treated as a set	真类不可当集合取势或属于：诚实弃权
+E-SCOPE-ABSOLUTE	3	absolute infinity admits no cardinality comparison	绝对无限不可比较势：诚实弃权
+E-SCOPE-SEMANTIC	3	semantic entailment requires a certificate	语义蕴涵（models）需证书：诚实弃权
+E-SCOPE-NESTED	3	nested set elements out of scope in this version	嵌套集合元素超出本版范围：不压平、不伪判，诚实弃权
+E-SCOPE-SINGULAR	3	singular cardinal cofinality requires a certificate	奇异基数共尾性需证书：诚实弃权
+E-PARADOX-RUSSELL	3	Russell paradox: this map is inconsistent	罗素悖论：该地图自相不一致，登记外部证书，不判真假
+E-AXIOM-CONFLICT	3	axiom conflicts with current map (Kunen 1971)	公理与当前地图冲突（Kunen 1971）：登记元定理，不并入 False
+E-CHOICE-REQUIRED	3	conclusion requires a choice axiom not enabled here	该结论需要本图未开启的选择公理：诚实弃权
+E-CHOICE-CONFLICT	3	AD and AC cannot hold in the same map	AD 与 AC 不能同图：诚实弃权
+E-CHOICE-INCOMPARABLE	3	cardinal comparability requires AC; no order here	无 AC 时基数不可比：诚实弃权
+E-CHOICE-STRENGTH	3	choice principles are incomparable; no implication	弱选择原则互不可比：不能由此推出该结论
+E-REF-UNKNOWN	3	unregistered symbol or citation: honest abstain	未登记符号或引用：诚实弃权，严禁并入 False
+E-REF-MAP	3	citation does not belong to the current map	证书不属于当前地图：诚实弃权
+E-LOAD-MISSING	3	axiom module not found	公理模块找不到：诚实弃权
+E-LOAD-CYCLE	3	circular axiom module load	公理模块循环加载：诚实弃权
+E-LOAD-ASSERT	3	axiom module must not contain assertions	公理模块内不应含断言行：只登记不判
+E-SET-COMPREHENSION	3	set-builder notation registered, not enumerated	集合构造式已登记，不猜通项、不自动展开
+E-SCOPE-LEDGER-ONLY	3	domain registered but no decision kernel yet: honest abstain	领域已登记但本版仅有台账、无判定核：诚实弃权，不跨域串台
+E-CEX-INVALID	2	counter-example does not falsify the claim	反例代入后命题仍成立：反例无效
+E-SCOPE-CODOMAIN	3	surjection/bijection requires an explicit codomain	满射/双射需显式陪域 on {...}：诚实弃权
+E-SCOPE-OPEN	3	open problem (not proved independent): honest abstain	未解命题（非已证独立）：诚实弃权
+E-SCOPE-MODAL	3	modal forcing operator requires a certificate	模态力迫算子需证书：诚实弃权
+E-SCOPE-CROSS-WORLD	3	truth value must not be transported across worlds	不跨图搬真值：诚实弃权
+E-DEF-SIG	3	definition signature does not match sig:	定义签名与 sig: 不符：诚实弃权
+E-DEF-UNBOUND	3	free identifier in definition body	定义体含未绑定自由标识符：诚实弃权
+E-DEF-NONTERM	3	recursive definition has no termination check	递归定义无终止性保证：诚实弃权
+E-DEF-DEPTH	3	delta-expansion depth limit exceeded	δ 展开超出有限步上界：诚实弃权
+E-SCOPE-ALGEBRAIC	3	dual-radical exact value does not yet join arithmetic/comparison	双根式精确值暂不参与四则/比较：诚实弃权

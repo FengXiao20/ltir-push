@@ -1,0 +1,62 @@
+# ltir006 领域注册表 · 语法层资产（不是错误码表，append 不需改码表）
+# 用法：<subject domain="algebra"> ... </subject>  或顶层  domain: algebra
+# 未知领域按「域外记号标黄放行」精神：原样登记、不拦截不报错不解释
+# 格式：name<TAB>中文名<TAB>一句话范围
+name	zh	scope
+math	通用数学	未指定领域时的兜底
+algebra	代数	恒等变形、有理式、因式分解
+equation	方程	一元方程与方程组
+inequality	不等式	解集、区间、放缩
+polynomial	多项式	多项式恒等与求导
+function	函数	定义域、单调、复合
+sequence	数列	通项、递推、求和
+limit-calculus	极限与导数	数列极限、导数、切线
+trigonometry	三角	特殊角、恒等变换、解三角形
+vector	向量	点积、叉积、线性运算
+complex	复数	i 与代数数
+geometry	平面几何	三角形、圆、相似
+solid-geometry	立体几何	空间角、体积、截面
+analytic	解析几何	直线、圆锥曲线、参数方程
+combinatorics	计数与组合	排列组合、二项式
+probability	概率	古典概型、分布列
+statistics	统计	均值、方差、回归
+number-theory	数论	素数、同余、整除
+set	集合	有限集、区间、包含
+logic	逻辑与命题	充分必要、量词
+induction	数学归纳法	归纳与反证
+linear-algebra	线性代数	矩阵、行列式
+zfc	公理台账	ZF/ZFC 台账保留位
+physics-math	数学物理	角动量、量纲、向量力学
+foundations	数学基础	公理系统、独立性、不完备性、⊢ 地图坐标
+model-theory	模型论	内模型、力迫、UltL、反映
+naive	朴素集合论	无限制概括与罗素悖论（塌图登记）
+# ── 甲：扩全图（仅台账域，scope 含 [台账] 标记；本版不加判定核） ──
+# 语义：这些域只有名字与范围，A:/V: 等判定请求一律 E-SCOPE-LEDGER-ONLY 诚实弃权
+analysis	分析学	极限、连续性、级数收敛 [台账]
+real-analysis	实分析	实数完备性、函数项级数 [台账]
+measure	测度与积分	σ-代数、Lebesgue 积分、收敛定理 [台账]
+functional-analysis	泛函分析	Banach/Hilbert 空间、算子谱 [台账]
+complex-analysis	复分析	解析函数、留数、共形映射 [台账]
+differential-equation	微分方程	ODE/PDE、定性理论、边值问题 [台账]
+numerical-analysis	数值分析	误差、迭代法、数值稳定性 [台账]
+dynamical-systems	动力系统	迭代、混沌、分岔 [台账]
+abstract-algebra	抽象代数	群、环、域、模 [台账]
+galois-theory	伽罗瓦理论	域扩张、可解性、 Galois 群 [台账]
+algebraic-geometry	代数几何	仿射/射影簇、概形、层 [台账]
+graph-theory	图论	图、匹配、着色、网络流 [台账]
+combinatorial-optimization	组合优化	组合结构、拟阵、近似算法 [台账]
+topology	点集拓扑	开闭集、紧致、连通、分离性 [台账]
+algebraic-topology	代数拓扑	同调、同伦、基本群 [台账]
+differential-geometry	微分几何	流形、曲率、联络 [台账]
+category-theory	范畴论	函子、自然变换、极限与伴随 [台账]
+analytic-number-theory	解析数论	ζ 函数、素数分布、L 函数 [台账]
+measure-probability	测度概率	概率空间、条件期望、极限定理 [台账]
+stochastic-process	随机过程	马氏链、鞅、布朗运动 [台账]
+statistical-inference	统计推断	估计、检验、置信区间 [台账]
+information-theory	信息论	熵、信道容量、编码 [台账]
+game-theory	博弈论	均衡、机制设计、合作博弈 [台账]
+convex-optimization	凸优化	凸集、对偶、KKT [台账]
+operations-research	运筹学	线性规划、排队、库存 [台账]
+computational-complexity	计算复杂性	P/NP、归约、复杂度类 [台账]
+financial-mathematics	金融数学	无套利、期权定价、随机积分 [台账]
+ergodic-theory	遍历理论	保测变换、遍历定理、熵 [台账]

@@ -1,0 +1,6 @@
+# 0.0.7 公理模块 · I0（只登记，不产三态行）
+module: I0
+system: ZFC
+choice: on
+axiom: ZFC, I0
+ref: Kunen1971

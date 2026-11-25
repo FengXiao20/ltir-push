@@ -1,0 +1,13 @@
+# ltir006 · ZF/ZFC 台账保留位（只登记不判，不进三态统计）
+# 0.0.6 按「已经实现了的 zf/zfc 暂时别动」原样保留语义
+zf: Extensionality: 外延公理
+zf: EmptySet: 空集存在
+zf: Pairing: 配对公理
+zf: Union: 并集公理
+zf: PowerSet: 幂集公理
+zf: Infinity: 无穷公理
+zf: Separation: 分离公理模式
+zf: Replacement: 替换公理模式
+zf: Foundation: 正则公理
+zfc: Choice: 选择公理
+zfc: WellOrdering: 良序定理

@@ -1,0 +1,5 @@
+# 0.0.8 算术命题专档：只登记，不判真假
+system: PA
+problem: Goldbach-binary
+status: open
+ref: Goldbach1742, Helfgott2013, Oliveira2014

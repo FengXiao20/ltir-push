@@ -1,0 +1,6 @@
+# 用户自定义公理模块示例：改这里，用 load: axioms/my_axioms.ltir 加载
+module: MyMap
+system: ZFC
+choice: on
+axiom: AC, MyExtraAxiom
+ref: MyNote2026
