@@ -1,0 +1,4 @@
+# LTIR 卷文件是这门语言的本体，Linguist 不认识——手工登记
+*.ltir linguist-language=LTIR
+domains.tsv linguist-language=TSV
+lab_codes.tsv linguist-language=TSV
