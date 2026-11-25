@@ -131,7 +131,7 @@ preserved / inferences / answers`，每行带 `tag`；简明档末尾只在显�
 补一行 `tags:` / `domain:`，原有逐行输出一字不变。
 
 **Termux**：`pkg install clang make`；项目别放 `/storage/emulated/0`（noexec），
-脚本会自动搬家到 `~/ltir006_lab`。Termux 无 g++，脚本自动切 `clang++`。
+脚本会自动搬家到 `~/ltir_lab`。Termux 无 g++，脚本自动切 `clang++`。
 
 ## 六、谱系（防串台）
 
@@ -191,7 +191,7 @@ AST 级复合 LaTeX 折叠、i18n、Windows 分支。
 
 **怎么跑（Linux / Termux，Win10+ 包本轮不重打）**
 ```bash
-cd ~/ltir006_lab
+cd ~/ltir_lab
 bash ltir.sh          # SHA 门禁 → 编译 → SMOKE → 演示
 bash ltir.sh b        # 只编译（Termux 自动 clang++）
 bash ltir.sh t        # 只跑 0.0.7 SMOKE
@@ -376,7 +376,7 @@ bash ltir.sh b / t    # build only / SMOKE only (Termux auto-switches to clang++
 ```
 
 **Termux**: `pkg install clang make`; keep off `/storage/emulated/0` (noexec) —
-the script relocates to `~/ltir006_lab` automatically.
+the script relocates to `~/ltir_lab` automatically.
 
 ## 7. Lineage & boundaries
 

@@ -35,7 +35,7 @@ bash ltir.sh                    # gate check -> build -> SMOKE (347/347) -> demo
 ```
 
 C++17, standard library only. Linux + Termux (`pkg install clang make`; keep the
-project off `/storage/emulated/0` — noexec — the script relocates it to `~/ltir006_lab`
+project off `/storage/emulated/0` — noexec — the script relocates it to `~/ltir_lab`
 and switches to `clang++` automatically).
 
 ## The language in one page

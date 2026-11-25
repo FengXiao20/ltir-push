@@ -2243,7 +2243,7 @@ int main(int argc,char** argv){
     return verify(argv[2],ex,js,codes,domains,lang,outMode);
   }
   if(cmd=="uninstall"){
-    std::cout<<"LTIR 卸载：请运行 bash uninstall.sh（只删 ~/ltir006_lab 与 hook，不碰 .ltir 卷）\n";
+    std::cout<<"LTIR 卸载：请运行 bash uninstall.sh（只删 ~/ltir_lab 与 hook，不碰 .ltir 卷）\n";
     return 0;
   }
   std::cerr<<"ltir006: unknown command "<<cmd<<"\n"; return 2;

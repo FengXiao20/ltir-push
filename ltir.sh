@@ -42,7 +42,7 @@ banner() {
 
 case "$(pwd)" in /storage/emulated/*|/sdcard/*|/mnt/sdcard/*)
   ui_t noexec "$(pwd)" >&2; printf '\n' >&2
-  DEST="$HOME/ltir006_lab"
+  DEST="$HOME/ltir_lab"
   if [ "$(pwd)" != "$DEST" ]; then
       # 底片 + 输出层「内容哈希」双重比对：MT 覆盖外存后不必手敲 rm -rf
       _src_h=''; _dst_h=''
@@ -104,7 +104,7 @@ case "${1:-run}" in
   t) test_ ;;
   d) [ -x "$BIN" ] || build; demo ;;
   v) cat VERSION; [ -x "$BIN" ] || build; $BIN --version ;;
-  R) rm -rf "$HOME/ltir006_lab"; exec bash ./ltir.sh ;;
+  R) rm -rf "$HOME/ltir_lab"; exec bash ./ltir.sh ;;
   u) exec bash ./uninstall.sh ;;
   ui) bash ./ltir_ui.sh selftest ;;
   env) bash ./ltir_ui.sh env ;;

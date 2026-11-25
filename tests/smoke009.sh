@@ -395,7 +395,7 @@ ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir
 echo "== 老账本归编 / hook 随包 =="
 ck  "BACKLOG.md 已归编" "$([ -f BACKLOG.md ] && echo yes)" 'yes'
 ck  "termux-file-editor 随包" "$([ -f termux/termux-file-editor ] && echo yes)" 'yes'
-ckc "hook 锚点：收容目录不变" "$(cat termux/termux-file-editor)" '$HOME/ltir006_lab'
+ckc "hook 锚点：收容目录不变" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ckc "hook 锚点：可执行名不变" "$(cat termux/termux-file-editor)" '$LAB/ltir006'
 ckc "hook 标题读 --version" "$(cat termux/termux-file-editor)" 'VER="$("$BIN" --version 2>/dev/null)"'
 ck  "hook 不写死旧版本号" "$(grep -c '0\.0\.6' termux/termux-file-editor)" '0'
@@ -501,7 +501,7 @@ ckc "用户卷汇总不漂" "$($BIN verify "$TMP/logic.ltir")" '── 7 lines: 
 ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "demo 24 行不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "码表新增两行" "$(cat lab_codes.tsv)" 'E-SCOPE-CODOMAIN'
-ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir006_lab'
+ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ck  "--version 仍 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
 ckc "JSON 版本仍 0.0.9" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.9"'
 ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
@@ -518,7 +518,7 @@ ckc "入口切 smoke009" "$(cat ltir.sh)" 'tests/smoke009.sh'
 ckc "v 子命令读 VERSION" "$(cat ltir.sh)" 'v) cat VERSION'
 ckc "R 强制重搬兜底" "$(cat ltir.sh)" 'R) rm -rf'
 ckc "hook 提示改名" "$(cat termux/termux-file-editor)" 'bash ltir.sh'
-ckc "hook 三锚点：收容目录" "$(cat termux/termux-file-editor)" '$HOME/ltir006_lab'
+ckc "hook 三锚点：收容目录" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ckc "hook 三锚点：可执行名" "$(cat termux/termux-file-editor)" '$LAB/ltir006'
 ck  "未推进 0.0.10" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 ck  "--version = 0.0.9" "$($BIN --version)" 'ltir006 0.0.9'
@@ -646,16 +646,16 @@ ckc "码表含 E-SCOPE-ALGEBRAIC" "$(cat lab_codes.tsv)" 'E-SCOPE-ALGEBRAIC'
 
 echo "== 新功能 A：卸载脚本与命令 =="
 ck  "uninstall.sh 存在" "$([ -f uninstall.sh ] && echo yes)" 'yes'
-ckc "uninstall.sh 只删收容目录" "$(cat uninstall.sh)" '$HOME/ltir006_lab'
+ckc "uninstall.sh 只删收容目录" "$(cat uninstall.sh)" '$HOME/ltir_lab'
 ckc "uninstall.sh 删 hook" "$(cat uninstall.sh)" '$HOME/bin/termux-file-editor'
 ckc "uninstall.sh 保留用户卷" "$(cat uninstall.sh)" '不碰用户自己的 .ltir 卷'
 ckc "ltir.sh u 转交" "$(cat ltir.sh)" 'u) exec bash ./uninstall.sh'
 ckc "收容清单含卸载脚本" "$(cat ltir.sh)" './uninstall.sh'
 ckc "CLI uninstall 给指引" "$($BIN uninstall)" 'bash uninstall.sh'
-TMPHOME="$(mktemp -d)"; mkdir -p "$TMPHOME/ltir006_lab" "$TMPHOME/bin"
-printf 'x' > "$TMPHOME/ltir006_lab/keep"; printf 'x' > "$TMPHOME/bin/termux-file-editor"
+TMPHOME="$(mktemp -d)"; mkdir -p "$TMPHOME/ltir_lab" "$TMPHOME/bin"
+printf 'x' > "$TMPHOME/ltir_lab/keep"; printf 'x' > "$TMPHOME/bin/termux-file-editor"
 HOME="$TMPHOME" bash uninstall.sh > "$TMPHOME/un9.log" 2>&1
-ck  "卸载后收容目录消失" "$([ ! -d "$TMPHOME/ltir006_lab" ] && echo yes)" 'yes'
+ck  "卸载后收容目录消失" "$([ ! -d "$TMPHOME/ltir_lab" ] && echo yes)" 'yes'
 ck  "卸载后 hook 消失" "$([ ! -f "$TMPHOME/bin/termux-file-editor" ] && echo yes)" 'yes'
 rm -rf "$TMPHOME"
 

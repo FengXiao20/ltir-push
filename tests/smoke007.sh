@@ -394,7 +394,7 @@ ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir
 echo "== 【0.0.7 补丁】老账本归编 / hook 随包 =="
 ck  "BACKLOG.md 已归编" "$([ -f BACKLOG.md ] && echo yes)" 'yes'
 ck  "termux-file-editor 随包" "$([ -f termux/termux-file-editor ] && echo yes)" 'yes'
-ckc "hook 锚点：收容目录不变" "$(cat termux/termux-file-editor)" '$HOME/ltir006_lab'
+ckc "hook 锚点：收容目录不变" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ckc "hook 锚点：可执行名不变" "$(cat termux/termux-file-editor)" '$LAB/ltir006'
 ckc "hook 标题读 --version" "$(cat termux/termux-file-editor)" 'VER="$("$BIN" --version 2>/dev/null)"'
 ck  "hook 不写死旧版本号" "$(grep -c '0\.0\.6' termux/termux-file-editor)" '0'
@@ -500,7 +500,7 @@ ckc "用户卷汇总不漂" "$($BIN verify "$TMP/logic.ltir")" '── 7 lines: 
 ckc "三角囚徒冻结卷不漂" "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "demo 24 行不漂" "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
 ckc "码表新增两行" "$(cat lab_codes.tsv)" 'E-SCOPE-CODOMAIN'
-ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir006_lab'
+ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ck  "--version 仍 0.0.8" "$($BIN --version)" 'ltir006 0.0.8'
 ckc "JSON 版本仍 0.0.8" "$($BIN verify "$TMP/test_006.ltir" --json)" '"version":"0.0.8"'
 ck  "未推进 0.0.9" "$(strings ./ltir006 | grep -c '0\.0\.9')" '0'

@@ -5,7 +5,7 @@
   F="$1"
   case "$F" in
     *.ltir)
-      LAB="$HOME/ltir006_lab"
+      LAB="$HOME/ltir_lab"
       BIN="$LAB/ltir006"
       if [ ! -x "$BIN" ]; then
         echo "E-HOOK: $BIN 不在，先跑一次 bash ltir.sh"

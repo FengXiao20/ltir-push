@@ -11,7 +11,7 @@
 | 本地平台 | Linux x86_64（Ubuntu 22.04.3 容器），`g++ 11.4.0` |
 | 本地编译 | `-std=c++17 -O2 -Wall -Wextra`，**0 error / 0 warning** |
 | 真机平台 | **Termux（Android）`clang++`** —— 立法者截图回填 |
-| 真机结果 | 内核门禁 OK、clang++ 编译成功、44/44、noexec 搬家生效（`~/ltir006_lab $`） |
+| 真机结果 | 内核门禁 OK、clang++ 编译成功、44/44、noexec 搬家生效（`~/ltir_lab $`） |
 | 本地 SMOKE | `69 / 69 项满足`，exit 0 |
 | 一键 `bash ltir.sh` | 门禁 → 编译 → SMOKE → 演示，exit 0 |
 | 干净解包复现 | 独立目录解包后 `bash ltir.sh` 全流程 exit 0，69/69 |
@@ -126,7 +126,7 @@ $ ./ltir006 verify 卷.ltir --json
 立法者两张截图坐实：
 
 - `== 编译（Termux：clang++ 自适应） ==` → `OK: ./ltir006`，**clang++ 编译成功**
-- `== SMOKE ==` → `44 / 44 项满足`，noexec 搬家后提示符 `~/ltir006_lab $`
+- `== SMOKE ==` → `44 / 44 项满足`，noexec 搬家后提示符 `~/ltir_lab $`
 - 真机抓到 `src/value.hpp:187` `Rational c2,d2,den,t` 的 `unused variable 't'`
   → **1 warning**。首版报「0 warning」只在 g++ 下成立，这条认；本版删 `,t`，
   g++ 复核 0 warning，并加 SMOKE 第 68 条静态断言防回归。

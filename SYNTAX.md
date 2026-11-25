@@ -331,12 +331,12 @@ CH 是希尔伯特第一题、不在 CMI 七问内，本版按独立命题专档
    `E-SCOPE-CODOMAIN`。判假无码。
 7. **仍锁**：三态 · 真值自产 · Richardson 不伪判 · 码表只读消费 · core 11 件 SHA
    · 三角囚徒冻结卷 `10/10` · 原 175 条回归 · 版本 007 焊死 · `./ltir006` /
-   `~/ltir006_lab` / hook 三锚点不动。
+   `~/ltir_lab` / hook 三锚点不动。
 
 ## 0.0.8 条文（形式化定义 / 多宇宙图册）
 
 - 版本 `0.0.8`；版本身份另存 `VERSION`，底片 `LTIR_STAMP` 驱动收容重搬。
-- 启动脚本 `ltir.sh`；二进制名 `ltir006`、收容目录 `~/ltir006_lab`、hook 三锚点不动。
+- 启动脚本 `ltir.sh`；二进制名 `ltir006`、收容目录 `~/ltir_lab`、hook 三锚点不动。
 - 新关键词（全英文长名，短写表仍冻结）：`sig: type: where: rule: grammar: expand:`
   `multiverse: world: force: ground: mantle: reachable:`。
 - `define:` 支持 `define: f(x : Num) : Num = ...`；签名不符 → `E-DEF-SIG`，
@@ -370,7 +370,7 @@ CH 是希尔伯特第一题、不在 CMI 七问内，本版按独立命题专档
     抑制答案值 `R.out`，三态与码照出
   - `--normal` 恢复；`--tri` 覆盖 `--json` / `--explain`
 - **卸载**：`./ltir006 uninstall` 只打印指引；实际删除由 `uninstall.sh` 执行，
-  范围为 `~/ltir006_lab` 与 `~/bin/termux-file-editor`。
+  范围为 `~/ltir_lab` 与 `~/bin/termux-file-editor`。
 - 短写表仍冻结；一个 `.ltir` 两种身份不变；新码只读消费。
 
 ---
@@ -487,6 +487,6 @@ hopping never unlocks absolute truth). **0.0.9**: implicit product (`2xy` → `2
 restricted-comprehension double syntax, overflow classification (`E-OVF`,
 `E-SCOPE-ALGEBRAIC`), the π/12 exact-angle family (dual-radical display, no arithmetic
 on `RAD2`), output modes (`--tri` / `--no-answer` / env vars), and uninstall
-(`./ltir006 uninstall` prints; `uninstall.sh` deletes `~/ltir006_lab` +
+(`./ltir006 uninstall` prints; `uninstall.sh` deletes `~/ltir_lab` +
 `~/bin/termux-file-editor`). Short-form table stays frozen throughout; version numbers
 belong to the legislator — patches do not mint versions.
