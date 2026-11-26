@@ -1,5 +1,7 @@
 # 0.1.0 A 增量 · 公理本体化（需替换文件包）
 
+> **状态（2026-11-26）**：本补丁已并入 0.1.1。
+
 **口径**：正式版补丁，不带 beta/RC/experimental 字样。**不铸版本号** ——
 `VERSION` / `LTIR_STAMP` / `--version` / JSON `"version"` 仍 `0.1.0`；
 `core/` 十一件与 `RUN_core_sha.txt` 一字未动；短写表冻结；码表零 append。

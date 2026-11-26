@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ltir_ui.sh —— LTIR 输出层（套用于 0.0.9，不推进版本号）
+# ltir_ui.sh —— LTIR 输出层（套用于 0.1.1，不推进版本号）
 #
 # 契约
 #   stderr = 进度条 / 阶段标题 / 一行汇总 / 失败块   stdout 永远不写（留给数据与回执）
@@ -18,7 +18,7 @@
 LTIR_BIN=${LTIR_BIN:-./ltir006}
 LTIR_WIDTH=${LTIR_WIDTH:-18}
 LTIR_UI_DIR=${LTIR_UI_DIR:-./.ltir_ui}
-LTIR_SMOKE_TOTAL=${LTIR_SMOKE_TOTAL:-387}
+LTIR_SMOKE_TOTAL=${LTIR_SMOKE_TOTAL:-420}
 LTIR_DEMO_BASE=${LTIR_DEMO_BASE:-'24 lines: 20 True, 3 False, 1 UNDECIDED'}
 
 # 帧宽 = '[' + LTIR_WIDTH + ']' + ' ' + '%3d%%'(4)
@@ -116,13 +116,30 @@ ui_t() {
 
 # ---------------------------------------------------------------- 开关 / \b 条
 
-ltir_ui_on() {
-  case "${LTIR_UI:-on}:${CI:-}:${TERM:-}" in
-    off:*|*:1:*|*:*dumb*) return 1 ;;
+# ---------------- 模式优先级（高 → 低，命中即停）----------------
+#   1. CI=1 / LTIR_UI=off        → 绝对静默（Agent 管道纪律，--verbose 也翻不掉它）
+#   2. 非 TTY / TERM=dumb         → 静默
+#   3. LTIR_UI_VERBOSE=1          → 满屏 ✓（与条互斥）
+#   4. LTIR_UI_BAR=off            → 有标题无条
+#   5. 默认 TTY                   → \b 进度条
+ltir_ui_mode() {   # stdout: MODE<TAB>REASON
+  if [ "${CI:-}" = 1 ]; then printf 'silent\tCI=1'; return 0; fi
+  if [ "${LTIR_UI:-on}" = off ]; then printf 'silent\tLTIR_UI=off'; return 0; fi
+  if [ "${TERM:-}" = dumb ]; then printf 'silent\tTERM=dumb'; return 0; fi
+  if [ ! -t 2 ] && [ "${LTIR_FORCE_TTY:-0}" != 1 ]; then
+    printf 'silent\tstderr 非 TTY'; return 0
+  fi
+  if [ "${LTIR_UI_VERBOSE:-0}" = 1 ]; then printf 'verbose\tLTIR_UI_VERBOSE=1'; return 0; fi
+  case "${LTIR_UI_BAR:-on}" in
+    off|0|no|false) printf 'title-only\tLTIR_UI_BAR=%s' "${LTIR_UI_BAR}"; return 0 ;;
   esac
-  [ "${LTIR_UI_VERBOSE:-0}" = 1 ] && return 1
-  [ "${LTIR_FORCE_TTY:-0}" = 1 ] && return 0   # 仅 selftest 用
-  [ -t 2 ] || return 1
+  printf 'bar\t默认 TTY'
+  return 0
+}
+
+ltir_ui_on() {
+  local m; m=$(ltir_ui_mode)
+  case "$m" in silent*|verbose*) return 1 ;; esac
   return 0
 }
 
@@ -196,16 +213,25 @@ ltir_ui_compile() {
 
 ltir_ui_smoke() {
   local script=${1:-tests/smoke009.sh} total=${2:-$LTIR_SMOKE_TOTAL}
-  local log rcf failf rc=0 fails=0 n=0 idx line j s dup step last_step=-1
+  local log rcf failf tsv rc=0 fails=0 n=0 idx line j s dup step last_step=-1
+  local plan_seen=0 p real_total
   _ui_dir
   log="$LTIR_UI_DIR/smoke_last.log"; rcf="$LTIR_UI_DIR/smoke_rc"; failf="$LTIR_UI_DIR/smoke_fail"
-  : > "$log"; : > "$failf"; printf '0\n' > "$rcf"
+  tsv="$LTIR_UI_DIR/test_events.tsv"
+  : > "$log"; : > "$failf"; printf '0\n' > "$rcf"; : > "$tsv"
+  # 结构化事件通道：ck/ckc 认 LTIR_TSV 才双写；mock/旧脚本不认 → 自动退化文本解析
+  export LTIR_TSV="$tsv"
 
   while IFS= read -r line; do
     n=$((n+1))
     printf '%s\n' "$line" >> "$log"
     if [[ $line == '__LTIR_RC__='* ]]; then
       printf '%s\n' "${line#*=}" > "$rcf"; continue
+    fi
+    if [[ $line == '__LTIR_PLAN__='* ]]; then
+      p=${line#*=}
+      [[ $p =~ ^[0-9]+$ ]] && { total=$p; plan_seen=1; }
+      continue
     fi
     if [[ $line =~ ^[[:space:]]*\[([0-9]+)\][[:space:]] ]]; then
       idx=${BASH_REMATCH[1]}
@@ -216,13 +242,19 @@ ltir_ui_smoke() {
     [[ $line == *'✗'* ]] && { fails=$((fails+1)); printf '%s\n' "$n" >> "$failf"; }
     [ "${LTIR_UI_VERBOSE:-0}" = 1 ] && printf '%s\n' "$line" >&2
   done < <( { set +e; bash "$script" 2>&1; r=$?; printf '__LTIR_RC__=%s\n' "$r"; } )
+  unset LTIR_TSV
 
   rc=$(cat "$rcf")
-  # 真实计数以 SMOKE 自己的收尾行为准，推版加断言不用改输出层
-  local real_total
-  real_total=$(grep -E '^[0-9]+ / [0-9]+ 项满足' "$log" 2>/dev/null | tail -1 | sed 's#.* / \([0-9]*\) 项满足.*#\1#')
-  [ -n "$real_total" ] && total="$real_total"
-  _ltir_draw 20 20
+  # 权威总数：TSV（实跑逐条，最准）> 收尾行正则（无计划/mock 时的兼容回退）> 计划/入参（中途进度）
+  if [ -s "$tsv" ]; then
+    total=$(grep -c '^TEST_' "$tsv" 2>/dev/null || true)
+    fails=$(grep -c '^TEST_FAIL' "$tsv" 2>/dev/null || true)
+  elif [ "$plan_seen" = 0 ]; then
+    real_total=$(grep -E '^[0-9]+ / [0-9]+ 项满足' "$log" 2>/dev/null | tail -1 | sed 's#.* / \([0-9]*\) .*$#\1#')
+    [ -n "$real_total" ] && total="$real_total"
+  fi
+  # 只有全绿才画满 100%；中途失败/提前退出时进度条冻结在最后一步
+  if [ "$fails" = 0 ] && [ "$rc" = 0 ]; then _ltir_draw 20 20; fi
   _ltir_end
 
   if [ "${LTIR_UI_VERBOSE:-0}" = 1 ]; then
@@ -233,7 +265,12 @@ ltir_ui_smoke() {
 
   if [ "$fails" = 0 ] && [ "$rc" = 0 ]; then
     ui_t ok_smoke "$total" "$total" >&2; printf '\n' >&2
-    rm -f "$log" "$failf" "$rcf" 2>/dev/null || true
+    # 成功不留 405 行全量日志：只留一行精简摘要（时间 / 405 / rc / 版本）
+    local ver ts
+    ver=$(tr -d '\n' < VERSION 2>/dev/null || true); [ -n "$ver" ] || ver=unknown
+    ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null) || ts=$(date)
+    printf 'SMOKE OK · %s · %s/%s · rc=%s · ltir006 %s\n' "$ts" "$total" "$total" "$rc" "$ver" > "$log"
+    rm -f "$failf" "$rcf" "$tsv" 2>/dev/null || true
     return 0
   fi
   if [ "$fails" = 0 ] && [ "$rc" != 0 ]; then
@@ -284,9 +321,11 @@ ltir_ui_demo() {
 # ---------------------------------------------------------------- env 自报
 
 ltir_ui_env() {
-  printf 'UI=%s\nSRC=%s\nTZ=%s\nLANG=%s\nFRAME_W=%s\nBAR=%s\n' \
+  local mr r m
+  mr=$(ltir_ui_mode); r=${mr#*$'\t'}; m=${mr%%$'\t'*}
+  printf 'UI=%s\nSRC=%s\nTZ=%s\nLANG=%s\nFRAME_W=%s\nBAR=%s\nMODE=%s\nMODE_REASON=%s\n' \
     "$LTIR_LANG_DETECTED" "$LTIR_LANG_SRC" "${TZ:-<unset>}" "${LANG:-<unset>}" \
-    "$LTIR_FRAME_W" '\b-only'
+    "$LTIR_FRAME_W" '\b-only' "$m" "$r"
 }
 
 # ---------------------------------------------------------------- 自测（6 项）

@@ -194,7 +194,7 @@ inline Num divv(const Num& x, const Num& y) {
     if (isZero(y)) return und();
     return infinity();
   }
-  if (isZero(y)) return infinity();                        // 速览：1/0 → ∞
+  if (isZero(y)) return isZero(x)?und():infinity();        // 0/0 未定形 → 弃权；1/0 → ∞
   if (x.k==Num::SYM||y.k==Num::SYM) {
     if (x.k==Num::SYM&&y.k==Num::RAT) { Num n=x; Rational c,o;
       if(!ratDiv(x.coef,y.a,c)||!ratDiv(x.off,y.a,o)){return und();} n.coef=c;n.off=o;return n;}

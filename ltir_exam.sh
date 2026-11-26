@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# LTIR 0.1.0 试卷库 · shell 层执行器（判定核 ./ltir006 一字不动）
+# LTIR 0.1.1 试卷库 · shell 层执行器（判定核 ./ltir006 一字不动）
 #   bash ltir.sh exam                     抽题 + 考前须知 + 题面，stdin 收答卷
 #   bash ltir.sh exam answer.ltir        打开旧卷重判（同样命令）
 #   --stdin / --paper=PATH / --json / --ndjson / --tri / --output=
@@ -175,7 +175,7 @@ VJSON="$VJSON]"; DIAGS="$DIAGS]"
 
 LINES=$(grep -c '[^[:space:]]' "$TMPA" 2>/dev/null); LINES=${LINES:-0}; LINES=${LINES%%$'\n'*}
 CLAIMS=$(grep -c -- '-> *True' "$TMPA" 2>/dev/null); CLAIMS=${CLAIMS:-0}; CLAIMS=${CLAIMS%%$'\n'*}
-CERTS=$(grep -Ec '^(by:|rule:|cex:|interprets:|translation:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
+CERTS=$(grep -Ec '^(by:|rule:|cex:|interprets:|translation:|inj:|surj:|bij:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
 SCORE=0
 [ "$LINES" -gt 0 ] && SCORE=40
 [ "$CERTS" -gt 4 ] && CERTS=4

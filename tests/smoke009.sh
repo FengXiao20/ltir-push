@@ -1,16 +1,46 @@
 #!/usr/bin/env bash
-# ltir006/tests/smoke009.sh —— 0.1.0 SMOKE（回归 + V010 组）
+# ltir006/tests/smoke009.sh —— 0.1.1 SMOKE（回归 + V010 + A 增量组）
 # Linux: g++  / Termux: clang++（由 ltir.sh 传入）
 # 入口：ltir.sh t（tests/smoke008.sh 保留为历史取证）
 set -u
 cd "$(cd "$(dirname "$0")/.." && pwd)"
 BIN=./ltir006
 PASS=0; TOTAL=0
-ck() { TOTAL=$((TOTAL+1)); if [ "$2" = "$3" ]; then PASS=$((PASS+1));
-  printf '  [%02d] ✓ %s\n' "$TOTAL" "$1"; else
+
+# 结构化计划：顶层断言静态展开数（简单 for 循环按条目数展开），供输出层实时算进度。
+# 循环展开仅支持单层 `for …; do`；实跑权威总数仍以 TSV / 收尾行为准（见 ltir_ui.sh）。
+LTIR_PLAN=$(awk '
+  inloop && /^[[:space:]]*(ck|ckc)[[:space:]]/ { lw++; next }
+  /^[[:space:]]*(ck|ckc)[[:space:]]/ { n++; next }
+  /^for[[:space:]]+[^[:space:]]+[[:space:]]+in[[:space:]]+/ && /;[[:space:]]*do[[:space:]]*$/ {
+    s=$0
+    sub(/^for[[:space:]]+[^[:space:]]+[[:space:]]+in[[:space:]]+/, "", s)
+    sub(/;[[:space:]]*do[[:space:]]*$/, "", s)
+    items=split(s, a, /[[:space:]]+/)
+    lw=0; inloop=1; next
+  }
+  inloop && /^done[[:space:]]*$/ { n += lw*items; lw=0; items=0; inloop=0; next }
+  END { printf "%d", n }
+' "$0")
+echo "__LTIR_PLAN__=${LTIR_PLAN:-unknown}" >&2
+# 结构化测试事件：设置 LTIR_TSV 时，每条断言额外双写一行 TSV
+#   TEST_OK / TEST_FAIL \t id \t got \t want \t file \t line
+# 输出层优先消费 TSV；未设 LTIR_TSV（本脚本单独跑）时跳过，stdout/stderr 与旧版一致。
+_ltir_evt() {  # $1=OK|FAIL  $2=id  $3=got  $4=want
+  [ -n "${LTIR_TSV:-}" ] || return 0
+  # TSV 单行纪律：got/want 拍平换行与制表符（多行 JSON/explain 输出会撕行），截断 160 字符
+  local _g=${3//$'\t'/ } _w=${4//$'\t'/ } _nl=' | '
+  _g=${_g//$'\n'/"$_nl"}; _w=${_w//$'\n'/"$_nl"}
+  printf 'TEST_%s\t%s\t%.160s\t%.160s\t%s\t%s\n' "$1" "$2" "${_g:-}" "${_w:-}" \
+    "$(basename "${BASH_SOURCE[2]:-$0}")" "${BASH_LINENO[1]:-0}" >> "$LTIR_TSV"
+}
+ck() { TOTAL=$((TOTAL+1)); if [ "$2" = "$3" ]; then PASS=$((PASS+1)); _ltir_evt OK "$1" "$2" "$3";
+  printf '  [%02d] ✓ %s\n' "$TOTAL" "$1"; else _ltir_evt FAIL "$1" "$2" "$3";
   printf '  [%02d] ✗ %s   got=<%s> want=<%s>\n' "$TOTAL" "$1" "$2" "$3"; fi; }
-ckc() { TOTAL=$((TOTAL+1)); if printf '%s' "$2" | grep -qF -- "$3"; then PASS=$((PASS+1));
-  printf '  [%02d] ✓ %s\n' "$TOTAL" "$1"; else
+# ckc 是 grep -qF 子串匹配（弱断言，有意为之）：历史断言里存在「实际输出是期望的超集」场景，
+# 改成全等会炸存量 —— 只在此注明，不改判定语义。
+ckc() { TOTAL=$((TOTAL+1)); if printf '%s' "$2" | grep -qF -- "$3"; then PASS=$((PASS+1)); _ltir_evt OK "$1" "$2" "$3";
+  printf '  [%02d] ✓ %s\n' "$TOTAL" "$1"; else _ltir_evt FAIL "$1" "$2" "$3";
   printf '  [%02d] ✗ %s   missing=<%s>\n' "$TOTAL" "$1" "$3"; fi; }
 
 echo "== 内核 SHA 门禁 =="
@@ -384,9 +414,10 @@ ck  "28 个域标 [台账]" "$(grep -c '\[台账\]$' domains.tsv)" '28'
 ckc "弃权码已入表" "$(cat lab_codes.tsv)" 'E-SCOPE-LEDGER-ONLY'
 printf 'domain: analysis\nA: 2+2==4 -> True\n' > "$TMP/led.ltir"
 LE="$($BIN verify "$TMP/led.ltir")"
-ckc "仅台账域：有码弃权" "$LE" 'E-SCOPE-LEDGER-ONLY'
-ckc "弃权不并入 False" "$LE" '── 1 lines: 0 True, 0 False, 1 UNDECIDED ──'
+ckc "台账域纯算术不外溢" "$LE" '── 1 lines: 1 True, 0 False, 0 UNDECIDED ──'
 ck  "弃权不是硬错（exit 0）" "$($BIN verify "$TMP/led.ltir" >/dev/null; echo $?)" '0'
+printf 'domain: analysis\nV: sin(pi/6)\n' > "$TMP/led3.ltir"
+ckc "台账域域专有式仍弃权" "$($BIN verify "$TMP/led3.ltir")" 'E-SCOPE-LEDGER-ONLY'
 printf 'domain: analysis\nsystem: ZF\nref: Godel1940\n' > "$TMP/led2.ltir"
 ckc "仅台账域：登记类行照常不产三态行" "$($BIN verify "$TMP/led2.ltir")" '── 0 lines:'
 ckc "老域不串台（trigonometry 照常判）" "$($BIN verify "$TMP/dset.ltir")" 'L01 True'
@@ -405,7 +436,7 @@ ck  "收容清单含 ./termux 与 BACKLOG" "$(grep -c './termux ./BACKLOG.md' lt
 echo "== 版本锚点（版本号推进） =="
 ck  "--version 归 VERSION" "$($BIN --version)" "ltir006 $VER"
 ckc "JSON 版本归 VERSION" "$($BIN verify "$TMP/test_006.ltir" --json)" "\"version\":\"$VER\""
-ck  "未推进到 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "二进制无 0.0.10 越版残留" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
 echo "== Bug 1：V: 求假无码（求值标签 ≠ 断言标签） =="
 printf 'V: 1 == 2\nV: 2 ∈ ∅\nV: 3 > 5\n' > "$TMP/b1.ltir"
@@ -505,7 +536,7 @@ ckc "码表新增两行" "$(cat lab_codes.tsv)" 'E-SCOPE-CODOMAIN'
 ckc "hook 锚点不回退" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ck  "--version 仍 VERSION" "$($BIN --version)" "ltir006 $VER"
 ckc "JSON 版本仍 VERSION" "$($BIN verify "$TMP/test_006.ltir" --json)" "\"version\":\"$VER\""
-ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "二进制无 0.0.10 越版残留" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 
 echo "== 工程三件：ltir.sh / VERSION / LTIR_STAMP =="
 ck  "ltir.sh 存在" "$([ -f ltir.sh ] && echo yes)" 'yes'
@@ -521,7 +552,7 @@ ckc "R 强制重搬兜底" "$(cat ltir.sh)" 'R) rm -rf'
 ckc "hook 提示改名" "$(cat termux/termux-file-editor)" 'bash ltir.sh'
 ckc "hook 三锚点：收容目录" "$(cat termux/termux-file-editor)" '$HOME/ltir_lab'
 ckc "hook 三锚点：可执行名" "$(cat termux/termux-file-editor)" '$LAB/ltir006'
-ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "二进制无 0.0.10 越版残留" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 ck  "--version = VERSION" "$($BIN --version)" "ltir006 $VER"
 ckc "JSON 版本 VERSION" "$($BIN verify "$TMP/test_006.ltir" --json)" "\"version\":\"$VER\""
 
@@ -694,7 +725,7 @@ ckc "多宇宙边未回归" "$($BIN verify "$TMP/mv.ltir" --json)" '"world_edges
 ckc "哥德巴赫 open 未回归" "$($BIN verify "$TMP/gb.ltir")" 'E-SCOPE-OPEN'
 ckc "用户卷汇总不漂" "$($BIN verify "$TMP/logic.ltir")" '── 7 lines: 4 True, 1 False, 2 UNDECIDED ──'
 ck  "core SHA 门禁" "$(sha256sum -c RUN_core_sha.txt --quiet >/dev/null 2>&1; echo $?)" '0'
-ck  "未推进 0.1.1" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
+ck  "二进制无 0.0.10 越版残留" "$(strings ./ltir006 | grep -c '0\.0\.10')" '0'
 ck  "GITHUB_INTRO 多版文案在包里" "$([ -f GITHUB_INTRO.md ] && echo yes)" 'yes'
 
 echo "== 【0.1.0】进制眼镜：只换读法，不换世界 =="
@@ -800,6 +831,27 @@ ckc "不符计入 mismatch"          "$S8" 'mismatch=1'
 ckc "JSON 带 sig_mismatch"       "$($BIN verify "$TMP/sig8.ltir" --json)" '"sig_mismatch":1'
 ckc "三角囚徒冻结卷不漂"         "$($BIN verify fixtures/triangle_prisoner.ltir)" '── 10 lines: 10 True, 0 False, 0 UNDECIDED ──'
 ckc "demo 24 行不漂"             "$($BIN verify fixtures/demo.ltir)" '── 24 lines: 20 True, 3 False, 1 UNDECIDED ──'
+
+echo "== 0.1.1 bugfix：隐式乘 / 0÷0 / 台账域 / 短闭合 =="
+ck  "显式乘不回退"          "$($BIN eval '2*sin(pi/6)')"   '1'
+ck  "隐式乘遇函数不截断"    "$($BIN eval '2sin(pi/6)')"    '1'
+ck  "空格隐式乘"            "$($BIN eval '2 sin(pi/6)')"   '1'
+ck  "括号后隐式乘"          "$($BIN eval '(2)sin(pi/6)')"  '1'
+ck  "2sqrt(2) 保留根式"     "$($BIN eval '2sqrt(2)')"      '(2)√2'
+ck  "2√2 保留根式"          "$($BIN eval '2√2')"           '(2)√2'
+ck  "隐式乘不连吞 +1"       "$($BIN eval '2sqrt(2)+1')"    '1 + (2)√2'
+ck  "0/0 未定形弃权"        "$($BIN eval '0/0')"           'UNDECIDED'
+ck  "(1-1)/(1-1) 弃权"     "$($BIN eval '(1-1)/(1-1)')"   'UNDECIDED'
+ck  "1/0 仍为 ∞"            "$($BIN eval '1/0')"           '∞'
+printf 'A: 2sin(pi/6) == 1 -> True\nA: 2sqrt(2) == 2sqrt(2) -> True\n' > "$TMP/bug1.ltir"
+ckc "正确声明不再被判错"    "$($BIN verify "$TMP/bug1.ltir")" '── 2 lines: 2 True, 0 False, 0 UNDECIDED ──'
+printf 'A: 5 -> True\n' > "$TMP/bug2.ltir"
+ckc "非布尔断言措辞"        "$($BIN verify "$TMP/bug2.ltir" --explain)" 'cannot compare against a verdict token'
+printf 'domain: topology\nA: 1+1 == 2 -> True\n' > "$TMP/bug3.ltir"
+ckc "台账域纯算术照判"      "$($BIN verify "$TMP/bug3.ltir")" '── 1 lines: 1 True, 0 False, 0 UNDECIDED ──'
+printf '<base=16>\nV: 10\n</base>\nV: 10\n' > "$TMP/bug4.ltir"
+ckc "短闭合不报未闭合"      "$($BIN verify "$TMP/bug4.ltir")" '── 2 lines: 2 True, 0 False, 0 UNDECIDED ──'
+ckc "短闭合出栈恢复 base10" "$($BIN verify "$TMP/bug4.ltir")" 'True  10'
 
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"

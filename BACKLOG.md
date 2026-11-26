@@ -168,7 +168,7 @@ HoTT universe、一般极限构造、2-范畴、∞-范畴、Win 重打。
 已落：`lang:` 语言签名 · `axiom: Name = <公式>` 公式本体 · `preset:`/`load:` 同源解析 ·
 `theory_sig:` 从空壳登记升级为 FNV-1a 64 内容指纹（按内容不按名字/顺序）·
 JSON 四字段 `axiom_bodies` / `lang` / `theory_sig` / `sig_mismatch` ·
-`fixtures/theory_sig.ltir` · SMOKE 405/405。`VERSION` 仍 `0.1.0`，core 11 件未动。
+`fixtures/theory_sig.ltir` · SMOKE 405/405。core 11 件未动；`VERSION` 已于 0.1.1 铸号（A 增量并入正式版）。
 
 **下版本草图 B / C / D（等令，不夹带）**
 - B：`depth: 12` 解开 δ 展开写死的 8 步上限；`trace:` 吐逐步展开轨迹，

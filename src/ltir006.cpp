@@ -480,9 +480,10 @@ struct Parser {
     for(;;){
       if(eat("*")){ n=mul2(n,unary()); continue; }
       if(eat("/")){ Num d=unary(); n=divv(n,d); continue; }
-      // 隐式乘：2x / x(x+1) / 2(x+1)
+      // 隐式乘：2x / x(x+1) / 2(x+1) / 2sin(pi/6) / 2sqrt(2)
+      // 0.1.1 bugfix：遇函数名必须交给 primary() 正常吃括号并 call()；
+      // 早先直接 break 会把剩余 token 留在流里 → 静默截断成前导因子（假 True / 假 False）。
       if(cur().t==Tok::NUM||cur().t==Tok::ID||cur().t==Tok::LP||cur().t==Tok::LB){
-        if(cur().t==Tok::ID&&FUNCS.count(cur().s)) break;
         n=mul2(n,unary()); continue; }
       break;
     }
@@ -1320,7 +1321,19 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       "assert:","value:","numth:","claim:","forall:","card:","prob:","stat:",
       "solve:","limit:","vector:","sum:","seq:","derive:","ident:"
     };
-    if(c.ledgerDomains.count(c.domain) && JUDGE.count(key))
+    /* 0.1.1 bugfix：「台账域无判定核」只管域专有记号，纯有理算术与域无关。
+     * 早先把整段 A:/V: 判失能（domain: topology 下 1+1==2 也弃权）是作用域外溢。
+     * 剥离声明词后若表达式不含任何字母（纯数字四则/比较），照常精确判。*/
+    auto pureArith=[&](const std::string& s)->bool{
+      std::string e=s;
+      const std::size_t a=e.rfind("->");
+      if(a!=std::string::npos) e=e.substr(0,a);
+      bool digit=false;
+      for(unsigned char ch:e){ if(isalpha(ch)) return false; if(isdigit(ch)) digit=true; }
+      return digit;
+    };
+    if(c.ledgerDomains.count(c.domain) && JUDGE.count(key) &&
+       !((key=="assert:"||key=="value:") && pureArith(body)))
       return codeRes("E-SCOPE-LEDGER-ONLY",2);
   }
 
@@ -1922,7 +1935,10 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       return codeRes("E-SCOPE-TRANSCENDENTAL",2);
     }
     if(v.k==Num::INF) return codeRes("E-INF",2);
-    if(v.k!=Num::BOOL) return codeRes("E-VAL-MISMATCH",0,{{"lhs",numStr(v)},{"rhs","True"}});
+    if(v.k!=Num::BOOL){ codeRes("E-VAL-MISMATCH",0);
+      R.detail = zh ? ("左侧实算为 "+numStr(v)+"（非布尔命题），无法与声明词比对")
+                    : ("LHS evaluated to "+numStr(v)+" (non-boolean); cannot compare against a verdict token");
+      return R; }
     if(!has){ R.state=v.bv?1:0; R.out=v.bv?"True":"False";
       if(!v.bv){R.code="E-VAL-MISMATCH";R.detail=explain("E-VAL-MISMATCH",zh,{{"lhs","False"},{"rhs","True"}});} return R; }
     const bool agree=(v.bv==claim);
@@ -2029,7 +2045,11 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
 
       /* 0.1.0 进制容器：<2_nary> / <3_nary> / <二进制> / <base=2>，压栈-出栈 */
       const int rb=radixBase(name);
-      if(rb>0){
+      /* 0.1.1 bugfix：闭合标签允许短名 </base> / </nary> / </radix> / </进制>，
+       * 不再要求与开标签逐字相同（SYNTAX.md 同步补写法）。*/
+      const bool radixCloser = closing && !c.baseStack.empty() &&
+        (rb>0 || name=="base" || name=="nary" || name=="radix" || name=="进制");
+      if(rb>0 || radixCloser){
         c.preserved.push_back(raw);
         if(!closing){
           c.baseStack.push_back(c.base); c.base=rb;
