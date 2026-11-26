@@ -184,5 +184,5 @@ JSON 四字段 `axiom_bodies` / `lang` / `theory_sig` / `sig_mismatch` ·
 （`--paper=PATH` 或 `tail -1` 可绕）；重搬守卫只比 STAMP + `ltir_ui.sh` 哈希，
 未盖 `src/ltir006.cpp` / `ltir_exam.sh`（MT 覆盖后建议 `rm -rf ~/ltir_lab` 全新重搬）；
 `src/ltir006.cpp` 第 7 行注释仍写「速览.md」；`ltir.sh` 第 9 行注释仍写
-「Windows 分支冻结，不维护」；`ltir_ui.sh` 的 `LTIR_SMOKE_TOTAL` 默认 387 只是
-进度条初始估算，收尾行自适应真实总数（405），无需改输出层。
+「Windows 分支冻结，不维护」；0.1.1 收尾后进度总数由 SMOKE 开头的
+`__LTIR_PLAN__` 结构化计划行实时给出（当前 420，与实跑一致），收尾行正则仅作兼容回退。
