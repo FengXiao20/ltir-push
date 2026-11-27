@@ -134,6 +134,42 @@ O="$($BIN verify "$TMP/b7e.ltir")"
 ckc "回归：严格 < 仍开区间 (-1, 1)" "$O" 'x ∈ (-1, 1)'
 ckc "回归：严格 > 仍开区间外侧" "$O" 'x ∈ (-∞, -1) ∪ (1, ∞)'
 
+echo "== S1 sqrt 负数：完全平方负数走复数，非完全平方诚实弃权 =="
+ck "sqrt(-1) = i" "$($BIN eval 'sqrt(-1)')" "i"
+ck "sqrt(-4) = 2i" "$($BIN eval 'sqrt(-4)')" "2i"
+ck "sqrt(-2) 根式×i 混合超纲弃权" "$($BIN eval 'sqrt(-2)')" "UNDECIDED"
+ck "sqrt(-1)^2 = -1" "$($BIN eval 'sqrt(-1)^2')" "-1"
+ck "回归：sqrt(4) = 2" "$($BIN eval 'sqrt(4)')" "2"
+
+echo "== S2 C/P：k>n 按组合学惯例归 0 =="
+ck "C(5,6) = 0" "$($BIN eval 'C(5,6)')" "0"
+ck "P(5,6) = 0" "$($BIN eval 'P(5,6)')" "0"
+ck "回归：C(5,2) = 10" "$($BIN eval 'C(5,2)')" "10"
+ck "回归：C(-1,2) 仍弃权" "$($BIN eval 'C(-1,2)')" "UNDECIDED"
+
+echo "== S3 负整数指数 =="
+ck "2^-1 = 1/2" "$($BIN eval '2^-1')" "1/2"
+ck "2^-3 = 1/8" "$($BIN eval '2^-3')" "1/8"
+ck "(1/2)^-2 = 4" "$($BIN eval '(1/2)^-2')" "4"
+ck "回归：2^2^3 = 256（右结合）" "$($BIN eval '2^2^3')" "256"
+ck "回归：-2^2 = -4" "$($BIN eval '-2^2')" "-4"
+printf 'at: x=3\nV: 2x^2\n' > "$TMP/s3bind.ltir"
+ckc "回归：PATCH009 幂绑定 2x^2=18" "$($BIN verify "$TMP/s3bind.ltir")" 'L01 True  18'
+
+echo "== S6 eval factors 与 N: 口径一致 =="
+ck "eval factors(360) 输出分解串" "$($BIN eval 'factors(360)')" '2^3 × 3^2 × 5'
+ck "eval factors(97) = 97" "$($BIN eval 'factors(97)')" "97"
+ck "eval factors(1) = 1（空分解，与 N: 一致）" "$($BIN eval 'factors(1)')" "1"
+printf 'N: factors(360)\n' > "$TMP/s6n.ltir"
+ckc "回归：N: factors(360) 不变" "$($BIN verify "$TMP/s6n.ltir")" '2^3'
+
+echo "== D4 JSON 补文件行号 file_line =="
+printf '# comment\nV: 1+1\ndefine: f(x)=x\nV: 2+2\n' > "$TMP/d4.ltir"
+O="$($BIN verify "$TMP/d4.ltir" --json)"
+ckc "第一条判定 file_line=2" "$O" '"file_line":2'
+ckc "第二条判定 file_line=4" "$O" '"file_line":4'
+ckc "判定序号 n 不变" "$O" '"n":1'
+
 echo "== B6 exam --json：stdout 只给一条 JSON 回执，题面走 stderr =="
 EO="$(printf 'A: 1+1=2 -> True\nsubmit:\n' | bash ltir_exam.sh --json --no-clock --human=n --seed=42 2>"$TMP/b6.err")"
 ckn "json 模式 stdout 不含题面文本" "$EO" 'problem:'

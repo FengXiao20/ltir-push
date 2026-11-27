@@ -86,6 +86,8 @@ algebraic numbers a+b√r        ∞ as a sentinel (1/0 → ∞; ∞−∞ → U
 number theory: isprime nextprime factors gcd lcm phi modpow C P
 ```
 
+Integer magnitude is checked-int64 based (roughly |v| < 2^62; `2^63` and 30-digit literals abstain with `E-OVF`).
+
 Non-special angles (`sin(π/7)`) hit a **Richardson bound**: the engine abstains
 instead of guessing — no float interpolation, no fake `True`.
 
@@ -148,7 +150,7 @@ into `False`. Abstention is a feature, not a bug.
 | `core/` | the eleven frozen ℚ-domain kernel files (SHA-gated, untouched) |
 | `axioms/` | loadable axiom modules (`.ltir`, registration-only) |
 | `fixtures/` | demo & regression scrolls |
-| `tests/` | SMOKE suite — 420/420 green |
+| `tests/` | SMOKE suite `smoke009.sh` (445/445) + `regress_bugfix.sh` (81/81); pre-0.0.9 suites archived under `tests/archive/` |
 | `SYNTAX.md` | full legislation text (Chinese, with English edition appended) |
 | `QUICK_TOUR.md` | one-page quick tour (bilingual 中英) |
 | `PATCH_A.md` | the implicit-power binding patch |

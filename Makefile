@@ -9,4 +9,8 @@ ltir006: src/ltir006.cpp src/value.hpp core/src/rational.cpp
 clean:
 	rm -f ltir006
 
-.PHONY: clean
+test: ltir006
+	bash tests/smoke009.sh
+	bash tests/regress_bugfix.sh
+
+.PHONY: clean test

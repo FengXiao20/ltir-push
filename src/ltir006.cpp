@@ -454,7 +454,17 @@ struct Parser {
     (void)u;
     auto need=[&](std::size_t n){ return a.size()==n&&!a.empty(); };
     if (id=="sqrt") { if(!need(1)){ok=false;return und();} 
-      if(a[0].k==Num::RAT){return sqrtR(a[0].a);} return und(); }
+      if(a[0].k==Num::RAT){
+        /* 0.1.1 S1：负完全平方 → 纯虚复数（sqrt(-1)=i）；
+         * 负非完全平方是 根式×i 混合形态，超出 CPX（虚部纯有理）能力域，诚实弃权。 */
+        if(a[0].a.p<0){
+          Rational nx; if(!ratNeg(a[0].a,nx)) return und();
+          Num s=sqrtR(nx);
+          if(s.k==Num::RAT){ Num n; n.k=Num::CPX; n.a=rat(0,1).a; n.im=s.a; return n; }
+          return und();
+        }
+        return sqrtR(a[0].a);
+      } return und(); }
     if (id=="abs") { if(!need(1)){ok=false;return und();}
       if(a[0].k==Num::RAT){ return a[0].a.p<0?neg(a[0]):a[0]; } return und(); }
     if (id=="sin"||id=="cos"||id=="tan") { if(!need(1)){ok=false;return und();} return trigValue(id,a[0]); }
@@ -501,7 +511,8 @@ struct Parser {
       std::int64_t q1=x/u,q2=iarg(1); if(q2!=0&&q1>INT64_MAX/q2)return und(); return rat(q1*q2); }
     if(id=="modpow"){ std::int64_t b=x,e=iarg(1),m=iarg(2),r=1%m;
       if(m<=0||e<0){return und();} b%=m; while(e){if(e&1)r=(r*b)%m;b=(b*b)%m;e>>=1;}return rat(r); }
-    if(id=="C"||id=="P"){ std::int64_t n=x,k=iarg(1); if(n<0||k<0||k>n||n>60)return und();
+    if(id=="C"||id=="P"){ std::int64_t n=x,k=iarg(1); if(n<0||k<0||n>60)return und();
+      if(k>n) return rat(0);   /* 0.1.1 S2：组合学惯例 C(n,k)=P(n,k)=0（k>n），不再弃权 */
       std::int64_t r=1; for(std::int64_t j=1;j<=k;++j){ r=r*(n-j+1)/j; }
       if(id=="P"){ std::int64_t q=1; for(std::int64_t j=0;j<k;++j){ if(q>INT64_MAX/(n-j))return und(); q*=(n-j);} return rat(q); }
       return rat(r); }
@@ -514,7 +525,7 @@ struct Parser {
     for(;;) {
       if (eat("!")) { if(n.k==Num::RAT&&n.a.q==1&&n.a.p>=0&&n.a.p<=20){ std::int64_t f=1;
           for(std::int64_t j=2;j<=n.a.p;++j){ f*=j; } n=rat(f);} else n=und(); continue; }
-      if (eat("^")) { Num e=postfix(); if(e.k!=Num::RAT||e.a.q!=1){n=und();continue;}
+      if (eat("^")) { Num e=unary(); if(e.k!=Num::RAT||e.a.q!=1){n=und();continue;}   /* 0.1.1 S3：指数允许一元负号（2^-1），右结合不变 */
         n=power(n,e.a.p); continue; }
       if (isOp("'")) { ++p; continue; }                    // f'(x) 的撇号，derive 行走专用路径
       break;
@@ -728,7 +739,7 @@ struct Ctx {
   bool inContainer() const { return !containers.empty(); }
   std::string curContainer() const { return containers.empty()?"":containers.back(); }
 };
-struct Result { int state=0; std::string line, out, code, detail, tag; }; // 1=True 0=False 2=UNDECIDED 3=ERROR -1=登记
+struct Result { int state=0; std::string line, out, code, detail, tag; int fileLine=0; }; // 1=True 0=False 2=UNDECIDED 3=ERROR -1=登记
 
 /* ══════════ 0.1.0 A 增量：公理本体化（只登记，不构造判定核） ══════════
  * 立法点：一致性强度由 lang + 公理公式 + 推导规则这套本体给出，不是名字给出。
@@ -1344,9 +1355,17 @@ static std::string overflowHint(const std::string& body){
   }
   return "";
 }
+/* 0.1.1 S6：质因数分解展示串——N: 行与 eval 共用同一口径 */
+static std::string factorStr(std::int64_t m){
+  std::string s; bool first=true;
+  for(std::int64_t d=2;d*d<=m;++d){ int c=0; while(m%d==0){m/=d;++c;}
+    if(c){ if(!first)s+=" \xC3\x97 "; first=false; s+=std::to_string(d);
+           if(c>1)s+="^"+std::to_string(c); } }
+  if(m>1){ if(!first)s+=" \xC3\x97 "; s+=std::to_string(m); }
+  return s.empty()?"1":s;
+}
 static Result handle(Ctx& c,const std::string& key,const std::string& raw,int lineno) {
-  (void)lineno;
-  Result R; R.line=raw;
+  Result R; R.line=raw; R.fileLine=lineno;   /* 0.1.1 D4：文件行号入 Result，JSON 输出 file_line */
   const bool zh=c.chinese;
   auto codeRes=[&](const std::string& code,int state,const std::map<std::string,std::string>& fill={}){
     R.code=code; R.state=state; R.detail=explain(code,zh,fill); return R; };
@@ -2080,12 +2099,7 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       const std::size_t e=body.find(')');
       Num n=evalExpr(c,body.substr(8,e==std::string::npos?std::string::npos:e-8));
       if(n.k!=Num::RAT||n.a.q!=1||n.a.p<=0) return codeRes("E-EXT",2);
-      std::int64_t m=n.a.p; std::string s; bool first=true;
-      for(std::int64_t d=2;d*d<=m;++d){ int c=0; while(m%d==0){m/=d;++c;}
-        if(c){ if(!first)s+=" \xC3\x97 "; first=false; s+=std::to_string(d);
-               if(c>1)s+="^"+std::to_string(c); } }
-      if(m>1){ if(!first)s+=" \xC3\x97 "; s+=std::to_string(m); }
-      R.state=1; R.out=s.empty()?"1":s; return R;
+      R.state=1; R.out=factorStr(n.a.p); return R;
     }
     /* 甲补丁：V:/N: 短写同样走有限集语义，避免 ∈/⊆/∩ 误归超越域或输出伪 "1"。
      * 先剥声明词再判集合，否则 "-> True" 会被整串吞进集合表达式（真值自产不变）。 */
@@ -2259,7 +2273,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       if(c.base!=10 && !radixDirective){
         std::string nb, er;
         if(!radixNorm(body,c.base,nb,er)){
-          Result R; R.state=3; R.code=er; R.line=raw;
+          Result R; R.state=3; R.code=er; R.line=raw; R.fileLine=(int)i+1;
           R.detail=explain(er,c.chinese,{}); rs.push_back(R); err++; continue;
         }
         body=nb;
@@ -2297,7 +2311,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
           const std::string lhs=trim(body.substr(0,eq));
           if(isIdent(lhs) && lhs!="pi"&&lhs!="e"&&lhs!="i"&&lhs!="oo"&&lhs!="inf"){
             if(c.env.count(lhs)){
-              Result R; R.state=3; R.code="E-BIND-REDEFINED"; R.line=raw;
+              Result R; R.state=3; R.code="E-BIND-REDEFINED"; R.line=raw; R.fileLine=(int)i+1;
               R.detail=explain("E-BIND-REDEFINED",c.chinese,{});
               rs.push_back(R); err++; continue;
             }
@@ -2312,7 +2326,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
           if(body.find('=')!=std::string::npos||body.find("->")!=std::string::npos) key="assert:";
           else continue;
         }
-        else { Result R; R.state=3; R.code="E-UNK-LINE"; R.line=raw;
+        else { Result R; R.state=3; R.code="E-UNK-LINE"; R.line=raw; R.fileLine=(int)i+1;
                R.detail=explain("E-UNK-LINE",c.chinese,{}); rs.push_back(R); err++; continue; }
       }
       if(key=="note:") continue;
@@ -2328,7 +2342,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
     }
   }
   if(!c.baseStack.empty()){                 // 容器忘闭合：有码，不猜到文末
-    Result R; R.state=3; R.code="E-SCOPE-UNCLOSED"; R.line="<radix unclosed>";
+    Result R; R.state=3; R.code="E-SCOPE-UNCLOSED"; R.line="<radix unclosed>"; R.fileLine=(int)lines.size();
     R.detail=explain("E-SCOPE-UNCLOSED",c.chinese,{}); rs.push_back(R); err++;
     c.baseStack.clear(); c.base=10;
   }
@@ -2342,7 +2356,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
     for(std::size_t i=0;i<rs.size();++i){auto&R=rs[i];
       if(i)std::cout<<",";
       const char* st=R.state==1?"True":R.state==0?"False":R.state==2?"UNDECIDED":"ERROR";
-      std::cout<<"{\"n\":"<<(i+1)<<",\"state\":\""<<st<<"\",\"code\":\""<<R.code
+      std::cout<<"{\"n\":"<<(i+1)<<",\"file_line\":"<<R.fileLine<<",\"state\":\""<<st<<"\",\"code\":\""<<R.code
                <<"\",\"tag\":\""<<R.tag<<"\"";
       if(R.code=="E-INDETERMINATE")
         std::cout<<",\"indeterminate_form\":\"0/0\",\"rules\":[\"N\",\"R1\",\"R2\",\"R3\",\"R4\"]";
@@ -2408,7 +2422,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       std::cout<<"  "<<indetLine(c.chinese)<<"\n";
   }
   std::cout<<"── "<<total<<" lines: "<<nt<<" True, "<<nf<<" False, "<<nu<<" UNDECIDED ──\n";
-  if(c.registered) std::cout<<"registered: "<<c.registered<<" (zf/zfc/given/case/check/const/define/seq/set, ledger only)\n";
+  if(c.registered) std::cout<<"registered: "<<c.registered<<" (zf/zfc/given/case/check/const/define/seq/set/radix/mapping/limit/axiom 等, ledger only)\n";
   if(!c.domainsSeen.empty())
     std::cout<<"domain: "<<c.domain<<" ("<<c.domainNames.size()<<" registered)\n";
   if(!c.inferences.empty()||!c.answers.empty()||!c.decorations.empty())
@@ -2659,6 +2673,13 @@ int main(int argc,char** argv){
   if(cmd=="eval"){
     if(argc<3){ std::cerr<<"ltir006: eval needs an expression\n"; return 1; }
     g_sandFix=0; loadCodes(codes); Ctx c; loadDomains(c,domains); c.chinese=hasCjk(argv[2]);
+    /* 0.1.1 S6：eval factors(...) 与 N: 同口径，输出分解串而非弃权 */
+    const std::string exT=trim(gate(argv[2]));
+    if(exT.rfind("factors(",0)==0 && !exT.empty() && exT.back()==')'){
+      Num n=evalExpr(c,exT.substr(8,exT.size()-9));
+      if(n.k==Num::RAT&&n.a.q==1&&n.a.p>0){ std::cout<<factorStr(n.a.p)<<"\n"; return 0; }
+      std::cout<<"UNDECIDED\n"; return 0;
+    }
     Num v=evalExpr(c,gate(argv[2]));
     std::cout<<numStr(v)<<"\n";
     return 0;
@@ -2682,3 +2703,4 @@ int main(int argc,char** argv){
   }
   std::cerr<<"ltir006: unknown command "<<cmd<<"\n"; return 2;
 }
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ltir006/tests/smoke009.sh —— 0.1.1 SMOKE（回归 + V010 + A 增量组）
 # Linux: g++  / Termux: clang++（由 ltir.sh 传入）
-# 入口：ltir.sh t（tests/smoke008.sh 保留为历史取证）
+# 入口：ltir.sh t（tests/archive/smoke008.sh 保留为历史取证）
 set -u
 cd "$(cd "$(dirname "$0")/.." && pwd)"
 BIN=./ltir006
