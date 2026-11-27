@@ -724,6 +724,10 @@ struct Ctx {
   std::map<std::string,std::string> gapSeen;
   int expandDepth=8;
   bool traceOn=false;
+  /* 0.2.0 B：元编程锚护栏（gap 需 sig+by 锚，reformulate 需对应 gap） */
+  bool hasBy=false;
+  std::vector<std::pair<int,std::string>> gapTrace, reformTrace;
+  std::string reflGaps;
   std::map<std::string,Num> env;
   std::map<std::string,Poly> funcs;
   std::map<std::string,std::pair<std::string,std::string>> seqs;
@@ -1523,20 +1527,20 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     c.sigMode=v;
     c.registered++; c.ledger.push_back("sig_mode: "+c.sigMode); R.state=-1; return R;
   }
-  if (key=="by:") { c.registered++; R.state=-1; return R; }
+  if (key=="by:") { c.hasBy=true; c.registered++; R.state=-1; return R; }
 
   /* ══════════ 0.2.0 元编程：quotation 可做，eval 永久不做 ══════════
    * 六词全部只登记：0 三态、不进指纹、不搬真值、不执行自产 .ltir。
-   * 冲突与非法参数复用现成 E-DEF-SIG，不擅自 append 码表。 */
+   * 0.2.0 B：参数越界立 E-META-RANGE（TA 令），缺锚弃权 E-META-ANCHOR；撞名仍 E-DEF-SIG。 */
   if (key=="depth:") {
     const std::string dv=trim(body); int d=0; bool ok=!dv.empty();
     for(char ch:dv){ if(ch<'0'||ch>'9'){ok=false;break;} d=d*10+(ch-'0'); if(d>1000){ok=false;break;} }
-    if(!ok||d<1||d>64) return codeRes("E-DEF-SIG",3);
+    if(!ok||d<1||d>64) return codeRes("E-META-RANGE",3);
     c.expandDepth=d; c.registered++; c.ledger.push_back("depth: "+dv); R.state=-1; return R;
   }
   if (key=="trace:") {
     const std::string v=trim(body);
-    if(v!="on"&&v!="off") return codeRes("E-DEF-SIG",3);
+    if(v!="on"&&v!="off") return codeRes("E-META-RANGE",3);
     c.traceOn=(v=="on"); c.registered++; R.state=-1; return R;
   }
   if (key=="gap:") {
@@ -1544,17 +1548,23 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     const std::string id=trim(b.substr(0,b.find_first_of(" \t")));
     if(id.empty()) return codeRes("E-DEF-SIG",3);
     if(c.gapSeen.count(id)) return codeRes("E-DEF-SIG",2);  /* 同 id 两条：弃权，不静默择一 */
-    c.gapSeen[id]=b; c.gaps.push_back(b); c.registered++; c.ledger.push_back("gap: "+id); R.state=-1; return R;
+    c.gapSeen[id]=b; c.gaps.push_back(b); c.gapTrace.push_back({R.fileLine,R.line}); c.registered++; c.ledger.push_back("gap: "+id); R.state=-1; return R;
   }
   if (key=="reformulate:") {
-    c.reformulations.push_back(trim(body)); c.registered++; R.state=-1; return R;
+    c.reformulations.push_back(trim(body)); c.reformTrace.push_back({R.fileLine,R.line}); c.registered++; R.state=-1; return R;
   }
   if (key=="quote:") {
-    c.quotes.push_back(trim(body)); c.registered++; R.state=-1; return R;
+    const std::string b=trim(body);
+    const std::size_t op=b.find("<ltir>"), cl=b.find("</ltir>");
+    if(op==std::string::npos||cl==std::string::npos||cl<op) return codeRes("E-SYN",3);  /* 未闭合残词：有意报错，不静默吞行 */
+    c.quotes.push_back(b); c.registered++; R.state=-1; return R;
   }
   if (key=="reflect:") {
     const std::string w=trim(body);
-    if(w=="gaps") for(const auto& g:c.gaps) c.ledger.push_back("reflect/gap: "+g);
+    if(w=="gaps"){ for(const auto& g:c.gaps) c.ledger.push_back("reflect/gap: "+g);
+      std::string ids; for(const auto& g:c.gaps){ const std::size_t sp=g.find_first_of(" \t");
+        ids+=(ids.empty()?"":", ")+g.substr(0,sp); }
+      c.reflGaps=ids; }  /* 0.2.0 B：人话档列已登记 id，--tri/--json 不受污染 */
     else if(w=="rules") for(const auto& g:c.reformulations) c.ledger.push_back("reflect/rule: "+g);
     else if(w=="quotes") for(const auto& g:c.quotes) c.ledger.push_back("reflect/quote: "+g);
     else if(w=="codes") c.ledger.push_back("reflect/codes: read-only");  /* 码表只读镜，不列内容 */
@@ -1892,7 +1902,10 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   if (key=="sig:"||key=="type:"||key=="where:"||key=="rule:"||key=="grammar:") {
     const std::size_t q=body.find(':');
     const std::string nm=(q==std::string::npos)?"":trim(body.substr(0,q));
-    if(key=="sig:"&&!nm.empty()) c.defSigs[nm]=trim(body.substr(q+1));
+    if(key=="sig:"&&!nm.empty()){
+      if(c.defSigs.count(nm)) return codeRes("E-DEF-SIG",2);  /* 0.2.0 B：撞名即弃权，不静默覆盖（META_KEYWORDS 总原则2） */
+      c.defSigs[nm]=trim(body.substr(q+1));
+    }
     else if(key=="type:"&&!nm.empty()) c.defTypes[nm]=trim(body.substr(q+1));
     else if(key=="where:") c.defWhere.push_back(body);
     else if(key=="rule:") c.rules.push_back(body);
@@ -2459,6 +2472,21 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
   }
   if(!curInf.empty()) c.inferences.push_back(curInf);
 
+  /* 0.2.0 B：元编程锚护栏——gap 需 sig+by 锚，reformulate 需至少一条 gap 对应。
+   * 缺锚即弃权入账（UNDECIDED 行），登记撤销，不静默通过。 */
+  if(!c.gapTrace.empty()&&(c.defSigs.empty()||!c.hasBy)){
+    for(const auto&g:c.gapTrace){ Result R; R.state=2; R.code="E-META-ANCHOR";
+      R.line=g.second; R.fileLine=g.first; R.detail=explain("E-META-ANCHOR",c.chinese,{});
+      rs.push_back(R); }
+    c.gaps.clear(); c.gapSeen.clear(); c.registered-=(int)c.gapTrace.size();
+  }
+  if(!c.reformTrace.empty()&&c.gaps.empty()){
+    for(const auto&g:c.reformTrace){ Result R; R.state=2; R.code="E-META-ANCHOR";
+      R.line=g.second; R.fileLine=g.first; R.detail=explain("E-META-ANCHOR",c.chinese,{});
+      rs.push_back(R); }
+    c.reformulations.clear(); c.registered-=(int)c.reformTrace.size();
+  }
+
   int nt=0,nf=0,nu=0;
   for(auto&R:rs){ if(R.state==1)++nt; else if(R.state==0)++nf; else if(R.state==2)++nu; }
   const int total=nt+nf+nu;
@@ -2539,7 +2567,8 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       std::cout<<"  "<<indetLine(c.chinese)<<"\n";
   }
   std::cout<<"── "<<total<<" lines: "<<nt<<" True, "<<nf<<" False, "<<nu<<" UNDECIDED ──\n";
-  if(c.registered) std::cout<<"registered: "<<c.registered<<" (zf/zfc/given/case/check/const/define/seq/set/radix/mapping/limit/axiom 等, ledger only)\n";
+  if(!c.reflGaps.empty()) std::cout<<"reflect: gaps -> "<<c.reflGaps<<"\n";  /* 0.2.0 B：只列已登记 id */
+  if(c.registered) std::cout<<"registered: "<<c.registered<<" (zf/zfc/given/case/check/const/define/seq/set/radix/mapping/limit/axiom/gap/reformulate/quote/reflect/depth/trace 等, ledger only)\n";
   if(!c.domainsSeen.empty())
     std::cout<<"domain: "<<c.domain<<" ("<<c.domainNames.size()<<" registered)\n";
   if(!c.inferences.empty()||!c.answers.empty()||!c.decorations.empty())

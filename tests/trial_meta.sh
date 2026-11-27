@@ -39,7 +39,7 @@ echo "== 冲突 / 非法参数复用 E-DEF-SIG，不静默择一 =="
 printf 'gap: dup  where: A\ngap: dup  where: B\n' > "$TMP/dup.ltir"
 ckc "同 id 两条 gap 弃权" "$($BIN verify "$TMP/dup.ltir")" 'E-DEF-SIG'
 printf 'depth: 999\n' > "$TMP/deep.ltir"
-ckc "depth 越界给码" "$($BIN verify "$TMP/deep.ltir")" 'E-DEF-SIG'
+ckc "depth 越界给码（0.2.0 B 立专码）" "$($BIN verify "$TMP/deep.ltir")" 'E-META-RANGE'
 printf 'reflect: invent\n' > "$TMP/rf.ltir"
 ckc "未知 reflect 目标给码" "$($BIN verify "$TMP/rf.ltir")" 'E-DEF-SIG'
 
@@ -62,6 +62,21 @@ printf 'V: 1/110000000000000000\n' > "$TMP/ov2.ltir"
 ckc "B9 直除" "$($BIN verify "$TMP/ov2.ltir")" '1/110000000000000000'
 printf 'V: 1.1E17\n' > "$TMP/ov3.ltir"
 ckc "B10 大写 E" "$($BIN verify "$TMP/ov3.ltir")" '110000000000000000'
+
+echo "== 0.2.0 B：撞名不覆盖 / 缺锚不静默 / 残词有意报错 =="
+printf 'sig: f : Num -> Num\nsig: f : Poly -> Set\nV: 1\n' > "$TMP/sr.ltir"
+ckc "sig 重定义弃权，不静默覆盖" "$($BIN verify "$TMP/sr.ltir")" 'E-DEF-SIG'
+printf 'gap: lonely where: x > 0\n' > "$TMP/an1.ltir"
+ckc "裸 gap 缺 sig+by 锚弃权" "$($BIN verify "$TMP/an1.ltir")" 'E-META-ANCHOR'
+printf 'sig: f : Num -> Num\nreformulate: f(x) = x + 1\nby: c1\n' > "$TMP/an2.ltir"
+ckc "孤儿 reformulate 无 gap 弃权" "$($BIN verify "$TMP/an2.ltir")" 'E-META-ANCHOR'
+printf 'quote: <ltir> V: 1 + 1\n' > "$TMP/q1.ltir"
+ckc "quote 未闭合残词 E-SYN" "$($BIN verify "$TMP/q1.ltir")" 'E-SYN'
+printf 'trace: bogus\n' > "$TMP/tb.ltir"
+ckc "trace 非法值 E-META-RANGE" "$($BIN verify "$TMP/tb.ltir")" 'E-META-RANGE'
+printf 'depth: 0\n' > "$TMP/dz.ltir"
+ckc "depth 0 也 E-META-RANGE" "$($BIN verify "$TMP/dz.ltir")" 'E-META-RANGE'
+ckc "reflect gaps 人话档列已登记 id" "$($BIN verify fixtures/metaprogram_trial.ltir)" 'quad_disc_neg'
 
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"

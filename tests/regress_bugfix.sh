@@ -259,7 +259,7 @@ ckc "interprets 同档" "$($BIN verify "$TMP/au3.ltir")" 'E-STRENGTH-NOCERT'
 ck "Gödel II 定理卷 0 三态" "$($BIN verify fixtures/godel_ii.ltir | grep -c '^L0')" '0'
 ckc "定理卷 counts 全 0" "$($BIN verify fixtures/godel_ii.ltir --json)" '"counts":{"True":0,"False":0,"UNDECIDED":0}'
 ckn "候选三码未入正式码表" "$(cat lab_codes.tsv)" 'E-RULE-CONFLICT'
-ck "码表 E- 条目 59 → 63（append 四行）" "$(grep -c '^E-' lab_codes.tsv)" '63'
+ck "码表 E- 条目 59 → 65（0.1.2/0.2.0 四行 + B 批 E-META-RANGE/E-META-ANCHOR 两行）" "$(grep -c '^E-' lab_codes.tsv)" '65'
 
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"

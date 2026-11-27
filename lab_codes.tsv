@@ -72,3 +72,5 @@ E-GODEL-II	3	Goedel II structural guard: T cannot certify Con(T) from within; ab
 E-STRENGTH-NOCERT	3	consistency-strength comparison lacks interpretation certificate (translation / preserves / base / notation); abstain	一致性强度比较缺解释证书（翻译/保真/基理论/序数记号）：诚实弃权
 E-STRENGTH-INCOMPARABLE	3	two theories incomparable in the consistency-strength preorder; abstain, never folded into False	两理论在强度偏序中不可比：弃权，绝不并入 False
 E-STRENGTH-CYCLE	3	registered strength edges form a cycle; abstain (Goedel II isomorphic guard)	登记的强度边成环：弃权（与 Gödel II 同构护栏）
+E-META-RANGE	3	metaprogram modifier out of range: depth: needs 1..64, trace: needs on|off	元编程修饰行越界：depth 取值须在 1..64，trace 仅 on|off；硬错，不静默
+E-META-ANCHOR	3	metaprogram line missing anchors: gap: needs sig:/by:, reformulate: needs a registered gap; abstain, never silent	元编程词条缺锚：gap: 需 sig:/by:，reformulate: 需对应 gap；诚实弃权，不静默登记
