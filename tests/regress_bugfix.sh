@@ -116,6 +116,24 @@ ckc "回归：裸 inj: f 仍实算 False" "$($BIN verify "$TMP/b5c.ltir")" 'L01 
 printf 'inj: R -> True\n' > "$TMP/b5d.ltir"
 ckc "无限域 inj: R 仍弃权 E-SCOPE-INFINITE" "$($BIN verify "$TMP/b5d.ltir")" 'E-SCOPE-INFINITE'
 
+echo "== B7 solve：非重根 <=/>= 解集端点必须闭合 =="
+printf 'solve: x^2 <= 1\n' > "$TMP/b7a.ltir"
+O="$($BIN verify "$TMP/b7a.ltir")"
+ckc "x^2<=1 闭区间 [-1, 1]" "$O" 'x ∈ [-1, 1]'
+ckn "x^2<=1 不得丢端点输出 (-1, 1)" "$O" '(-1, 1)'
+printf 'solve: x^2 >= 1\n' > "$TMP/b7b.ltir"
+ckc "x^2>=1 外侧闭端点" "$($BIN verify "$TMP/b7b.ltir")" 'x ∈ (-∞, -1] ∪ [1, ∞)'
+printf 'solve: x^2-5x+6 <= 0\nsolve: x^2-5x+6 >= 0\n' > "$TMP/b7c.ltir"
+O="$($BIN verify "$TMP/b7c.ltir")"
+ckc "x^2-5x+6<=0 → [2, 3]" "$O" 'x ∈ [2, 3]'
+ckc "x^2-5x+6>=0 → (-∞, 2] ∪ [3, ∞)" "$O" 'x ∈ (-∞, 2] ∪ [3, ∞)'
+printf 'solve: 0-x^2 >= -1\n' > "$TMP/b7d.ltir"
+ckc "负首项 -x^2>=-1 → [-1, 1]" "$($BIN verify "$TMP/b7d.ltir")" 'x ∈ [-1, 1]'
+printf 'solve: x^2 < 1\nsolve: x^2 > 1\n' > "$TMP/b7e.ltir"
+O="$($BIN verify "$TMP/b7e.ltir")"
+ckc "回归：严格 < 仍开区间 (-1, 1)" "$O" 'x ∈ (-1, 1)'
+ckc "回归：严格 > 仍开区间外侧" "$O" 'x ∈ (-∞, -1) ∪ (1, ∞)'
+
 echo "== B6 exam --json：stdout 只给一条 JSON 回执，题面走 stderr =="
 EO="$(printf 'A: 1+1=2 -> True\nsubmit:\n' | bash ltir_exam.sh --json --no-clock --human=n --seed=42 2>"$TMP/b6.err")"
 ckn "json 模式 stdout 不含题面文本" "$EO" 'problem:'

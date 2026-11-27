@@ -1590,8 +1590,12 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       }
       if(eq){ R.state=1; R.out="x = "+ratStr(r1)+" or x = "+ratStr(r2); return R; }
       const bool inside = (A.p>0)?lt:!lt;
-      const std::string l=inside?"x ∈ ("+ratStr(r1)+", "+ratStr(r2)+")"
-                                :"x ∈ (-∞, "+ratStr(r1)+") ∪ ("+ratStr(r2)+", ∞)";
+      /* 0.1.1 bugfix B7：非严格不等号（<=/>=）解集含端点，区间必须闭合；
+       * 严格不等号（</>）保持开区间。外侧形态 (-∞, r1] ∪ [r2, ∞)。 */
+      const bool closed=(o=="<="||o==">=");
+      const std::string lb=closed?"[":"(", rb=closed?"]":")";
+      const std::string l=inside?"x \xE2\x88\x88 "+lb+ratStr(r1)+", "+ratStr(r2)+rb
+                                :"x \xE2\x88\x88 (-\xE2\x88\x9E, "+ratStr(r1)+rb+" \xE2\x88\xAA "+lb+ratStr(r2)+", \xE2\x88\x9E)";
       R.state=1;R.out=l;return R; }
     return codeRes("E-SYN",3);
   }
