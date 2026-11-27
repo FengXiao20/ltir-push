@@ -256,7 +256,9 @@ static bool isKeyword(const std::string& k) {
     "equalizer:","pullback:","adj:","unit:","counit:","yoneda:",
     "topos:","subobject:","monad:","algebra:","carrier:","structure:",
     /* 0.1.0 A 增量：理论语言签名（全英文长名，短写表仍冻结） */
-    "lang:"
+    "lang:",
+    /* 0.1.1：顶层证书行 by: 只登记，不再落 E-UNK-LINE（短写表仍冻结） */
+    "by:"
   };
   return K.count(k)>0;
 }
@@ -303,6 +305,41 @@ static void loadCodes(const std::string& path) {
     CODES[c[0]] = Code{std::atoi(c[1].c_str()), c[2], c[3]};
   }
 }
+
+/* ══════════════ 0.1.1：E-INDETERMINATE ∵∴ 因果链（表驱动码 + 形式化展示） ══════════════
+ * 默认只给一行 ∴；--explain 摊开完整链。全链走 stdout 的人话档，
+ * --tri 只吐三态词、--json 只走结构字段，均不被形式化展示污染。 */
+static std::string indetLine(bool zh){
+  return zh ? "∴ 0/0 不定式：逆元不存在 ∧ 商不唯一 ∧ 路径依赖 → 诚实弃权（人话兜底词 NaN，非真值）"
+            : "∴ 0/0 indeterminate: inverse undefined ∧ quotient non-unique ∧ path-dependent → honest abstain (NaN is a word, not a value)";
+}
+static std::string indetChain(bool zh){
+  if(zh) return
+    "∵ N   norm(1-1, 1-1) = (0, 0)          归一化后再判，不靠字面匹配\n"
+    "∵ R1  a/b ≜ a·b⁻¹            (b ≠ 0)    除法定义\n"
+    "∵ R2  b ≠ 0 ⇒ ∃! b⁻¹, b·b⁻¹ = 1        域逆元公理\n"
+    "∵ R3  ∀c∈ℚ: 0·c = 0                    零吸收律\n"
+    "∵ R4  lim x/x = 1, lim x²/x = 0, lim x/x² = ∞   路径依赖\n"
+    "─────────────────────────────────────────────────────────\n"
+    "∴ R2 ∧ b=0 ⇒ 0⁻¹ 不存在，R1 前提失效\n"
+    "∴ 外推 R1 至 b=0 ⇒ 0 = 0·c 对 ∀c 成立（R3）⇒ c 不唯一，商无定义\n"
+    "∴ R4 ⇒ 不可归为单一 ∞（1/0 才是无界发散登记）\n"
+    "∴ 与 ∞−∞ / 0·∞ 同档：不赋 True / 不并 False / 不并 ∞\n"
+    "∴ UNDECIDED  E-INDETERMINATE   不定式：诚实弃权";
+  return
+    "∵ N   norm(1-1, 1-1) = (0, 0)          normalize first, no string matching\n"
+    "∵ R1  a/b ≜ a·b⁻¹            (b ≠ 0)    division definition\n"
+    "∵ R2  b ≠ 0 ⇒ ∃! b⁻¹, b·b⁻¹ = 1        field inverse axiom\n"
+    "∵ R3  ∀c∈ℚ: 0·c = 0                    zero absorption\n"
+    "∵ R4  lim x/x = 1, lim x²/x = 0, lim x/x² = ∞   path-dependent 0/0\n"
+    "─────────────────────────────────────────────────────────\n"
+    "∴ R2 ∧ b=0 ⇒ 0⁻¹ undefined; R1 precondition fails\n"
+    "∴ extending R1 to b=0 ⇒ 0 = 0·c for every c (R3) ⇒ c not unique\n"
+    "∴ R4 ⇒ not a single ∞; 1/0 registers unbounded divergence\n"
+    "∴ same tier as ∞−∞, 0·∞: no True, not folded into False, not ∞\n"
+    "∴ UNDECIDED  E-INDETERMINATE   indeterminate form: honest abstain";
+}
+
 static std::string explain(const std::string& code, bool chinese,
                            const std::map<std::string,std::string>& fill) {
   auto it=CODES.find(code);
@@ -360,8 +397,13 @@ struct Parser {
   std::map<std::string,Num> env;
   std::map<std::string,Poly> funcs;
   std::map<std::string,std::pair<std::string,std::string>> seqs; // name -> (var, expr)
+  std::map<std::string,std::string> defParams;  // 0.1.1：define: f(t) 的真实参数名
   bool ok=true;
   explicit Parser(const std::string& s):t(lex(s)){}
+  /* 0.1.1：三处写死 "x" 的消费端统一走这里；旧卷缺省回退 x，零回归 */
+  std::string paramOf(const std::string& fn) const {
+    auto it=defParams.find(fn); return it==defParams.end()?std::string("x"):it->second;
+  }
   const Tok& cur() const { return t[p<t.size()?p:t.size()-1]; }
   bool eat(const std::string& s){ if(cur().s==s){++p;return true;} return false; }
   bool isOp(const std::string& s) const { return cur().t==Tok::OP&&cur().s==s; }
@@ -378,8 +420,9 @@ struct Parser {
         if (!eat(")")) { for(;;){ args.push_back(expr()); if(eat(","))continue; if(eat(")"))break;
             ok=false; break; } }
         if (deriv && funcs.count(fname) && args.size()==1 && args[0].k==Num::RAT) {
-          Poly d=pDerive(funcs[fname],"x"); bool good=true;
-          std::map<std::string,Num> e; e["x"]=args[0];
+          const std::string par=paramOf(fname);
+          Poly d=pDerive(funcs[fname],par); bool good=true;
+          std::map<std::string,Num> e; e[par]=args[0];
           Rational v=pEvalAt(d,e,good); return good?fromR(v):und();
         }
         return call(id,args);
@@ -417,7 +460,7 @@ struct Parser {
     if (id=="mean"||id=="var"||id=="cross"||id=="dot"||id=="L") return und(); // 由行层专门解析
     auto f=funcs.find(id);
     if (f!=funcs.end()&&a.size()==1&&a[0].k==Num::RAT) {
-      bool good=true; std::map<std::string,Num> e; e["x"]=a[0];
+      bool good=true; std::map<std::string,Num> e; e[paramOf(id)]=a[0];
       Rational v=pEvalAt(f->second,e,good); return good?fromR(v):und();
     }
     ok=false; return und();
@@ -497,7 +540,7 @@ struct Parser {
     Num n=add();
     static const char* cops[]={"==","=","!=","<=",">=","<",">",nullptr};
     for(int k=0;cops[k];++k){ if(eat(cops[k])){ Num r=add(); const int c=cmp(n,r);
-        if(c==2) return und();
+        if(c==2) return undProp(n,r);   /* 0.1.1：比较不可判时保留不定式原因 */
         const std::string o=cops[k];
         if(o=="=="||o=="=") return v6::boolean(c==0);
         if(o=="!=") return v6::boolean(c!=0);
@@ -748,11 +791,11 @@ static std::vector<Num> parseList(Ctx& c,const std::string& s) {
   std::vector<Num> r;
   const std::size_t b=s.find('['), e=s.rfind(']');
   const std::string inner = (b!=std::string::npos&&e!=std::string::npos&&e>b)?s.substr(b+1,e-b-1):s;
-  for(auto&part:splitTop(inner,',')){ Parser q(part);q.env=c.env;q.funcs=c.funcs;q.seqs=c.seqs;r.push_back(q.run()); }
+  for(auto&part:splitTop(inner,',')){ Parser q(part);q.env=c.env;q.funcs=c.funcs;q.seqs=c.seqs;q.defParams=c.defParams;r.push_back(q.run()); }
   return r;
 }
 static Num evalExpr(Ctx& c,const std::string& s) {
-  Parser q(s); q.env=c.env; q.funcs=c.funcs; q.seqs=c.seqs; return q.run();
+  Parser q(s); q.env=c.env; q.funcs=c.funcs; q.seqs=c.seqs; q.defParams=c.defParams; return q.run();
 }
 static bool findVerdict(const std::string& body,std::string& lhs,bool& claim) {
   const std::size_t q=body.rfind("->");
@@ -1390,6 +1433,8 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   }
 
   if (key=="note:"||key=="subject:") { R.state=-1; return R; }
+  /* 0.1.1：顶层证书行只登记（keys 卷裸 verify 不再 ERROR，也不冒充三态） */
+  if (key=="by:") { c.registered++; R.state=-1; return R; }
 
   if (key=="zf:"||key=="zfc:"||key=="given:"||key=="case:") {
     c.registered++; R.state=-1;                       // 只登记不判（保留现有语义）
@@ -1470,7 +1515,9 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   if (key=="derive:") {
     const std::size_t q=body.find('\''); const std::string fn=trim(q==std::string::npos?body:body.substr(0,q));
     auto it=c.funcs.find(fn); if(it==c.funcs.end()) return codeRes("E-NAME",3);
-    Poly d=pDerive(it->second,"x");
+    const auto pit=c.defParams.find(fn);
+    const std::string par=(pit==c.defParams.end())?"x":pit->second;
+    Poly d=pDerive(it->second,par);
     if(!d.ok) return codeRes("E-EXT",2);
     R.state=1; R.out=polyStr(d); R.code=""; R.detail=""; return R;
   }
@@ -1929,6 +1976,8 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     if(trySetAssert(c,lhs,R,codeRes,has,claim)) return R;
 
     Num v=evalExpr(c,lhs);
+    /* 0.1.1：0/0 及其复合式带不定式原因标记 → 独立专码，不蹭超越域 */
+    if(v.indet) return codeRes("E-INDETERMINATE",2);
     if(v.k==Num::UND){
       const std::string ov=overflowHint(lhs);
       if(!ov.empty()) return codeRes(ov,2);
@@ -1986,6 +2035,7 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       }
     }
     Num v=evalExpr(c,body);
+    if(v.indet) return codeRes("E-INDETERMINATE",2);
     if(v.k==Num::UND) {
       const std::string ov=overflowHint(body);
       if(!ov.empty()) return codeRes(ov,2);           // 0.1.0：阶乘溢出归 E-OVF
@@ -2210,7 +2260,10 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       if(i)std::cout<<",";
       const char* st=R.state==1?"True":R.state==0?"False":R.state==2?"UNDECIDED":"ERROR";
       std::cout<<"{\"n\":"<<(i+1)<<",\"state\":\""<<st<<"\",\"code\":\""<<R.code
-               <<"\",\"tag\":\""<<R.tag<<"\"}"; }
+               <<"\",\"tag\":\""<<R.tag<<"\"";
+      if(R.code=="E-INDETERMINATE")
+        std::cout<<",\"indeterminate_form\":\"0/0\",\"rules\":[\"N\",\"R1\",\"R2\",\"R3\",\"R4\"]";
+      std::cout<<"}"; }
     std::cout<<"],\"counts\":{\"True\":"<<nt<<",\"False\":"<<nf<<",\"UNDECIDED\":"<<nu
              <<"},\"registered\":"<<c.registered
              <<",\"domain\":\""<<c.domain<<"\",\"domains_registered\":"<<c.domainNames.size()
@@ -2246,7 +2299,8 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
   }
   if(outMode==1){
     for(auto&R:rs)
-      std::cout<<(R.state==1?"True":R.state==0?"False":"UNDECIDED")<<"\n";
+      if(R.state!=3)   /* 0.1.1：ERROR 不冒充 UNDECIDED（三态纪律） */
+        std::cout<<(R.state==1?"True":R.state==0?"False":"UNDECIDED")<<"\n";
     return err?1:0;
   }
   for(std::size_t i=0;i<rs.size();++i){
@@ -2262,8 +2316,13 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       std::size_t pos=R.line.find('='); if(pos==std::string::npos)pos=R.line.find("->");
       if(pos!=std::string::npos){ const int w=dispWidth(R.line.substr(0,pos));
         std::cout<<"  "<<std::string(w>0?w:0,' ')<<"^\n"; }
-      std::cout<<"  "<<R.detail<<"\n";
+      if(R.code=="E-INDETERMINATE"){
+        std::istringstream iss(indetChain(c.chinese)); std::string _l;
+        while(std::getline(iss,_l)) std::cout<<"  "<<_l<<"\n";
+      } else std::cout<<"  "<<R.detail<<"\n";
     }
+    if(!explainMode && R.code=="E-INDETERMINATE")
+      std::cout<<"  "<<indetLine(c.chinese)<<"\n";
   }
   std::cout<<"── "<<total<<" lines: "<<nt<<" True, "<<nf<<" False, "<<nu<<" UNDECIDED ──\n";
   if(c.registered) std::cout<<"registered: "<<c.registered<<" (zf/zfc/given/case/check/const/define/seq/set, ledger only)\n";

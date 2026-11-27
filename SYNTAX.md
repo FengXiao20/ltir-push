@@ -559,3 +559,34 @@ belong to the legislator — patches do not mint versions.
   UI 层按收尾行自适应总数，推版加断言不用改输出层。
 
 **示范卷**：`fixtures/theory_sig.ltir`。
+
+## 0.1.1 不定式专码 · E-INDETERMINATE（本节覆盖 `V: 0/0` 的归码）
+
+立法点：`0/0` 不是「超越域」，也不是 `∞` 未定形。它是**除法定义 + 域逆元公理 +
+零吸收律 + 路径依赖**四条规则叠加后商无唯一值。码表 append 一行
+`E-INDETERMINATE`（state 3），`0/0` 不再蹭 `E-SCOPE-TRANSCENDENTAL`。
+
+- **触发**：`divv` 在 `isZero(y) && isZero(x)` 时返回带原因标记的 UND；
+  标记经 `add` / `mul` / `divv` / `neg` / `power` / 比较原样传播，故
+  `0/0`、`(1-1)/(1-1)`、`0/0+1`、`0/0 == 0/0` 同归此码。
+  `1/0` 仍登记 `∞`；`∞−∞` / `0·∞` 仍 `E-INF`，三家互不串台。
+- **三态纪律**：一律 `UNDECIDED`，不赋 True、不并 False、不并 ∞。
+  `NaN` 只是人话兜底词，**不是引擎真值**；不引入浮点、不引入随机数、
+  不引入交互。彩蛋 A/B 抽奖按裁决**整族不做**。
+- **展示**：默认档在 `Lxx UNDECIDED  E-INDETERMINATE` 下补一行 `∴`；
+  `--explain` 摊开完整 `∵ N / R1 / R2 / R3 / R4 → ∴` 因果链，中英同构。
+  `--tri` 只吐三态词，`--json` 追加 `indeterminate_form` + `rules` 结构字段，
+  形式化展示均不污染数据通道（UI 信息全走人话档，stdout 仍归数据与回执）。
+- **定理卷**：`fixtures/indeterminate.ltir` 只登记四条公理本体、`theory_sig:`
+  与 `∵∴` 链，`verify` 输出 `0 lines: 0 True, 0 False, 0 UNDECIDED`。
+  它不替行层判 `0/0`，不搬真值；**不含交互、不含抽奖、不含计时**。
+  本卷由本节 `ref:` 收录，条文本身仍是「只登记不判」。
+- **`by:` 登记**：顶层证书行收进关键词表，只 `registered++`、不产三态；
+  keys 卷裸 `verify` 不再 `E-UNK-LINE`。`--tri` 遇 `state=3` 的 ERROR 直接跳过，
+  不把系统错冒充 `UNDECIDED`（Agent 管道纪律）。
+- **`define:` 参数名**：`define: g(t) = ...` 的真实参数名接入
+  `call()` / `primary()` 导数分支 / `derive:` 三处消费端（缺省回退 `x`，
+  旧卷零回归）。`V: g(3)` → 10、`V: 2g(3)` → 20、`derive: g'(t)` → `2*t`。
+- **仍锁**：`core/` 十一件与 `RUN_core_sha.txt` 一字不动；不新增判定核、
+  不开 `sqrt(-1)` / 复数比较、不重写测试事件消费层、不推进版本。
+- SMOKE `445 / 445`；demo `24 lines: 20/3/1`、三角囚徒 `10 True` 逐字不漂。

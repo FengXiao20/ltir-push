@@ -853,6 +853,42 @@ printf '<base=16>\nV: 10\n</base>\nV: 10\n' > "$TMP/bug4.ltir"
 ckc "短闭合不报未闭合"      "$($BIN verify "$TMP/bug4.ltir")" '── 2 lines: 2 True, 0 False, 0 UNDECIDED ──'
 ckc "短闭合出栈恢复 base10" "$($BIN verify "$TMP/bug4.ltir")" 'True  10'
 
+
+echo "== 0.1.1 不定式专码 / ∵∴ 链 / define 参数名 / 顶层 by: 登记 =="
+printf 'V: 0/0\n' > "$TMP/ind1.ltir"
+ckc "0/0 独立专码"              "$($BIN verify "$TMP/ind1.ltir")" 'E-INDETERMINATE'
+ck  "0/0 不蹭超越域码"          "$($BIN verify "$TMP/ind1.ltir" | grep -c 'E-SCOPE-TRANSCENDENTAL')" '0'
+ckc "默认一行 ∴（中文）"        "$($BIN verify "$TMP/ind1.ltir" --lang=zh)" '∴ 0/0 不定式'
+ckc "explain ∵ N 归一化"        "$($BIN verify "$TMP/ind1.ltir" --lang=zh --explain)" '∵ N'
+ckc "explain ∵ R1 除法定义"     "$($BIN verify "$TMP/ind1.ltir" --lang=zh --explain)" '∵ R1'
+ckc "explain ∵ R4 路径依赖"     "$($BIN verify "$TMP/ind1.ltir" --lang=zh --explain)" '∵ R4'
+ckc "explain ∴ 商无定义"        "$($BIN verify "$TMP/ind1.ltir" --lang=zh --explain)" '商无定义'
+ckc "英文链同构"                "$($BIN verify "$TMP/ind1.ltir" --explain)" '∴ UNDECIDED  E-INDETERMINATE'
+ck  "tri 不污染形式化展示"      "$($BIN verify "$TMP/ind1.ltir" --tri)" 'UNDECIDED'
+ckc "json 带 rules 数组"        "$($BIN verify "$TMP/ind1.ltir" --json)" '"rules":["N","R1","R2","R3","R4"]'
+ckc "json 带 indeterminate_form" "$($BIN verify "$TMP/ind1.ltir" --json)" '"indeterminate_form":"0/0"'
+printf 'V: (1-1)/(1-1)\n' > "$TMP/ind2.ltir"
+ckc "归一化到 (0,0) 后同码"     "$($BIN verify "$TMP/ind2.ltir")" 'E-INDETERMINATE'
+printf 'V: 0/0+1\n' > "$TMP/ind3.ltir"
+ckc "含 0/0 复合式同码"         "$($BIN verify "$TMP/ind3.ltir")" 'E-INDETERMINATE'
+printf 'A: 0/0 == 0/0 -> True\n' > "$TMP/ind4.ltir"
+ckc "NaN 自反等式不判假"        "$($BIN verify "$TMP/ind4.ltir")" '── 1 lines: 0 True, 0 False, 1 UNDECIDED ──'
+ck  "1/0 仍为 ∞"                "$($BIN eval '1/0')" '∞'
+printf "define: g(t) = t^2 + 1\nderive: g'(t)\nV: g(3)\nV: 2g(3)\n" > "$TMP/def1.ltir"
+ckc "define g(t) 求值"          "$($BIN verify "$TMP/def1.ltir")" 'True  10'
+ckc "2g(3) 隐式乘接力"          "$($BIN verify "$TMP/def1.ltir")" 'True  20'
+ckc "derive g'(t) 不再假 0"     "$($BIN verify "$TMP/def1.ltir")" 'True  2*t'
+printf "define: f(x) = x^2\nderive: f'(x)\nV: f(3)\n" > "$TMP/def2.ltir"
+ckc "旧 f(x) 零回归"            "$($BIN verify "$TMP/def2.ltir")" 'True  9'
+ckc "旧 derive f'(x)"           "$($BIN verify "$TMP/def2.ltir")" 'True  2*x'
+printf 'by: rule: finite-injection-check\nA: 1+1 == 2 -> True\n' > "$TMP/by1.ltir"
+ck  "顶层 by: 不再 ERROR"       "$($BIN verify "$TMP/by1.ltir" | grep -c 'E-UNK-LINE')" '0'
+ck  "keys 卷裸 verify 无 ERROR" "$($BIN verify exams/keys/injection-check.ltir | grep -c 'E-UNK-LINE')" '0'
+printf 'bogus: x\n' > "$TMP/err1.ltir"
+ck  "tri 不吞真 ERROR"          "$($BIN verify "$TMP/err1.ltir" --tri | grep -c .)" '0'
+ckc "不定式定理卷零三态"        "$($BIN verify fixtures/indeterminate.ltir)" '── 0 lines: 0 True, 0 False, 0 UNDECIDED ──'
+ckc "不定式定理卷指纹一致"      "$($BIN verify fixtures/indeterminate.ltir)" 'mismatch=0'
+
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"
 echo "-----------------------------------------------"

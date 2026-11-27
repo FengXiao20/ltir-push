@@ -1,0 +1,27 @@
+# LTIR 0.1.1 定理卷 · 不定式 0/0（只登记，不产三态）
+# 本卷登记形式规则与 ∵∴ 因果链；V: 0/0 的判定在引擎行层，和本卷互不搬运真值。
+# 不含交互、不含抽奖、不含随机、不含计时。NaN 只是人话兜底词，不是引擎真值。
+# 立法：码表 append 一行 E-INDETERMINATE（state 3），本卷只引用，不替判定。
+
+problem: indeterminate-0/0
+status: theorem
+ref: E-INDETERMINATE, R1-R4, SYNTAX-364, IEEE754-0xfff8000000000000
+
+lang: L_Q = {0, 1, +, *, inv, =}
+axiom: R1 = forall a b (b != 0 -> a/b = a*inv(b))
+axiom: R2 = forall b (b != 0 -> exists! u (b*u = 1))
+axiom: R3 = forall c (0*c = 0)
+axiom: R4 = path(0/0) in {1, 0, oo}
+rule: ModusPonens, ZeroAbsorb, PathLimit
+theory_sig: 461b0a18e0f49d8b
+
+hint: ∵ N   norm(1-1, 1-1) = (0, 0)   归一化后再判，不靠字面匹配
+hint: ∵ R1  a/b ≜ a·b⁻¹ (b ≠ 0)      除法定义
+hint: ∵ R2  b ≠ 0 ⇒ ∃! b⁻¹           域逆元公理
+hint: ∵ R3  ∀c∈ℚ: 0·c = 0            零吸收律
+hint: ∵ R4  lim x/x = 1, lim x²/x = 0, lim x/x² = ∞   路径依赖
+hint: ∴ R2 ∧ b=0 ⇒ 0⁻¹ 不存在，R1 前提失效
+hint: ∴ 外推 R1 至 b=0 ⇒ 0 = 0·c 对 ∀c 成立（R3）⇒ c 不唯一，商无定义
+hint: ∴ R4 ⇒ 不可归为单一 ∞；1/0 才是无界发散登记
+hint: ∴ 与 ∞−∞ / 0·∞ 同档：不赋 True、不并 False、不并 ∞
+hint: ∴ UNDECIDED E-INDETERMINATE；默认人话词 NaN（兜底，非真值）

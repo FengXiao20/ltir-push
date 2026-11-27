@@ -63,3 +63,6 @@ E-EXAM-EMPTY	1	no paper in this difficulty	该难度题库为空
 E-EXAM-DUP-ID	1	duplicate problem id	题号重复
 E-EXAM-DIFFICULTY	1	unknown difficulty	未知难度档
 E-EXAM-OUTPUT	1	conflicting output modes	输出模式冲突
+
+# ── 0.1.1 新增：不定式专码（0/0 不再蹭 E-SCOPE-TRANSCENDENTAL） ──
+E-INDETERMINATE	3	indeterminate form (0/0): inverse undefined + zero absorption + path-dependence conflict; honest abstain, NaN is only a word	不定式（0/0）：逆元失效 ∧ 零吸收 ∧ 路径依赖叠加，商无唯一值；诚实弃权，NaN 仅为人话兜底词

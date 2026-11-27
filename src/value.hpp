@@ -41,9 +41,15 @@ struct Num {
   bool bv = false;
   Rational coef{1,1}, off{0,1};
   std::string sym;
+  bool indet = false;   /* 0.1.1：0/0 不定式原因标记；只答「哪条规则炸的」，不答「值是多少」 */
 };
 
 inline Num und() { return Num(); }
+/* 0.1.1：不定式原因标记。NaN 不是真值，标记只用于把 UND 归到正确码，
+ * 绝不改变 UND 的弃权语义；所有算术/比较短路到 UND 时原样传播。 */
+inline Num undIndet() { Num n=und(); n.indet=true; return n; }
+inline Num undProp(const Num& x,const Num& y) { Num n=und(); n.indet=x.indet||y.indet; return n; }
+inline Num undProp(const Num& x) { Num n=und(); n.indet=x.indet; return n; }
 inline Num rat(std::int64_t p, std::int64_t q = 1) {
   Num n; Rational x;
   if (makeRational(p, q, x)) { n.k = Num::RAT; n.a = x; }
@@ -102,13 +108,13 @@ inline Num neg(const Num& x) {
     case Num::RAD2: { Num n=x; Rational a,b,c;
       if(!ratNeg(x.a,a)||!ratNeg(x.b,b)||!ratNeg(x.c2,c)) return und();
       n.a=a; n.b=b; n.c2=c; return n; }
-    default: return und();
+    default: return undProp(x);
   }
 }
 
 inline Num add(const Num& x, const Num& y) {
   if (rad2Abstain(x,y)) return und();
-  if (x.k==Num::UND || y.k==Num::UND) return und();
+  if (x.k==Num::UND || y.k==Num::UND) return undProp(x,y);
   if (x.k==Num::INF || y.k==Num::INF) {
     if (x.k==Num::INF && y.k==Num::INF) return infinity();
     return infinity();
@@ -148,7 +154,7 @@ inline Num sub(const Num& x, const Num& y) { return add(x, neg(y)); }
 
 inline Num mul(const Num& x, const Num& y) {
   if (rad2Abstain(x,y)) return und();
-  if (x.k==Num::UND||y.k==Num::UND) return und();
+  if (x.k==Num::UND||y.k==Num::UND) return undProp(x,y);
   if (x.k==Num::INF||y.k==Num::INF) {
     if (isZero(x)||isZero(y)) return und();                  // ∞×0 未定形
     Num n=infinity();
@@ -187,14 +193,14 @@ inline Num mul(const Num& x, const Num& y) {
 
 inline Num divv(const Num& x, const Num& y) {
   if (rad2Abstain(x,y)) return und();
-  if (x.k==Num::UND||y.k==Num::UND) return und();
+  if (x.k==Num::UND||y.k==Num::UND) return undProp(x,y);
   if (y.k==Num::INF) return isZero(x)?und():rat(0,1);
   if (x.k==Num::INF) {
     if (y.k==Num::INF) return und();                       // ∞/∞ 未定形
     if (isZero(y)) return und();
     return infinity();
   }
-  if (isZero(y)) return isZero(x)?und():infinity();        // 0/0 未定形 → 弃权；1/0 → ∞
+  if (isZero(y)) return isZero(x)?undIndet():infinity();   // 0/0 → E-INDETERMINATE；1/0 → ∞
   if (x.k==Num::SYM||y.k==Num::SYM) {
     if (x.k==Num::SYM&&y.k==Num::RAT) { Num n=x; Rational c,o;
       if(!ratDiv(x.coef,y.a,c)||!ratDiv(x.off,y.a,o)){return und();} n.coef=c;n.off=o;return n;}
@@ -208,7 +214,7 @@ inline Num divv(const Num& x, const Num& y) {
     if (den.p==0) return und();
     Num conj=y; Rational ni; if(!ratNeg(y.im,ni))return und(); conj.im=ni;
     Num p=mul(x,conj);
-    if (p.k==Num::UND) return und();
+    if (p.k==Num::UND) return p;
     Num q=fromR(den);
     return divv(p,q);
   }
@@ -241,7 +247,7 @@ inline Num divv(const Num& x, const Num& y) {
 inline Num power(const Num& b, std::int64_t e) {
   if (isRad2(b)) return und();
   if (e==0) return rat(1,1);          // ★ 常量折叠先于 Richardson 判据（π^0 → 1）
-  if (b.k==Num::UND||b.k==Num::BOOL) return und();
+  if (b.k==Num::UND||b.k==Num::BOOL) return undProp(b);
   if (b.k==Num::SYM) return und();    // 真超越等式诚实弃权
   if (e<0) {
     if (e==std::numeric_limits<std::int64_t>::min()) return und();
@@ -251,9 +257,9 @@ inline Num power(const Num& b, std::int64_t e) {
   if (e>64) return und();             // 2^64 / 溢出弃权
   Num res=rat(1,1), base=b;
   while (e>0) {
-    if (e&1) { res=mul(res,base); if(res.k==Num::UND) return und(); }
+    if (e&1) { res=mul(res,base); if(res.k==Num::UND) return res; }
     e>>=1;
-    if (e) { base=mul(base,base); if(base.k==Num::UND) return und(); }
+    if (e) { base=mul(base,base); if(base.k==Num::UND) return base; }
   }
   return res;
 }

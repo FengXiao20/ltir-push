@@ -7,9 +7,10 @@
 
 ## A 版 · README 正文（中文，推荐）
 
-**LTIR — 一台不会装懂的验算机**
+**LTIR — 一台不会装懂的精确计算器 + 判定器**
 
-它只判三种状态：`True` / `False` / `UNDECIDED`。
+它既是计算器（`./ltir006 eval "1/3+1/6"` → `1/2`，精确有理、零浮点），
+也是判定器：只判三种状态 `True` / `False` / `UNDECIDED`。
 
 你写 `2+2==5 -> True`，它照样回 `False` —— **声明不算证据，真值得自己算**。
 算不了就老实弃权：不把「不知道」凑成否，不拿一堆采样点冒充全称证明，
@@ -36,9 +37,10 @@ bash ltir.sh                 # 一键全流程
 
 ## B 版 · README（English）
 
-**LTIR — a verifier that refuses to bluff**
+**LTIR — an exact calculator and a verifier that refuses to bluff**
 
-Three verdicts only: `True`, `False`, `UNDECIDED`.
+Calculator: `./ltir006 eval "1/3+1/6"` → `1/2` (exact rationals, zero floating point).
+Verifier: three verdicts only — `True`, `False`, `UNDECIDED`.
 `2+2==5 -> True` still returns `False`: **a claim is not evidence**;
 truth must be computed. When it cannot compute, it abstains honestly —
 never collapsing "unknown" into `False`, never promoting finite samples
@@ -61,7 +63,7 @@ Single-binary C++17, stdlib only. Linux / Termux: `bash ltir.sh`.
 
 ## C 版 · 一句话 / 电梯版
 
-> 一台宁可说「不知道」也不肯装懂的精确验算机：三态判定、集合论地图、
+> 一台宁可说「不知道」也不肯装懂的精确计算器 + 判定器：三态判定、集合论地图、
 > 形式化定义，还会傲娇地帮你补省略号。
 
 备选短句：
@@ -79,7 +81,7 @@ LTIR 0.1.1
   verdicts      True | False | UNDECIDED        (UNDECIDED never folds into False)
   truth         self-computed; "-> True" is a claim, not a certificate
   arithmetic    ℚ / RAD / RAD2 / CPX, exact; Richardson-style abstain
-  sets          ∪ ∩ ⊆ ⊂ ∈ card |A|, restricted comprehension, ∀/∃, cex:, inj/surj/bij
+  sets          ∪ ∩ ⊆ ⊂ ∈ card A, restricted comprehension, ∀/∃, cex:, inj/surj/bij
   maps          ⊢ coordinates, system:/choice:/axiom:, preset:/load: modules
   foundations   CH independent · Goldbach open · Gödel incomplete · multiverse ledger-only
   definitions   sig: type: where: rule: grammar: expand: (≤8-step δ)
@@ -97,7 +99,7 @@ LTIR 0.1.1
 > 写罗素集它不判真假，只说「这张地图塌了」。
 > 我多打了几个省略号，它给我补齐，然后：「才不是帮你呢。」
 >
-> 一个 C++ 写的、脾气很倔的验算机。开源了。
+> 一个 C++ 写的、脾气很倔的精确计算器 + 验算机。开源了。
 
 ---
 
@@ -109,5 +111,7 @@ LTIR 0.1.1
   `termux/termux-file-editor` 文件管理器钩子 · `SYNTAX.md` 语法条文 ·
   `AXIOM_NOTES.md` 学术口径 · `BACKLOG.md` 欠账
 - **Release 标题建议**：`LTIR 0.1.1 — 公理本体化指纹 / 进制眼镜 / 赋值环境 / 试卷库 / 卸载`
+- **`card:` 只认名字**：`card: A` 才出势，`card: |A|` → `E-REF-UNKNOWN`；
+  `|A|` 只是展示记号，不是引擎语法。
 - **别写进 README 的**：不要承诺「判定 CH」「证明哥德巴赫」；
   这些在台账里是 `independent` / `open`，只登记不判 —— 这正是项目的立场。

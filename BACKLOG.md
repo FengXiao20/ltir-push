@@ -186,3 +186,11 @@ JSON 四字段 `axiom_bodies` / `lang` / `theory_sig` / `sig_mismatch` ·
 `src/ltir006.cpp` 第 7 行注释仍写「速览.md」；`ltir.sh` 第 9 行注释仍写
 「Windows 分支冻结，不维护」；0.1.1 收尾后进度总数由 SMOKE 开头的
 `__LTIR_PLAN__` 结构化计划行实时给出（当前 420，与实跑一致），收尾行正则仅作兼容回退。
+
+## 0.1.1 不定式专码（已落，不铸版本号）
+
+`E-INDETERMINATE` 立码 + `∵∴` 链 + `fixtures/indeterminate.ltir` 定理卷、
+`define: f(t)` 参数名接线、顶层 `by:` 登记、`--tri` 不吞 ERROR、首屏双身份文案，
+均已收编。**彩蛋 A/B 抽奖按裁决整族不做**，不留残码、不留交互。
+仍挂账：`sqrt(-1)` / 复数比较、Gödel II 独立码与定理卷、局部理论块、
+δ 展开松绑、公理依赖图、试卷计分与 keys 卷对齐、Win 重打。

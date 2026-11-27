@@ -1,6 +1,6 @@
 # LTIR
 
-**A math verifier that refuses to bluff.**
+**An exact calculator and a math verifier that refuses to bluff.**
 
 You feed it mathematical assertions; it answers line by line with one of three verdicts:
 
@@ -13,6 +13,9 @@ and computes the value itself. Write `A: 2+2=5 -> True` and it answers `False` �
 claim is not evidence. It never folds "I don't know" into `False`, never passes sampled
 points off as a universal proof, and never rules on CH or Goldbach for mathematics.
 Everything runs on exact rationals / algebraic numbers / complex numbers — zero floating point.
+
+It is also a calculator: `./ltir006 eval "1/3+1/6"` returns `1/2`, and
+`./ltir006 eval "2*sin(pi/6)"` returns `1` — same engine, same honesty, no separate mode.
 
 ```
 $ ./ltir006 verify paper.ltir
