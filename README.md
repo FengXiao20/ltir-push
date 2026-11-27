@@ -151,7 +151,7 @@ into `False`. Abstention is a feature, not a bug.
 | `tests/` | SMOKE suite — 420/420 green |
 | `SYNTAX.md` | full legislation text (Chinese, with English edition appended) |
 | `QUICK_TOUR.md` | one-page quick tour (bilingual 中英) |
-| `PATCH_009.md` | the implicit-power binding patch |
+| `PATCH_A.md` | the implicit-power binding patch |
 
 ## Version
 

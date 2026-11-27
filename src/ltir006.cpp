@@ -252,7 +252,7 @@ static bool isKeyword(const std::string& k) {
     "con:","equiconsistent:","strength_le:","interprets:","translation:","theory_sig:",
     "class:","proper_class:","card_le:","card_eq:",
     "cat:","object:","arrow:","compose:","identity:","commute:",
-    "functor:","nat:","preserves:","limit:","colimit:","product:",
+    "functor:","nat:","preserves:","colimit:","product:",   /* limit: 已在 0.0.6 分析组登记，此处不重复 */
     "equalizer:","pullback:","adj:","unit:","counit:","yoneda:",
     "topos:","subobject:","monad:","algebra:","carrier:","structure:",
     /* 0.1.0 A 增量：理论语言签名（全英文长名，短写表仍冻结） */
@@ -399,6 +399,10 @@ struct Parser {
   std::map<std::string,std::pair<std::string,std::string>> seqs; // name -> (var, expr)
   std::map<std::string,std::string> defParams;  // 0.1.1：define: f(t) 的真实参数名
   bool ok=true;
+  /* 0.1.1 bugfix B4：递归深度护栏——深嵌套诚实弃权，绝不栈溢出崩溃。
+   * expr()/postfix() 共用计数；1024 层远高于正常算式，远低于实测崩溃区（3000+）。 */
+  int depth=0;
+  struct DepthGuard{ int& d; bool over; explicit DepthGuard(int& dd):d(dd){over=(++d>1024);} ~DepthGuard(){--d;} };
   explicit Parser(const std::string& s):t(lex(s)){}
   /* 0.1.1：三处写死 "x" 的消费端统一走这里；旧卷缺省回退 x，零回归 */
   std::string paramOf(const std::string& fn) const {
@@ -537,6 +541,7 @@ struct Parser {
     for(;;){ if(eat("+")){n=add2(n,mul());continue;} if(eat("-")){n=sub(n,mul());continue;} break; } return n; }
   Num add2(const Num&a,const Num&b){ return v6::add(a,b); }
   Num expr() {
+    DepthGuard g(depth); if(g.over){ ok=false; return und(); }
     Num n=add();
     static const char* cops[]={"==","=","!=","<=",">=","<",">",nullptr};
     for(int k=0;cops[k];++k){ if(eat(cops[k])){ Num r=add(); const int c=cmp(n,r);
@@ -556,6 +561,9 @@ struct Parser {
 /* 符号多项式解析（id: / derive: / solve:） */
 struct PolyParser {
   std::vector<Tok> t; std::size_t p=0; bool ok=true;
+  /* 0.1.1 bugfix B4：符号多项式解析同样加深度护栏 */
+  int depth=0;
+  struct DepthGuard{ int& d; bool over; explicit DepthGuard(int& dd):d(dd){over=(++d>1024);} ~DepthGuard(){--d;} };
   bool lastSplit=false; std::vector<std::string> splitVars;  // 0.0.9b：^ 绑定拆分末变量
   explicit PolyParser(const std::string& s):t(lex(s)){}
   const Tok& cur() const { return t[p<t.size()?p:t.size()-1]; }
@@ -1399,7 +1407,9 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       "yoneda:","topos:","subobject:","monad:","algebra:","carrier:","structure:",
       "hint:","difficulty:","attribution:","exam:","submit:"
     };
-    if(REG.count(key)){
+    if(REG.count(key) &&
+       /* 0.1.1 bugfix B1：分析极限 limit: var->target of expr 不被范畴论登记拦截 */
+       !(key=="limit:" && body.find(" of ")!=std::string::npos && body.find("->")!=std::string::npos)){
       c.registered++; c.ledger.push_back(key+" "+body);
       if(key=="class:"||key=="proper_class:"){
         std::string nm=body;
@@ -1568,6 +1578,16 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       if(!ratAdd(nb,sd.a,sum1)||!ratSub(nb,sd.a,sum2)||!ratDiv(sum1,twoA,r1)||!ratDiv(sum2,twoA,r2)) return codeRes("E-SCOPE-SYMBOLIC",2);
       if(r1.p*r2.q>r2.p*r1.q) std::swap(r1,r2);
       const bool lt=(o=="<"||o=="<="), eq=(o=="="||o=="==");
+      /* 0.1.1 bugfix B3：判别式=0 重根 —— 按 A(x-r)² 的符号分析给解集，
+       * 绝不拿空开区间 (r,r) 冒充解集（x^2<0 曾伪判 True）。 */
+      if(r1.p*r2.q==r2.p*r1.q){
+        if(eq){ R.state=1; R.out="x = "+ratStr(r1); return R; }
+        const bool aPos=(A.p>0), less=(o=="<"||o=="<="), strict=(o=="<"||o==">");
+        if(strict && (less==aPos)){ R.state=1; R.out="x \xE2\x88\x88 \xE2\x88\x85"; return R; }   // 空集
+        if(!strict && (less==aPos)){ R.state=1; R.out="x = "+ratStr(r1); return R; }              // 单点
+        if(!strict && (less!=aPos)){ R.state=1; R.out="x \xE2\x88\x88 R"; return R; }             // 全体实数
+        R.state=1; R.out="x \xE2\x88\x88 (-\xE2\x88\x9E, "+ratStr(r1)+") \xE2\x88\xAA ("+ratStr(r2)+", \xE2\x88\x9E)"; return R;
+      }
       if(eq){ R.state=1; R.out="x = "+ratStr(r1)+" or x = "+ratStr(r2); return R; }
       const bool inside = (A.p>0)?lt:!lt;
       const std::string l=inside?"x ∈ ("+ratStr(r1)+", "+ratStr(r2)+")"
@@ -1608,19 +1628,64 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     c.registered++;R.state=-1;return R;
   }
   if (key=="limit:") {
+    /* 0.1.1 bugfix B1：重写极限处理器——
+     * 旧版只取 n^1 系数（注释却说比最高次）、忽略趋向点、无除号时把表达式本身当极限值。
+     * 新版：var->inf 比最高次；有限趋向点精确代入；0/0 型归 E-INDETERMINATE；
+     * 含其他自由变量 / 单侧 ∞ 符号分析超纲 → 诚实弃权。 */
     const std::size_t of=body.find(" of "); if(of==std::string::npos) return codeRes("E-SYN",3);
-    const std::string ex=trim(body.substr(of+4));
-    // n->inf of 有理式：比较分子分母最高次（形如 (an+b)/(cn+d) 取 a/c；1/n → 0）
+    const std::string head=trim(body.substr(0,of)), ex=trim(body.substr(of+4));
+    const std::size_t ar=head.find("->"); if(ar==std::string::npos) return codeRes("E-SYN",3);
+    const std::string var=trim(head.substr(0,ar)), tgt=trim(head.substr(ar+2));
+    if(!isIdent(var)) return codeRes("E-SYN",3);
+    const bool toInf=(tgt=="inf"||tgt=="oo");
+    Rational tval{0,1};
+    if(!toInf){
+      Num t=evalExpr(c,tgt);
+      if(t.k!=Num::RAT) return codeRes("E-SCOPE-SYMBOLIC",2);
+      tval=t.a;
+    }
     const std::size_t slash=ex.find('/');
+    Poly num,den;
     if(slash!=std::string::npos){
-      PolyParser n1(ex.substr(0,slash)),d1(ex.substr(slash+1)); Poly a=n1.run(),b=d1.run();
-      if(a.ok&&b.ok){ Monom mx;mx["n"]=1;
-        Rational ca=a.t.count(mx)?a.t[mx]:rat(0,1).a, cb=b.t.count(mx)?b.t[mx]:rat(0,1).a;
-        if(cb.p==0&&ca.p!=0) return codeRes("E-SCOPE-TRANSCENDENTAL",2);
-        if(ca.p==0){R.state=1;R.out="0";return R;}
-        Rational v; if(ratDiv(ca,cb,v)){R.state=1;R.out=ratStr(v);return R;} }
-    } else { R.state=1;R.out=ex;return R; }
-    return codeRes("E-SCOPE-SYMBOLIC",2);
+      PolyParser n1(ex.substr(0,slash)),d1(ex.substr(slash+1));
+      num=n1.run(); den=d1.run();
+    } else { PolyParser n1(ex); num=n1.run(); den=Poly::c(1); }
+    if(!num.ok||!den.ok) return codeRes("E-SCOPE-SYMBOLIC",2);
+    /* 关于 var 的次数与首项系数；含其他自由变量 → 弃权 */
+    auto degLead=[](const Poly&p,const std::string&v,int&deg,Rational&lead)->bool{
+      deg=0; lead=rat(0,1).a; bool any=false;
+      for(auto&kv:p.t){
+        int d=0;
+        for(auto&vv:kv.first){
+          if(vv.first==v) d=vv.second;
+          else if(vv.second!=0) return false;
+        }
+        if(!any||d>deg){ deg=d; lead=kv.second; any=true; }
+      }
+      return true;
+    };
+    int dn=0,dd=0; Rational ln=rat(0,1).a,ld=rat(0,1).a;
+    if(!degLead(num,var,dn,ln)||!degLead(den,var,dd,ld)) return codeRes("E-SCOPE-SYMBOLIC",2);
+    if(toInf){
+      if(dn<dd){ R.state=1; R.out="0"; return R; }
+      if(dn==dd){
+        if(ld.p==0) return codeRes("E-SCOPE-SYMBOLIC",2);
+        Rational v; if(!ratDiv(ln,ld,v)) return codeRes("E-OVF",2);
+        R.state=1; R.out=ratStr(v); return R;
+      }
+      const bool pos=((ln.p>0)==(ld.p>0));
+      R.state=1; R.out=pos?"\xE2\x88\x9E":"-\xE2\x88\x9E"; return R;
+    }
+    std::map<std::string,Num> e; e[var]=fromR(tval);
+    bool okn=false,okd=false;
+    const Rational vn=pEvalAt(num,e,okn), vd=pEvalAt(den,e,okd);
+    if(!okn||!okd) return codeRes("E-SCOPE-SYMBOLIC",2);
+    if(vd.p==0){
+      if(vn.p==0) return codeRes("E-INDETERMINATE",2);   // 0/0 不定式：因式分解超纲，诚实弃权
+      return codeRes("E-SCOPE-SYMBOLIC",2);              // 分母 0 分子非 0：单侧符号分析超纲
+    }
+    Rational v; if(!ratDiv(vn,vd,v)) return codeRes("E-OVF",2);
+    R.state=1; R.out=ratStr(v); return R;
   }
   if (key=="set:") {
     const std::size_t q=body.find('='), lb=body.find('{'), rb=body.rfind('}');
@@ -1853,9 +1918,13 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     c.mappings[nm]=mp; c.codomains[nm]=cod; c.registered++; R.state=-1; return R;
   }
   if (key=="inj:"||key=="surj:"||key=="bij:") {
-    if(body.find("->")!=std::string::npos||body=="R"||body=="N"||body=="Z"||body=="Q")
+    /* 0.1.1 bugfix B5：有限映射的手写声明词与 A: 同权——洗涤后照算，冲突挂 E-VAL-MISMATCH。
+     * E-SCOPE-INFINITE 只留给真正的无限域（R/N/Z/Q 或 R -> R 形态）。 */
+    std::string ref=trim(body); bool claim=false;
+    const bool has=findVerdict(body,ref,claim);
+    if(ref=="R"||ref=="N"||ref=="Z"||ref=="Q"||(!has&&body.find("->")!=std::string::npos))
       return codeRes("E-SCOPE-INFINITE",2);
-    auto it=c.mappings.find(trim(body));
+    auto it=c.mappings.find(ref);
     if(it==c.mappings.end()) return codeRes("E-REF-UNKNOWN",2);
     std::set<std::string> img; bool inj=true;
     for(auto&pr:it->second) if(!img.insert(pr.second).second) inj=false;
@@ -1866,7 +1935,12 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       for(const auto&x:cod) if(!img.count(x)) surj=false;
     }
     const bool bv=(key=="inj:")?inj:((key=="surj:")?surj:(inj&&surj));
-    R.state=bv?1:0; R.out=bv?"True":"False"; return R;   // 判假无码
+    if(!has){ R.state=bv?1:0; R.out=bv?"True":"False"; return R; }   // 判假无码
+    const bool agree=(bv==claim);
+    R.state=agree?1:0; R.out=agree?"True":"False";
+    if(!agree){ R.code="E-VAL-MISMATCH";
+      R.detail=explain("E-VAL-MISMATCH",c.chinese,{{"lhs",bv?"True":"False"},{"rhs",claim?"True":"False"}}); }
+    return R;
   }
   if (key=="cex:") {
     if(c.lastExpr.empty()) return codeRes("E-REF-UNKNOWN",2);
@@ -2173,7 +2247,12 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       std::string body=trim(body0);
       if(body.empty()) continue;
       /* 默认 base=10 是全等 no-op —— 347 条老回归逐字不受影响 */
-      if(c.base!=10){
+      /* 0.1.1 bugfix B2：radix:/base: 是指令不是数据——参数恒按十进制读。
+       * 早先指令自身也过 radixNorm，b 进制下 "10" 恒等于 b，永远切不回十进制。 */
+      const std::size_t kwColonB2=body.find(':');
+      const std::string kwB2=(kwColonB2==std::string::npos)?"":body.substr(0,kwColonB2+1);
+      const bool radixDirective=(kwB2=="radix:"||kwB2=="base:");
+      if(c.base!=10 && !radixDirective){
         std::string nb, er;
         if(!radixNorm(body,c.base,nb,er)){
           Result R; R.state=3; R.code=er; R.line=raw;

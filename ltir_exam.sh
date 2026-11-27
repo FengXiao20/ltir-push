@@ -120,12 +120,14 @@ err '出  json | ndjson | tri | default       --output= 覆盖'
 err ''
 
 # 题面 stdout（题面不是判定，tri 模式下仍给；--paper 落文件给 Agent 自己读）
+# 0.1.1 bugfix B6：json/ndjson 模式 stdout 只留机器回执，题面走 stderr（agent 管道契约）
 if [ -z "$ANSFILE" ]; then
   if [ -n "$PAPER" ]; then
     cat "$PAPER_FILE" > "$PAPER" || { err 'E-EXAM-CONFIG: --paper 写不了'; exit 2; }
     printf '{"event":"paper","exam_id":"%s","path":"%s"}\n' "$EXAM_ID" "$PAPER"
   else
-    cat "$PAPER_FILE"
+    if [ "$OUT" = json ] || [ "$OUT" = ndjson ]; then cat "$PAPER_FILE" >&2
+    else cat "$PAPER_FILE"; fi
   fi
 else
   [ -f "$ANSFILE" ] || { err "E-EXAM-CONFIG: $ANSFILE"; exit 2; }
@@ -151,6 +153,12 @@ $ANS
 EOF
 if [ "$HAS_SUB" != 1 ]; then
   err 'E-EXAM-UNSUBMITTED: 卷里没有 submit:，EOF 不算交卷'
+  # 0.1.1 bugfix B6：机器模式给 JSON 错误回执，stdout 不再是纯题面
+  if [ "$OUT" = json ]; then
+    printf '{"exam_id":"%s","difficulty":"%s","seed":%s,"submit":false,"error":"E-EXAM-UNSUBMITTED"}\n' "$EXAM_ID" "$DIFF" "$SEED"
+  elif [ "$OUT" = ndjson ]; then
+    printf '{"event":"error","exam_id":"%s","code":"E-EXAM-UNSUBMITTED","submit":false}\n' "$EXAM_ID"
+  fi
   exit 3
 fi
 
