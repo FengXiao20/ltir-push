@@ -34,7 +34,7 @@ bash ltir.sh                    # gate check -> build -> SMOKE -> demo
 ./ltir006 verify paper.ltir --tri      # bare True/False/UNDECIDED per line
 ./ltir006 verify paper.ltir --explain  # verbose: caret pointer + code-table reason
 ./ltir006 verify paper.ltir --json     # structured output
-./ltir006 --version            # ltir006 0.1.1
+./ltir006 --version            # ltir006 0.2.0
 ```
 
 C++17, standard library only. Linux + Termux (`pkg install clang make`; keep the
@@ -157,14 +157,14 @@ into `False`. Abstention is a feature, not a bug.
 
 ## Version
 
-**0.1.1** — see `VERSION` (plain text) and `LTIR_STAMP` (build stamp).
+**0.2.0** — see `VERSION` (plain text) and `LTIR_STAMP` (build stamp).
 Lineage: frozen ℚ kernel (0.0.1–2) → capability extension (0.0.4-lab) → shorthand,
 containers, LaTeX, trig, ZFC ledger (0.0.5) → self-contained C++ layer (0.0.6,
 reinforced) → set-theory map & quantifiers (0.0.7) → formal defs & multiverse (0.0.8)
 → implicit product, π/12 exact angles, output modes (0.0.9) → exam library,
-radix glasses, binding environment, consistency-strength ledger → axiom-identity fingerprint, single-source version (0.1.1). MIT licensed.
+radix glasses, binding environment, consistency-strength ledger → axiom-identity fingerprint, single-source version (0.1.1) → metaprogramming & authorized abstain codes (0.2.0). MIT licensed.
 
-## 0.1.1 at a glance
+## 0.2.0 at a glance
 
 ```bash
 bash ltir.sh                       # gate -> build -> SMOKE -> demo

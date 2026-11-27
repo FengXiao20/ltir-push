@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# LTIR 0.1.1 试卷库 · shell 层执行器（判定核 ./ltir006 一字不动）
+# LTIR 0.2.0 试卷库 · shell 层执行器（判定核 ./ltir006 一字不动）
 #   bash ltir.sh exam                     抽题 + 考前须知 + 题面，stdin 收答卷
 #   bash ltir.sh exam answer.ltir        打开旧卷重判（同样命令）
 #   --stdin / --paper=PATH / --json / --ndjson / --tri / --output=
