@@ -1,0 +1,15 @@
+# LTIR 强度草案 · 试验卷（只登记、不产三态、不产值）
+# 学术现成件照抄：≤_Con 相对基理论 B；PA 的 ε₀ 由 Gentzen 外部元理论给出。
+# 我们加的一层：ordinal/benchmark 只是展示型记号，缺 notation/base/metatheory 不成证书。
+lang: L_PA = {0 ; S ; + ; *}
+axiom: Ind = forall phi (phi(0) and forall n (phi(n) -> phi(S(n))) -> forall n phi(n))
+rule: ModusPonens
+sig_mode: formula
+ordinal: epsilon_0
+benchmark: BigFive-ACA0
+metatheory: PRA + TI(epsilon_0)
+notation: Cantor-normal-form-v1
+con_base: PRA
+by: Gentzen-1936
+translation: PA -> PRA
+theory_sig: ?

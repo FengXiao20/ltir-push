@@ -257,6 +257,8 @@ static bool isKeyword(const std::string& k) {
     "topos:","subobject:","monad:","algebra:","carrier:","structure:",
     /* 0.1.0 A 增量：理论语言签名（全英文长名，短写表仍冻结） */
     "lang:",
+    /* 强度草案试验：指纹口径开关 + 展示型值标签（只登记，不产值；短写表仍冻结） */
+    "sig_mode:","ordinal:","benchmark:","metatheory:","notation:","con_base:",
     /* 0.1.1：顶层证书行 by: 只登记，不再落 E-UNK-LINE（短写表仍冻结） */
     "by:"
   };
@@ -736,6 +738,10 @@ struct Ctx {
   std::string theorySigHex;            // 最近一次内容指纹（FNV-1a 64，16 位 hex）
   bool theorySigAsked=false;           // 卷内是否出现过 theory_sig:
   int sigMismatch=0;                   // 期望指纹不符次数：只登记，绝不产三态
+  /* 强度草案试验：v1 含公理名（默认，零回归）；v2 只认公理公式本体。
+   * strengthLabels 是展示型值标签，只登记、不进指纹、不产三态。 */
+  std::string sigMode="named";
+  std::vector<std::string> strengthLabels;
   bool inContainer() const { return !containers.empty(); }
   std::string curContainer() const { return containers.empty()?"":containers.back(); }
 };
@@ -762,11 +768,13 @@ static void absorbAxiomList(Ctx& c,const std::string& b){
 /* FNV-1a 64：纯整数位运算，零浮点、跨平台一致；同一份卷重跑逐字一样。
  * 输入按字典序归一，声明/加载顺序不影响指纹 —— 认的是内容，不是书写次序。 */
 static std::string computeTheorySig(const Ctx& c){
+  /* 试验开关：v2 只喂公式本体，公理名这个符号不再参与 hash；默认 v1 逐字保留 0.1.1 输出。 */
+  const bool formulaOnly=(c.sigMode=="formula");
   std::vector<std::string> ax,rl;
-  for(const auto&p:c.axiomBodies) ax.push_back(p.first+"="+p.second);
+  for(const auto&p:c.axiomBodies) ax.push_back(formulaOnly?p.second:(p.first+"="+p.second));
   std::sort(ax.begin(),ax.end());
   rl=c.rules; std::sort(rl.begin(),rl.end());
-  std::string s="LTIR-THEORY-SIG-v1\nlang:"+c.langSig+"\n";
+  std::string s=std::string(formulaOnly?"LTIR-THEORY-SIG-v2\n":"LTIR-THEORY-SIG-v1\n")+"lang:"+c.langSig+"\n";
   for(const auto&a:ax) s+="axiom:"+a+"\n";
   for(const auto&r:rl) s+="rule:"+r+"\n";
   std::uint64_t h=1469598103934665603ULL;
@@ -1424,12 +1432,16 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       "cat:","object:","arrow:","compose:","identity:","functor:","nat:","preserves:",
       "limit:","colimit:","product:","equalizer:","pullback:","adj:","unit:","counit:",
       "yoneda:","topos:","subobject:","monad:","algebra:","carrier:","structure:",
-      "hint:","difficulty:","attribution:","exam:","submit:"
+      "hint:","difficulty:","attribution:","exam:","submit:",
+      "ordinal:","benchmark:","metatheory:","notation:","con_base:"
     };
     if(REG.count(key) &&
        /* 0.1.1 bugfix B1：分析极限 limit: var->target of expr 不被范畴论登记拦截 */
        !(key=="limit:" && body.find(" of ")!=std::string::npos && body.find("->")!=std::string::npos)){
       c.registered++; c.ledger.push_back(key+" "+body);
+      /* 展示型值标签：只进 ledger，不进 computeTheorySig（值不反过来定义理论身份） */
+      if(key=="ordinal:"||key=="benchmark:"||key=="metatheory:"||key=="notation:"||key=="con_base:")
+        c.strengthLabels.push_back(key+" "+trim(body));
       if(key=="class:"||key=="proper_class:"){
         std::string nm=body;
         const std::size_t sp=nm.find_first_of(" \t=");
@@ -1463,6 +1475,12 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
 
   if (key=="note:"||key=="subject:") { R.state=-1; return R; }
   /* 0.1.1：顶层证书行只登记（keys 卷裸 verify 不再 ERROR，也不冒充三态） */
+  /* 强度草案试验：指纹口径开关，只登记、不产三态 */
+  if (key=="sig_mode:") {
+    const std::string v=trim(body);
+    if(v=="formula"||v=="named") c.sigMode=v;
+    c.registered++; c.ledger.push_back("sig_mode: "+c.sigMode); R.state=-1; return R;
+  }
   if (key=="by:") { c.registered++; R.state=-1; return R; }
 
   if (key=="zf:"||key=="zfc:"||key=="given:"||key=="case:") {
@@ -2391,6 +2409,8 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
              <<",\"axiom_bodies\":"<<c.axiomBodies.size()
              <<",\"lang\":\""<<jesc(c.langSig)<<"\""
              <<",\"theory_sig\":\""<<c.theorySigHex<<"\""
+             <<",\"sig_mode\":\""<<c.sigMode<<"\""
+             <<",\"strength_labels\":"<<c.strengthLabels.size()
              <<",\"sig_mismatch\":"<<c.sigMismatch<<"}\n";
     return err?1:0;
   }
@@ -2446,6 +2466,8 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
     std::cout<<"theory_sig: "<<c.theorySigHex
              <<"  (lang+axioms+rules, "<<c.axiomBodies.size()
              <<" axiom bodies, mismatch="<<c.sigMismatch<<")\n";
+  if(!c.strengthLabels.empty())
+    std::cout<<"strength_labels: "<<c.strengthLabels.size()<<" (display-only; no verdict, no scalar)\n";
   if(c.isModule && rs.empty() && !jsonMode)
     std::cout<<"module: 这是公理模块，请用 preset: / load: 加载（只登记，不判卷）\n";
   return err?1:0;

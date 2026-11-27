@@ -183,7 +183,7 @@ VJSON="$VJSON]"; DIAGS="$DIAGS]"
 
 LINES=$(grep -c '[^[:space:]]' "$TMPA" 2>/dev/null); LINES=${LINES:-0}; LINES=${LINES%%$'\n'*}
 CLAIMS=$(grep -c -- '-> *True' "$TMPA" 2>/dev/null); CLAIMS=${CLAIMS:-0}; CLAIMS=${CLAIMS%%$'\n'*}
-CERTS=$(grep -Ec '^(by:|rule:|cex:|interprets:|translation:|inj:|surj:|bij:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
+CERTS=$(grep -Ec '^(by:|rule:|cex:|interprets:|translation:|inj:|surj:|bij:|metatheory:|notation:|con_base:|ordinal:|benchmark:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
 SCORE=0
 [ "$LINES" -gt 0 ] && SCORE=40
 [ "$CERTS" -gt 4 ] && CERTS=4
