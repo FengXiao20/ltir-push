@@ -269,16 +269,21 @@ ordinal: c
 benchmark: d')" 'score=0/100'
 ck "strength_le 缺证书弃权卷 15" "$(exrun x 'strength_le: PA -> ZFC')" 'score=15/100'
 ck "正确判定不再清零 15" "$(exrun x 'A: 1+1=2 -> True')" 'score=15/100'
-ck "判定+证书 20" "$(exrun x 'A: 1+1=2 -> True
-by: c1')" 'score=20/100'
-ck "六判定两证书满分 100" "$(exrun x 'V: 1+1=2
+ck "判定+认账证书链 25（V15+rule:5+by:5）" "$(exrun x 'A: 1+1=2 -> True
+rule: arithmetic
+by: rule: arithmetic')" 'score=25/100'
+ck "编造 by 零加成（豆包 hole）" "$(exrun x 'A: 1+1=2 -> True
+by: 我编的')" 'score=15/100'
+ck "六判定认账证书满分 100" "$(exrun x 'rule: arithmetic
+rule: more
+V: 1+1=2
 V: 2+2=4
 V: 3+3=6
 V: 4+4=8
 V: 5+5=10
 V: 6+6=12
-by: c1
-by: c2')" 'score=100/100'
+by: rule: arithmetic
+by: rule: more')" 'score=100/100'
 ck "空卷 0 分" "$(exrun x '')" 'score=0/100'
 ck "展示标签已移出 CERTS 正则" "$(grep -c 'interprets:' ltir_exam.sh)" '0'
 

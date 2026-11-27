@@ -36,8 +36,10 @@ ckc "JSON 带 strength_labels" "$($BIN verify fixtures/strength_trial.ltir --jso
 ck "tri stdout 无三态词" "$($BIN verify fixtures/strength_trial.ltir --tri | grep -cE 'True|False|UNDECIDED')" '0'
 # 计分立法 EXAM_SCORING.md（0.2.0，豆包发现反号后重立）：判定主项 / 证书加成 / 展示归零。
 # 旧断言「零判定纯标签卷 100」正是被废的反号行为，卷已按新法补真判定。
-printf 'submit:\nA: 1+1=2 -> True\nA: 2+2=4 -> True\nby: Gentzen-1936\nrule: MP\n' > "$TMP/ans.ltir"
-ckc "判定+证书链 40（2×15+2×5）" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --json --no-clock --human=n 2>/dev/null)" '"score":40'
+printf 'submit:\nA: 1+1=2 -> True\nA: 2+2=4 -> True\nrule: MP\nrule: MT\nby: rule: MP\nby: rule: MT\n' > "$TMP/ans.ltir"
+ckc "判定+证书链 40（2×15+2×5，证书须认账）" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --json --no-clock --human=n 2>/dev/null)" '"score":40'
+printf 'submit:\nV: 1+1=2\nV: 2+2=4\nby: 我编的\nby: 胡写的\n' > "$TMP/ans2.ltir"
+ckc "编造 by 不给加成（豆包 hole，90 封顶路径）" "$(bash ./ltir_exam.sh "$TMP/ans2.ltir" --json --no-clock --human=n 2>/dev/null)" '"score":30'
 ckc "keys 卷按新法 55（V=3=45 + 证书cap2=10）" "$(bash ./ltir_exam.sh exams/keys/injection-check.ltir --json --no-clock --human=n 2>/dev/null)" '"score":55'
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"

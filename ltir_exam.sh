@@ -189,7 +189,28 @@ VJSON="$VJSON]"; DIAGS="$DIAGS]"
 #           否则 min(100, V*15 + min(CERTS,2)*5)
 # 废除：40 分 LINES 保底、CLAIMS ±20/−15、「无证书断言清零」——四项叠加曾致「越判越吃亏」。
 TRI_N=$(printf '%s\n' "$TRI" | grep -cE '^(True|False|UNDECIDED)$' || true); TRI_N=${TRI_N:-0}
-CERTS=$(grep -Ec '^(by:|rule:|cex:|inj:|surj:|bij:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
+# 证书验真（0.2.0 B2，豆包发现）：by: 引用须认账——与引擎 registerByRef 同款
+# 双向子串匹配本卷 axiom:/ref:/rule:/gap: 登记名 + 经典白名单；「by: 我编的」不再拿加成。
+# 其余五类（rule:/cex:/inj:/surj:/bij:）自证登记照旧计入。
+KNOWN="$(grep -hE '^(axiom:|ref:|rule:|gap:)' "$TMPA" 2>/dev/null | sed -E 's/^[a-z]+:[[:space:]]*//')"
+known_hit(){ nm="$1"; [ -z "$nm" ] && return 1
+  case " calc Kunen1971 Godel1940 Cohen1963 " in *" $nm "*) return 0 ;; esac
+  while IFS= read -r a; do [ -z "$a" ] && continue
+    case "$a" in *"$nm"*) return 0 ;; esac
+    case "$nm" in *"$a"*) return 0 ;; esac
+  done <<EOF2
+$KNOWN
+EOF2
+  return 1; }
+CERTS=0
+while IFS= read -r cl; do
+  if printf '%s' "$cl" | grep -q '^by:'; then
+    bid="$(printf '%s' "$cl" | sed -E 's/^by:[[:space:]]*(rule:[[:space:]]*)?//')"
+    known_hit "$bid" && CERTS=$((CERTS+1))
+  else
+    CERTS=$((CERTS+1))
+  fi
+done < <(grep -hE '^(by:|rule:|cex:|inj:|surj:|bij:)' "$TMPA" 2>/dev/null)
 if [ "$TRI_N" -eq 0 ]; then
   SCORE=0
 else

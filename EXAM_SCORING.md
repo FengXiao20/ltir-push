@@ -37,6 +37,14 @@ SCORE = V = 0 → 0
 
 **废除三条旧规**：40 分 LINES 保底（不看内容给分）；CLAIMS +20/−15（判定罚分）；「无证书断言清零」（判定正确反被抹杀）。
 
+## 2.5 证书验真（B2 · 豆包发现：by: 只数行首不验内容）
+
+`by: 我编的 / by: 胡写的` 原来照样拿 +10——满分曾是「六条 1+1=2 加两句胡话」。修法与引擎
+`registerByRef` 同款：**by: 引用须认账**——双向子串匹配本卷 `axiom:/ref:/rule:/gap:` 登记名
++ 经典白名单（calc / Kunen1971 / Godel1940 / Cohen1963）；认不出不计加成。
+其余五类（rule:/cex:/inj:/surj:/bij:）自证登记，照旧计入。
+新满分路径唯一：六条判定 + 两条认账证书；「判定 + 编造 by」封顶 90。
+
 ## 3. 新法对照（同三卷，实跑）
 
 | 卷 | 新分 | 判 |
@@ -57,4 +65,6 @@ SCORE = V = 0 → 0
 
 ## 5. 回归
 
-`tests/regress_bugfix.sh` 新增七条（EXAM_SCORING 节）：纯标签卷 0 / strength_le 弃权卷 15 / 正确判定 15 / 判定+证书 20 / 满分卷 100 / 空卷 0 / 展示标签不入 CERTS。
+`tests/regress_bugfix.sh` EXAM_SCORING 节八条：纯标签卷 0 / strength_le 弃权卷 15 / 正确判定 15 /
+判定+认账证书链 25 / 编造 by 零加成（豆包 hole）/ 六判定认账证书满分 100 / 空卷 0 / 展示标签不入 CERTS。
+`tests/trial_strength.sh` 同步：探针卷改认账引用（40），新增编造 by 探针（30，regress 主项不同卷各计）。
