@@ -170,6 +170,24 @@ ckc "第一条判定 file_line=2" "$O" '"file_line":2'
 ckc "第二条判定 file_line=4" "$O" '"file_line":4'
 ckc "判定序号 n 不变" "$O" '"n":1'
 
+echo "== ST 强度草案补漏：v2 纯名字公理不得指纹碰撞 / 非法 sig_mode 给码 =="
+printf 'axiom: AC, Separation, Replacement\nsig_mode: formula\ntheory_sig: ?\n' > "$TMP/st1.ltir"
+printf 'axiom: Choice, Foundation, Infinity\nsig_mode: formula\ntheory_sig: ?\n' > "$TMP/st2.ltir"
+S1="$($BIN verify "$TMP/st1.ltir" --json | grep -o '"theory_sig":"[0-9a-f]*"')"
+S2="$($BIN verify "$TMP/st2.ltir" --json | grep -o '"theory_sig":"[0-9a-f]*"')"
+ck "v2 纯名字公理：不同理论指纹必须不同" "$([ "$S1" != "$S2" ] && echo yes)" "yes"
+printf 'lang: L = {0 ; S}\naxiom: Sep = forall n (n = n)\nsig_mode: formula\ntheory_sig: ?\n' > "$TMP/st3.ltir"
+printf 'lang: L = {0 ; S}\naxiom: Q = forall n (n = n)\nsig_mode: formula\ntheory_sig: ?\n' > "$TMP/st4.ltir"
+S3="$($BIN verify "$TMP/st3.ltir" --json | grep -o '"theory_sig":"[0-9a-f]*"')"
+S4="$($BIN verify "$TMP/st4.ltir" --json | grep -o '"theory_sig":"[0-9a-f]*"')"
+ck "回归：v2 同公式不同名仍同指纹" "$([ "$S3" = "$S4" ] && echo yes)" "yes"
+printf 'sig_mode: banana\n' > "$TMP/st5.ltir"
+O="$($BIN verify "$TMP/st5.ltir"; echo "RC=$?")"
+ckc "非法 sig_mode 值给 E-SYN" "$O" 'E-SYN'
+ckc "非法 sig_mode 硬错误 exit 1" "$O" 'RC=1'
+printf 'sig_mode: formula\nsig_mode: named\nV: 1+1\n' > "$TMP/st6.ltir"
+ckc "回归：合法开关切换仍只登记" "$($BIN verify "$TMP/st6.ltir")" 'L01 True  2'
+
 echo "== B6 exam --json：stdout 只给一条 JSON 回执，题面走 stderr =="
 EO="$(printf 'A: 1+1=2 -> True\nsubmit:\n' | bash ltir_exam.sh --json --no-clock --human=n --seed=42 2>"$TMP/b6.err")"
 ckn "json 模式 stdout 不含题面文本" "$EO" 'problem:'

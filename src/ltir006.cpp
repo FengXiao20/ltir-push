@@ -771,7 +771,9 @@ static std::string computeTheorySig(const Ctx& c){
   /* 试验开关：v2 只喂公式本体，公理名这个符号不再参与 hash；默认 v1 逐字保留 0.1.1 输出。 */
   const bool formulaOnly=(c.sigMode=="formula");
   std::vector<std::string> ax,rl;
-  for(const auto&p:c.axiomBodies) ax.push_back(formulaOnly?p.second:(p.first+"="+p.second));
+  /* 0.1.1 ST 补漏：v2 下空本体（纯名字）公理回退用名字参与 hash——
+   * 否则不同理论的纯名字公理列表全塌成空串，指纹退化碰撞、sig_mismatch 失灵。 */
+  for(const auto&p:c.axiomBodies) ax.push_back(formulaOnly?(p.second.empty()?(p.first+"="):p.second):(p.first+"="+p.second));
   std::sort(ax.begin(),ax.end());
   rl=c.rules; std::sort(rl.begin(),rl.end());
   std::string s=std::string(formulaOnly?"LTIR-THEORY-SIG-v2\n":"LTIR-THEORY-SIG-v1\n")+"lang:"+c.langSig+"\n";
@@ -1478,7 +1480,8 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   /* 强度草案试验：指纹口径开关，只登记、不产三态 */
   if (key=="sig_mode:") {
     const std::string v=trim(body);
-    if(v=="formula"||v=="named") c.sigMode=v;
+    if(v!="formula"&&v!="named") return codeRes("E-SYN",3);   /* 0.1.1 ST：非法开关值硬错误，不静默忽略 */
+    c.sigMode=v;
     c.registered++; c.ledger.push_back("sig_mode: "+c.sigMode); R.state=-1; return R;
   }
   if (key=="by:") { c.registered++; R.state=-1; return R; }

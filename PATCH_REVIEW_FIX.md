@@ -67,6 +67,15 @@ R/N/Z/Q 与 `R -> R` 等真无限域形态。考试计分（声明扣分）不�
 - 留档不动：`V:` 计入 decorations 是冻结断言锁定的有意设计；考试结构计分（全 UNDECIDED 卷 40 分）属设计取舍。
 - 回归组扩至 **81 条**全绿；SMOKE 445/445、demo 基线零漂移。
 
+## ST 强度草案补漏（10a01db 试验版之上，追加）
+
+- **指纹退化碰撞**：`sig_mode: formula` 下纯名字公理（无公式本体）曾全部塌成空串，
+  `axiom: AC, Separation, Replacement` 与 `axiom: Choice, Foundation, Infinity` 指纹相同。
+  现 v2 下空本体公理回退用名字参与 hash；带公式本体的公理仍只认公式（Sep=φ ≡ Q=φ 不变）。
+- **非法 sig_mode 值**：`sig_mode: banana` 曾静默回退 named；现给 `E-SYN` 硬错误（exit 1）。
+- 回归组扩至 **86 条**全绿；trial_strength 12/12、SMOKE 445/445、demo 基线零漂移。
+- 留档待立法：展示标签进 CERTS 致纯标签卷 100 分、纯 strength_le 卷 60 分——计分口径属作者立法权。
+
 ## 附带
 
 - README 仓库地图失效引用 `PATCH_009.md` → `PATCH_A.md`。
