@@ -66,3 +66,9 @@ E-EXAM-OUTPUT	1	conflicting output modes	输出模式冲突
 
 # ── 0.1.1 新增：不定式专码（0/0 不再蹭 E-SCOPE-TRANSCENDENTAL） ──
 E-INDETERMINATE	3	indeterminate form (0/0): inverse undefined + zero absorption + path-dependence conflict; honest abstain, NaN is only a word	不定式（0/0）：逆元失效 ∧ 零吸收 ∧ 路径依赖叠加，商无唯一值；诚实弃权，NaN 仅为人话兜底词
+
+# ── 授权收尾：一致性强度与 Gödel II 独立立码（不再蹭 E-SCOPE-CONSISTENCY） ──
+E-GODEL-II	3	Goedel II structural guard: T cannot certify Con(T) from within; abstain, not a claim of inconsistency	哥德尔第二不完备结构护栏：T 不能自证 Con(T)；弃权，并非宣称 T 不一致
+E-STRENGTH-NOCERT	3	consistency-strength comparison lacks interpretation certificate (translation / preserves / base / notation); abstain	一致性强度比较缺解释证书（翻译/保真/基理论/序数记号）：诚实弃权
+E-STRENGTH-INCOMPARABLE	3	two theories incomparable in the consistency-strength preorder; abstain, never folded into False	两理论在强度偏序中不可比：弃权，绝不并入 False
+E-STRENGTH-CYCLE	3	registered strength edges form a cycle; abstain (Goedel II isomorphic guard)	登记的强度边成环：弃权（与 Gödel II 同构护栏）

@@ -199,6 +199,68 @@ RC=$?
 ck "未交卷仍 exit 3" "$RC" "3"
 ckc "未交卷给 JSON 错误回执" "$(cat "$TMP/b6n.out")" '"submit":false'
 
+echo "== B8 solve：判别式<0 恒号，不得弃权 =="
+printf 'solve: x^2 + 1 >= 0\n' > "$TMP/b8a.ltir"
+O="$($BIN verify "$TMP/b8a.ltir")"
+ckc "x^2+1>=0 → 全体实数 R" "$O" 'x ∈ R'
+ckn "B8a 不再 UNDECIDED" "$($BIN verify "$TMP/b8a.ltir" --tri)" 'UNDECIDED'
+printf 'solve: x^2 + 1 <= 0\n' > "$TMP/b8b.ltir"
+O="$($BIN verify "$TMP/b8b.ltir")"
+ckc "x^2+1<=0 → 空集" "$O" 'x ∈ ∅'
+printf 'solve: -x^2 - 1 <= 0\n' > "$TMP/b8c.ltir"
+O="$($BIN verify "$TMP/b8c.ltir")"
+ckc "-x^2-1<=0 → 全体实数 R" "$O" 'x ∈ R'
+printf 'solve: x^2 + 1 = 0\n' > "$TMP/b8d.ltir"
+ckc "x^2+1=0 → 空集（无实根）" "$($BIN verify "$TMP/b8d.ltir")" 'x ∈ ∅'
+printf 'solve: -x^2 - 1 >= 0\n' > "$TMP/b8e.ltir"
+ckc "-x^2-1>=0 → 空集" "$($BIN verify "$TMP/b8e.ltir")" 'x ∈ ∅'
+printf 'solve: 2x^2 + 3 <= 0\n' > "$TMP/b8f.ltir"
+ckc "2x^2+3<=0 → 空集" "$($BIN verify "$TMP/b8f.ltir")" 'x ∈ ∅'
+printf 'solve: x^2 - 1 >= 0\n' > "$TMP/b8g.ltir"
+ckc "B7 端点闭合零回归" "$($BIN verify "$TMP/b8g.ltir")" '(-∞, -1]'
+
+echo "== B9 divv：RAT/RAT 不再被分母有理化撑爆 =="
+printf 'V: 1/110000000000000000\n' > "$TMP/b9a.ltir"
+ckc "1/1.1e17 精确出分数" "$($BIN verify "$TMP/b9a.ltir")" 'L01 True  1/110000000000000000'
+printf 'V: 1/1000000000000 + 1/1000000000000\n' > "$TMP/b9b.ltir"
+ckc "大分母加法仍精确" "$($BIN verify "$TMP/b9b.ltir")" 'L01 True  1/500000000000'
+printf 'V: 1/(1+i)\n' > "$TMP/b9c.ltir"
+ckc "复数分母有理化不回退" "$($BIN verify "$TMP/b9c.ltir")" 'L01 True'
+printf 'V: 0/0\n' > "$TMP/b9d.ltir"
+ckc "0/0 仍归 E-INDETERMINATE" "$($BIN verify "$TMP/b9d.ltir" --json)" 'E-INDETERMINATE'
+printf 'V: 1/0\n' > "$TMP/b9e.ltir"
+ckc "1/0 仍登记 ∞" "$($BIN verify "$TMP/b9e.ltir")" 'L01 True'
+
+echo "== B10 大写 E 科学计数法：整体进 NUM，不拆成隐式乘 =="
+printf 'V: 1.1E17\n' > "$TMP/b10a.ltir"
+ckc "1.1E17 → 110000000000000000" "$($BIN verify "$TMP/b10a.ltir")" 'L01 True  110000000000000000'
+printf 'V: 2E3\n' > "$TMP/b10b.ltir"
+ckc "2E3 → 2000" "$($BIN verify "$TMP/b10b.ltir")" 'L01 True  2000'
+printf 'V: 1.1E-3\n' > "$TMP/b10c.ltir"
+ckc "1.1E-3 → 11/10000" "$($BIN verify "$TMP/b10c.ltir")" 'L01 True  11/10000'
+printf 'V: 1.1e17\n' > "$TMP/b10d.ltir"
+ckn "小写 e 仍是欧拉数，不冒充科学计数" "$($BIN verify "$TMP/b10d.ltir")" '110000000000000000'
+printf 'V: 1.1E17 + 1\n' > "$TMP/b10e.ltir"
+ckc "大数仍能参与四则" "$($BIN verify "$TMP/b10e.ltir")" 'L01 True  110000000000000001'
+
+echo "== 授权收尾：四个独立码入表且各归其位 =="
+ckc "码表含 E-GODEL-II" "$(cat lab_codes.tsv)" 'E-GODEL-II'
+ckc "码表含 E-STRENGTH-NOCERT" "$(cat lab_codes.tsv)" 'E-STRENGTH-NOCERT'
+ckc "码表含 E-STRENGTH-INCOMPARABLE" "$(cat lab_codes.tsv)" 'E-STRENGTH-INCOMPARABLE'
+ckc "码表含 E-STRENGTH-CYCLE" "$(cat lab_codes.tsv)" 'E-STRENGTH-CYCLE'
+printf 'con: ZFC -> ZFC\n' > "$TMP/au1.ltir"
+ckc "con 自指 → E-GODEL-II" "$($BIN verify "$TMP/au1.ltir")" 'E-GODEL-II'
+ckc "con 自指仍 UNDECIDED 不并 False" "$($BIN verify "$TMP/au1.ltir")" '0 True, 0 False, 1 UNDECIDED'
+printf 'strength_le: Q <= PA -> True\n' > "$TMP/au2.ltir"
+ckc "强度比较 → E-STRENGTH-NOCERT" "$($BIN verify "$TMP/au2.ltir")" 'E-STRENGTH-NOCERT'
+ckn "强度比较不再蹭通用码" "$($BIN verify "$TMP/au2.ltir")" 'E-SCOPE-CONSISTENCY'
+printf 'interprets: ZF in ZFC\n' > "$TMP/au3.ltir"
+ckc "interprets 同档" "$($BIN verify "$TMP/au3.ltir")" 'E-STRENGTH-NOCERT'
+ck "Gödel II 定理卷 0 三态" "$($BIN verify fixtures/godel_ii.ltir | grep -c '^L0')" '0'
+ckc "定理卷 counts 全 0" "$($BIN verify fixtures/godel_ii.ltir --json)" '"counts":{"True":0,"False":0,"UNDECIDED":0}'
+ckn "候选三码未入正式码表" "$(cat lab_codes.tsv)" 'E-RULE-CONFLICT'
+ck "码表 E- 条目 59 → 63（append 四行）" "$(grep -c '^E-' lab_codes.tsv)" '63'
+
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"
 echo "-----------------------------------------------"

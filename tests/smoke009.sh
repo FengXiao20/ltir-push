@@ -760,10 +760,10 @@ ckc "真类谈势拦下" "$($BIN verify "$TMP/lg1.ltir")" 'E-SCOPE-PROPER-CLASS'
 printf 'card_le: A <= B by: f\n' > "$TMP/lg2.ltir"
 ckc "无双射证书有码弃权" "$($BIN verify "$TMP/lg2.ltir")" 'E-SCOPE-CARDINAL'
 printf 'strength_le: Q <= PA -> True\n' > "$TMP/lg3.ltir"
-ckc "手写 True 不提供真值" "$($BIN verify "$TMP/lg3.ltir")" 'E-SCOPE-CONSISTENCY'
+ckc "手写 True 不提供真值" "$($BIN verify "$TMP/lg3.ltir")" 'E-STRENGTH-NOCERT'
 ckc "绝不并入 False" "$($BIN verify "$TMP/lg3.ltir")" '── 1 lines: 0 True, 0 False, 1 UNDECIDED ──'
 printf 'con: ZFC -> ZFC\n' > "$TMP/lg4.ltir"
-ckc "Gödel II 结构护栏" "$($BIN verify "$TMP/lg4.ltir")" 'E-SCOPE-CONSISTENCY'
+ckc "Gödel II 结构护栏" "$($BIN verify "$TMP/lg4.ltir")" 'E-GODEL-II'
 printf 'con: ZF, ZFC\nequiconsistent: ZF, ZFC\n' > "$TMP/lg5.ltir"
 ckc "等一致性只登记" "$($BIN verify "$TMP/lg5.ltir")" '── 0 lines:'
 ckc "JSON ledger 字段" "$($BIN verify "$TMP/lg5.ltir" --json)" '"ledger":2'

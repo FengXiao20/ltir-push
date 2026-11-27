@@ -1,0 +1,23 @@
+# LTIR 定理卷 · 哥德尔第二不完备（只登记，不产三态）
+# 与 fixtures/indeterminate.ltir 同纪律：全卷 0 三态，不替行层判 Con(T)。
+# 护栏禁的是「T 自证 Con(T)」，不是「谁都不许描述 T 的语法」；
+# Gentzen 在外部元理论证出 Con(PA) 与本卷并不冲突。
+
+problem: goedel-ii
+status: theorem
+ref: E-GODEL-II, SYNTAX-Godel-II, Gentzen-1936, Hilbert-Bernays
+
+lang: L_T = {0, S, +, *, Prov_T, Con_T}
+axiom: HB1 = forall phi (T |- phi -> T |- Prov_T(phi))
+axiom: HB2 = forall phi psi (T |- Prov_T(phi -> psi) -> (Prov_T(phi) -> Prov_T(psi)))
+axiom: HB3 = forall phi (T |- Prov_T(phi) -> Prov_T(Prov_T(phi)))
+axiom: D1 = Con_T == not Prov_T(perp)
+
+hint: ∵ Löb / Hilbert–Bernays 可导性条件在足够强的递归可枚举 T 中成立
+hint: ∵ 若 T |- Con_T，则 T 可在内部证出自身无矛盾
+hint: ∴ 由 Gödel II，T 一致时 T ⊬ Con_T；不一致时 T 本就平凡
+hint: ∴ 引擎对 con: T -> T 一律弃权，既不判一致也不判不一致
+hint: ∴ 弃权码 E-GODEL-II 独立，不蹭「无解释证书」；UNDECIDED 绝不并 False
+hint: ∴ 外部元理论证书（如 PRA + TI(epsilon_0) |- Con(PA)）只登记，不搬真值
+hint: ∴ 本卷只登记公理本体与因果链，不产 True / False / UNDECIDED
+by: cert-goedel-ii-001

@@ -1,0 +1,29 @@
+# LTIR 历史卷 · 已修「没考虑周全」标本（v2，0.2.0 正式词条）
+# 全卷 0 三态：只登记旧错输出与修后输出；reformulate 必须配 sig: + by:。
+# 「先看见，再补」：reflect: gaps 列出全部 id；规则复现不了修后输出即弃权。
+
+problem: history-gaps
+status: ledger
+ref: PATCH_0.1.2.md, PATCH_0.2.0.md, fixtures/indeterminate.ltir
+
+sig: ltir_quad_sign : Poly -> Set
+gap: quad_disc_neg   where: disc < 0
+reformulate: ltir_quad_sign(A, op) = sign_table(A, op)
+witness: solve: x^2 + 1 >= 0  ->  x ∈ R
+by: cert-quad-002
+
+sig: ltir_rat_div : Rat -> Rat -> Rat
+gap: div_self_square   where: y.a * y.a overflows
+reformulate: ltir_rat_div(a, b, c, d) = a*d/(b*c)
+witness: V: 1/110000000000000000  ->  1/110000000000000000
+by: cert-ratdiv-001
+
+gap: sci_upper_e   where: token ends with E<digits>
+reformulate: ltir_sci_number(m, e) = m * 10^e
+witness: V: 1.1E17  ->  110000000000000000
+by: cert-sci-003
+
+quote: <ltir> V: 2sqrt(2) </ltir>
+reflect: gaps
+reflect: rules
+depth: 12

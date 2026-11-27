@@ -1,0 +1,6 @@
+# 授权收尾裁决：三行「不准 append」，理由见 PATCH_AUTHORIZED.md
+# 复用现成 E-DEF-SIG（level 3，签名/参数不符）；冲突同族，避免码表膨胀。
+# 本文件仅记录裁决，不覆盖 lab_codes.tsv。
+# E-RULE-GAP        → 不准：现成 E-DEF-SIG 已覆盖「缺口无规则」
+# E-RULE-CONFLICT   → 不准：同 id / 撞模式一律 E-DEF-SIG，不静默择一
+# E-META-EVAL       → 不准：自举是永久锁，不靠错误码挡，靠「没有实现路径」

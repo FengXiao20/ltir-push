@@ -590,3 +590,37 @@ belong to the legislator — patches do not mint versions.
 - **仍锁**：`core/` 十一件与 `RUN_core_sha.txt` 一字不动；不新增判定核、
   不开 `sqrt(-1)` / 复数比较、不重写测试事件消费层、不推进版本。
 - SMOKE `445 / 445`；demo `24 lines: 20/3/1`、三角囚徒 `10 True` 逐字不漂。
+
+
+## 0.2.0 元编程词条（只登记，不判）
+
+- 新增长名六词：`gap:` / `reformulate:` / `quote:` / `reflect:` / `depth:` / `trace:`。
+  全部 `registered++` 后返回 `state=-1`，**0 三态**；短写表仍冻结。
+- `depth:` 给 `expand:` 的有限步上界（缺省 8，范围 1–64）；`trace: on` 把逐步展开
+  写 stderr，不进 stdout。`quote:` 只把一段 `.ltir` 当展示型数据登记，
+  **不 eval**；`reflect:` 是只读镜，摘要进 ledger 与 `--json` 的 `meta_*` 字段。
+- `gap:` 同 id 两条 / `depth:` 越界 / `reflect:` 未知目标，复用 `E-DEF-SIG`，
+  绝不静默择一。`reformulate:` 本期不自动接管 UNDECIDED 分支。
+- **永久锁**：自举执行自产 `.ltir`、运行时写回码表、`grammar:` 生成解析器、
+  元层产 True、自动跨图搬真值。`core/` 十一件与 `RUN_core_sha.txt` 一字不动。
+- 定理卷与历史卷：`ref:` 指向 `fixtures/indeterminate.ltir` 与
+  `fixtures/history_gaps.ltir`；两卷均 `0 lines: 0 True, 0 False, 0 UNDECIDED`。
+- 仍锁：`core/` 十一件；`A.p==0` 一次不等式、`sqrt(-1)`、复数比较留 BACKLOG；
+  码表未 append、不推进版本。
+
+
+## 授权收尾：四个独立码与 Gödel II 定理卷
+
+- `lab_codes.tsv` append-only 四行：`E-GODEL-II` / `E-STRENGTH-NOCERT` /
+  `E-STRENGTH-INCOMPARABLE` / `E-STRENGTH-CYCLE`。历史行一字未动。
+- `con: T -> T` 由通用 `E-SCOPE-CONSISTENCY` 改归 `E-GODEL-II`；
+  `strength_le:` / `interprets:` 改归 `E-STRENGTH-NOCERT`。
+  两者仍 `UNDECIDED`，**不并 False、不判 `Con(T)`、不判不一致**。
+- `E-STRENGTH-INCOMPARABLE` / `E-STRENGTH-CYCLE` 本期**只立法、不挂逻辑**：
+  偏序 DAG 与证书边尚未实现，码位先立好，条文明写「预留」。
+- 定理卷 `fixtures/godel_ii.ltir`：Hilbert–Bernays 三条件 + `Con_T` 定义 +
+  ∵∴ 链，`verify` 输出 `0 lines: 0 True, 0 False, 0 UNDECIDED`。
+  卷内不写 `con: T -> T`（那会产一行弃权），只以 `hint:` 登记。
+- 元编程三个候选码**裁决不 append**，冲突一律复用 `E-DEF-SIG`。
+- 仍锁：`core/` 十一件与 `RUN_core_sha.txt`；自举永久不做；
+  不推进 `VERSION` / `LTIR_STAMP`，仍 `0.1.1`。

@@ -9,7 +9,7 @@
 #include "value.hpp"
 
 /* 0.1.1：版本号单一来源——所有横幅/JSON/help 引用本宏，杜绝重复字面量 */
-#define LTIR_VER "0.1.1"
+#define LTIR_VER "0.2.0"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -260,7 +260,9 @@ static bool isKeyword(const std::string& k) {
     /* 强度草案试验：指纹口径开关 + 展示型值标签（只登记，不产值；短写表仍冻结） */
     "sig_mode:","ordinal:","benchmark:","metatheory:","notation:","con_base:",
     /* 0.1.1：顶层证书行 by: 只登记，不再落 E-UNK-LINE（短写表仍冻结） */
-    "by:"
+    "by:",
+    /* 0.2.0 元编程：只登记、0 三态、不自举（全英文长名，短写表仍冻结） */
+    "gap:","reformulate:","quote:","reflect:","depth:","trace:"
   };
   return K.count(k)>0;
 }
@@ -365,7 +367,37 @@ static std::vector<Tok> lex(const std::string& src) {
     if ((unsigned char)c>=0x80u) { ++i; continue; }       // 域外/中文：跳过，不解释
     if (isdigit((unsigned char)c)||(c=='.'&&i+1<src.size()&&isdigit((unsigned char)src[i+1]))) {
       std::size_t b=i; while(i<src.size()&&(isdigit((unsigned char)src[i])||src[i]=='.'))++i;
-      const std::string s=src.substr(b,i-b); Rational v;
+      const std::string s=src.substr(b,i-b);
+      /* 0.1.2 B10：大写 E 科学计数法整体吃进 NUM。
+       * 小写 e 仍是欧拉数 SYM，绝不拆成 1.1 * e * 17；零浮点，仍是精确分数。 */
+      if(i<src.size()&&src[i]=='E'){
+        std::size_t j=i+1; bool eneg=false;
+        if(j<src.size()&&(src[j]=='+'||src[j]=='-')){ eneg=(src[j]=='-'); ++j; }
+        const std::size_t eb=j;
+        while(j<src.size()&&isdigit((unsigned char)src[j]))++j;
+        if(j>eb&&j-eb<=2){
+          int e=0; for(std::size_t t=eb;t<j;++t) e=e*10+(src[t]-'0');
+          if(eneg) e=-e;
+          if(e>=-18&&e<=18){
+            std::string m=s; int frac=0;
+            const std::size_t dot=m.find('.');
+            if(dot!=std::string::npos){ frac=(int)(m.size()-dot-1); m.erase(dot,1); }
+            const std::size_t nz=m.find_first_not_of('0');
+            const std::string digs=(nz==std::string::npos?"0":m.substr(nz));
+            const int shift=e-frac;
+            std::string out;
+            if(shift>=0) out=digs+std::string(shift,'0');
+            else { const int k=-shift;
+              if(k>=(int)digs.size()) out="0."+std::string(k-(int)digs.size(),'0')+digs;
+              else out=digs.substr(0,digs.size()-k)+"."+digs.substr(digs.size()-k); }
+            Rational sv;
+            if(ltir::parseDecimalToRational(out,sv)){
+              i=j; Tok z; z.t=Tok::NUM; z.s=src.substr(b,j-b); z.v=sv; r.push_back(z); continue;
+            }
+          }
+        }
+      }
+      Rational v;
       if (!ltir::parseDecimalToRational(s,v)) { push(Tok::ID,s); continue; }
       Tok z; z.t=Tok::NUM; z.s=s; z.v=v; r.push_back(z); continue;
     }
@@ -687,6 +719,11 @@ static bool radixNorm(const std::string& s,int base,std::string& out,std::string
 }
 
 struct Ctx {
+  /* 0.2.0 元编程：登记容器与有限步开关（不产三态、不执行自产代码） */
+  std::vector<std::string> gaps, reformulations, quotes;
+  std::map<std::string,std::string> gapSeen;
+  int expandDepth=8;
+  bool traceOn=false;
   std::map<std::string,Num> env;
   std::map<std::string,Poly> funcs;
   std::map<std::string,std::pair<std::string,std::string>> seqs;
@@ -1424,7 +1461,8 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     const std::size_t a=body.find("->");            // Gödel II：结构护栏，不是外挂 if
     if(a!=std::string::npos){
       const std::string l=trim(body.substr(0,a)), r=trim(body.substr(a+2));
-      if(!l.empty() && l==r) return codeRes("E-SCOPE-CONSISTENCY",2);
+      /* 授权收尾：Gödel II 独立立码，不再蹭通用「无解释证书」 */
+      if(!l.empty() && l==r) return codeRes("E-GODEL-II",2);
     }
     c.registered++; c.ledger.push_back("con: "+body); R.state=-1; return R;
   }
@@ -1459,7 +1497,8 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     c.base=b; c.registered++; R.state=-1; return R;
   }
   if (key=="strength_le:"||key=="interprets:") {
-    return codeRes("E-SCOPE-CONSISTENCY",2);       // 无解释证书：有码弃权，不并 False
+    /* 授权收尾：强度比较专用码。手写 -> True 不提供真值，UNDECIDED 不并 False。 */
+    return codeRes("E-STRENGTH-NOCERT",2);
   }
   if (key=="card_le:"||key=="card_eq:") {
     for(const auto& p:c.properClasses){
@@ -1485,6 +1524,43 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     c.registered++; c.ledger.push_back("sig_mode: "+c.sigMode); R.state=-1; return R;
   }
   if (key=="by:") { c.registered++; R.state=-1; return R; }
+
+  /* ══════════ 0.2.0 元编程：quotation 可做，eval 永久不做 ══════════
+   * 六词全部只登记：0 三态、不进指纹、不搬真值、不执行自产 .ltir。
+   * 冲突与非法参数复用现成 E-DEF-SIG，不擅自 append 码表。 */
+  if (key=="depth:") {
+    const std::string dv=trim(body); int d=0; bool ok=!dv.empty();
+    for(char ch:dv){ if(ch<'0'||ch>'9'){ok=false;break;} d=d*10+(ch-'0'); if(d>1000){ok=false;break;} }
+    if(!ok||d<1||d>64) return codeRes("E-DEF-SIG",3);
+    c.expandDepth=d; c.registered++; c.ledger.push_back("depth: "+dv); R.state=-1; return R;
+  }
+  if (key=="trace:") {
+    const std::string v=trim(body);
+    if(v!="on"&&v!="off") return codeRes("E-DEF-SIG",3);
+    c.traceOn=(v=="on"); c.registered++; R.state=-1; return R;
+  }
+  if (key=="gap:") {
+    const std::string b=trim(body);
+    const std::string id=trim(b.substr(0,b.find_first_of(" \t")));
+    if(id.empty()) return codeRes("E-DEF-SIG",3);
+    if(c.gapSeen.count(id)) return codeRes("E-DEF-SIG",2);  /* 同 id 两条：弃权，不静默择一 */
+    c.gapSeen[id]=b; c.gaps.push_back(b); c.registered++; c.ledger.push_back("gap: "+id); R.state=-1; return R;
+  }
+  if (key=="reformulate:") {
+    c.reformulations.push_back(trim(body)); c.registered++; R.state=-1; return R;
+  }
+  if (key=="quote:") {
+    c.quotes.push_back(trim(body)); c.registered++; R.state=-1; return R;
+  }
+  if (key=="reflect:") {
+    const std::string w=trim(body);
+    if(w=="gaps") for(const auto& g:c.gaps) c.ledger.push_back("reflect/gap: "+g);
+    else if(w=="rules") for(const auto& g:c.reformulations) c.ledger.push_back("reflect/rule: "+g);
+    else if(w=="quotes") for(const auto& g:c.quotes) c.ledger.push_back("reflect/quote: "+g);
+    else if(w=="codes") c.ledger.push_back("reflect/codes: read-only");  /* 码表只读镜，不列内容 */
+    else return codeRes("E-DEF-SIG",3);
+    c.registered++; R.state=-1; return R;
+  }
 
   if (key=="zf:"||key=="zfc:"||key=="given:"||key=="case:") {
     c.registered++; R.state=-1;                       // 只登记不判（保留现有语义）
@@ -1611,6 +1687,18 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       if(A.p==0||d.t.size()>3) return codeRes("E-SCOPE-SYMBOLIC",2);
       Rational disc; Rational b2,four_ac,tmp;
       if(!ratMul(B,B,b2)||!ratMul(A,C,tmp)||!ratMul(tmp,rat(4,1).a,four_ac)||!ratSub(b2,four_ac,disc)) return codeRes("E-SCOPE-SYMBOLIC",2);
+      /* 0.1.2 B8：Δ<0 恒号 —— 根本不需要开方。
+       * 旧实现先 sqrtR(disc)，开不出有理根就弃权，把能判的分支挡在门外。
+       * A>0 恒正 / A<0 恒负，解集只由 A 的符号与不等号方向决定。 */
+      if(disc.p<0){
+        const bool eq2=(o=="="||o=="==");
+        if(eq2){ R.state=1; R.out="x \xE2\x88\x88 \xE2\x88\x85"; return R; }
+        const bool aPos=(A.p>0), wantPos=(o==">"||o==">=");
+        const bool holds=(aPos==wantPos);
+        R.state=1;
+        R.out=holds?"x \xE2\x88\x88 R":"x \xE2\x88\x88 \xE2\x88\x85";
+        return R;
+      }
       Num sd=sqrtR(disc); if(sd.k!=Num::RAT) return codeRes("E-SCOPE-SYMBOLIC",2);
       Rational twoA; if(!ratMul(A,rat(2,1).a,twoA)) return codeRes("E-SCOPE-SYMBOLIC",2);
       Rational nb; if(!ratNeg(B,nb)) return codeRes("E-SCOPE-SYMBOLIC",2);
@@ -1817,15 +1905,17 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     const std::size_t lp=e.find('(');
     if(lp!=std::string::npos && !c.defBodies.count(trim(e.substr(0,lp))))
       return codeRes("E-NAME",3);
+    /* 0.2.0：步数由 depth: 给（缺省 8，旧卷零回归）；trace: on 时逐步走 stderr。 */
     int steps=0;
-    for(;steps<8;++steps){
+    for(;steps<c.expandDepth;++steps){
       bool changed=false;
       std::string nx=deltaStep(c,e,changed);
       if(!changed) break;
       if(nx.size()>4096) return codeRes("E-DEF-DEPTH",2);
+      if(c.traceOn) std::cerr<<"[trace "<<(steps+1)<<"] "<<nx<<"\n";
       e=nx;
     }
-    if(steps>=8) return codeRes("E-DEF-DEPTH",2);
+    if(steps>=c.expandDepth) return codeRes("E-DEF-DEPTH",2);
     Num v=evalExpr(c,"("+e+")");
     if(v.k==Num::UND||v.k==Num::SYM) return codeRes("E-SCOPE-SYMBOLIC",2);
     R.state=1; R.out=numStr(v); R.code=""; return R;
@@ -2409,6 +2499,10 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
              <<",\"def_sigs\":"<<c.defSigs.size()
              <<",\"rules\":"<<c.rules.size()
              <<",\"grammars\":"<<c.grammars.size()
+             <<",\"meta_gaps\":"<<c.gaps.size()
+             <<",\"meta_rules\":"<<c.reformulations.size()
+             <<",\"meta_quotes\":"<<c.quotes.size()
+             <<",\"meta_depth\":"<<c.expandDepth
              <<",\"axiom_bodies\":"<<c.axiomBodies.size()
              <<",\"lang\":\""<<jesc(c.langSig)<<"\""
              <<",\"theory_sig\":\""<<c.theorySigHex<<"\""

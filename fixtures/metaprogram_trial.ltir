@@ -1,0 +1,17 @@
+# LTIR 0.2.0 元编程试验卷（只登记，0 三态，不 eval）
+problem: metaprogram-trial
+status: experiment
+ref: META_KEYWORDS.md, NEXT_VERSION_DRAFT.md
+
+sig: my_quad_sign : Poly -> Set
+gap: quad_disc_neg   where: disc < 0
+reformulate: my_quad_sign(A, op) = sign_table(A, op)
+witness: solve: x^2 + 1 >= 0  ->  x ∈ R
+by: cert-quad-002
+
+quote: <ltir> V: x^2 + 1 >= 0 </ltir>
+reflect: gaps
+reflect: rules
+reflect: codes
+depth: 12
+trace: off

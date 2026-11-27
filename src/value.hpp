@@ -201,6 +201,12 @@ inline Num divv(const Num& x, const Num& y) {
     return infinity();
   }
   if (isZero(y)) return isZero(x)?undIndet():infinity();   // 0/0 → E-INDETERMINATE；1/0 → ∞
+  /* 0.1.2 B9：RAT/RAT 直接精确相除，不再绕「分母有理化」先算 y.a*y.a。
+   * 旧路径 1/1e10 会先算 1e20 撑爆 checkedMul，把能算的式子洗成 UNDECIDED。 */
+  if (x.k==Num::RAT&&y.k==Num::RAT) {
+    Rational q; if(!ratDiv(x.a,y.a,q)) return und();
+    return fromR(q);
+  }
   if (x.k==Num::SYM||y.k==Num::SYM) {
     if (x.k==Num::SYM&&y.k==Num::RAT) { Num n=x; Rational c,o;
       if(!ratDiv(x.coef,y.a,c)||!ratDiv(x.off,y.a,o)){return und();} n.coef=c;n.off=o;return n;}
