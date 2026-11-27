@@ -261,6 +261,27 @@ ckc "定理卷 counts 全 0" "$($BIN verify fixtures/godel_ii.ltir --json)" '"co
 ckn "候选三码未入正式码表" "$(cat lab_codes.tsv)" 'E-RULE-CONFLICT'
 ck "码表 E- 条目 59 → 65（0.1.2/0.2.0 四行 + B 批 E-META-RANGE/E-META-ANCHOR 两行）" "$(grep -c '^E-' lab_codes.tsv)" '65'
 
+echo "== EXAM_SCORING 计分立法（0.2.0 反号修复，豆包发现） =="
+exrun(){ printf '%s\nsubmit:\n' "$2" > "$TMP/ex.ltir"; bash ./ltir_exam.sh "$TMP/ex.ltir" 2>/dev/null | grep -oE 'score=[0-9]+/100' | head -1; }
+ck "纯标签卷 0 分" "$(exrun x 'notation: a
+con_base: b
+ordinal: c
+benchmark: d')" 'score=0/100'
+ck "strength_le 缺证书弃权卷 15" "$(exrun x 'strength_le: PA -> ZFC')" 'score=15/100'
+ck "正确判定不再清零 15" "$(exrun x 'A: 1+1=2 -> True')" 'score=15/100'
+ck "判定+证书 20" "$(exrun x 'A: 1+1=2 -> True
+by: c1')" 'score=20/100'
+ck "六判定两证书满分 100" "$(exrun x 'V: 1+1=2
+V: 2+2=4
+V: 3+3=6
+V: 4+4=8
+V: 5+5=10
+V: 6+6=12
+by: c1
+by: c2')" 'score=100/100'
+ck "空卷 0 分" "$(exrun x '')" 'score=0/100'
+ck "展示标签已移出 CERTS 正则" "$(grep -c 'interprets:' ltir_exam.sh)" '0'
+
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"
 echo "-----------------------------------------------"

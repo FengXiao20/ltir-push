@@ -181,20 +181,22 @@ $TRI
 EOF
 VJSON="$VJSON]"; DIAGS="$DIAGS]"
 
-LINES=$(grep -c '[^[:space:]]' "$TMPA" 2>/dev/null); LINES=${LINES:-0}; LINES=${LINES%%$'\n'*}
-CLAIMS=$(grep -c -- '-> *True' "$TMPA" 2>/dev/null); CLAIMS=${CLAIMS:-0}; CLAIMS=${CLAIMS%%$'\n'*}
-CERTS=$(grep -Ec '^(by:|rule:|cex:|interprets:|translation:|inj:|surj:|bij:|metatheory:|notation:|con_base:|ordinal:|benchmark:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
-SCORE=0
-[ "$LINES" -gt 0 ] && SCORE=40
-[ "$CERTS" -gt 4 ] && CERTS=4
-SCORE=$((SCORE + CERTS*10))
-[ "$CLAIMS" = 0 ] && SCORE=$((SCORE+20))
-SCORE=$((SCORE - CLAIMS*15))
-[ "$SCORE" -lt 0 ] && SCORE=0
-[ "$SCORE" -gt 100 ] && SCORE=100
-# 空卷 / 只甩声明词 → 0 分，且不提前告知
-[ "$LINES" = 0 ] && SCORE=0
-[ "$CERTS" = 0 ] && [ "$CLAIMS" -gt 0 ] && SCORE=0
+# ══ 计分立法 EXAM_SCORING.md（0.2.0 · 反号修复，豆包发现） ══
+# 方向（TA 令）：判定主项 / 证书加成 / 展示归零——分数与「判得对不对」同号。
+#   V     = --tri 判定行数（True/False/UNDECIDED 同酬 15 分，cap 6=90；ERROR 已被 --tri 排除，不冒充 UNDECIDED）
+#   CERTS = 真证书锚 by:/rule:/cex:/inj:/surj:/bij:（加成 5 分/条，cap 2=10）；展示标签移出，0 分
+#   SCORE = V=0 → 0（只甩声明词 / 纯标签卷 / 越界声明一律零分）
+#           否则 min(100, V*15 + min(CERTS,2)*5)
+# 废除：40 分 LINES 保底、CLAIMS ±20/−15、「无证书断言清零」——四项叠加曾致「越判越吃亏」。
+TRI_N=$(printf '%s\n' "$TRI" | grep -cE '^(True|False|UNDECIDED)$' || true); TRI_N=${TRI_N:-0}
+CERTS=$(grep -Ec '^(by:|rule:|cex:|inj:|surj:|bij:)' "$TMPA" 2>/dev/null); CERTS=${CERTS:-0}; CERTS=${CERTS%%$'\n'*}
+if [ "$TRI_N" -eq 0 ]; then
+  SCORE=0
+else
+  SCORE=$((TRI_N*15)); [ "$SCORE" -gt 90 ] && SCORE=90
+  [ "$CERTS" -gt 2 ] && CERTS=2
+  SCORE=$((SCORE + CERTS*5)); [ "$SCORE" -gt 100 ] && SCORE=100
+fi
 
 if [ "$NOCLOCK" = 1 ]; then ELAPSED=0
 else ELAPSED=$(( $(date +%s 2>/dev/null || printf '0') - T0 )); fi

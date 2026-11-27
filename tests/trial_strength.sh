@@ -34,10 +34,11 @@ ckc "人话档只报标签数" "$T" 'strength_labels: 5 (display-only; no verdic
 ckc "JSON 带 sig_mode" "$($BIN verify fixtures/strength_trial.ltir --json)" '"sig_mode":"formula"'
 ckc "JSON 带 strength_labels" "$($BIN verify fixtures/strength_trial.ltir --json)" '"strength_labels":5'
 ck "tri stdout 无三态词" "$($BIN verify fixtures/strength_trial.ltir --tri | grep -cE 'True|False|UNDECIDED')" '0'
-# 核心操作打分：链齐给分，旧答案卷分数不漂
-printf 'submit:\nby: Gentzen-1936\nrule: MP\nmetatheory: PRA + TI(e0)\nnotation: CNF-v1\ncon_base: PRA\nordinal: epsilon_0\n' > "$TMP/ans.ltir"
-ckc "证书链齐可打分" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --json --no-clock --human=n 2>/dev/null)" '"score":100'
-ckc "旧答案卷分数不漂" "$(bash ./ltir_exam.sh exams/keys/injection-check.ltir --json --no-clock --human=n 2>/dev/null)" '"score":100'
+# 计分立法 EXAM_SCORING.md（0.2.0，豆包发现反号后重立）：判定主项 / 证书加成 / 展示归零。
+# 旧断言「零判定纯标签卷 100」正是被废的反号行为，卷已按新法补真判定。
+printf 'submit:\nA: 1+1=2 -> True\nA: 2+2=4 -> True\nby: Gentzen-1936\nrule: MP\n' > "$TMP/ans.ltir"
+ckc "判定+证书链 40（2×15+2×5）" "$(bash ./ltir_exam.sh "$TMP/ans.ltir" --json --no-clock --human=n 2>/dev/null)" '"score":40'
+ckc "keys 卷按新法 55（V=3=45 + 证书cap2=10）" "$(bash ./ltir_exam.sh exams/keys/injection-check.ltir --json --no-clock --human=n 2>/dev/null)" '"score":55'
 echo "-----------------------------------------------"
 echo "$PASS / $TOTAL 项满足"
 echo "-----------------------------------------------"
