@@ -214,7 +214,7 @@ ck "0 三态卷 --tri stdout 0 字节" "$("$BIN" verify fixtures/rewrite_gentzen
 CI_N=$(CI=1 "$BIN" verify fixtures/rewrite_gentzen.ltir 2>/dev/null | grep -Ec '^(True|False|UNDECIDED)|^L0[0-9]')
 ck "CI=1 台账汇报不含三态词行" "$CI_N" "0"
 ckn "--json 不含裸 ERROR 行" "$JS" '"ERROR"'
-ckc "版本仍 0.2.0" "$JS" '"version":"0.2.0"'
+ckc "版本落 0.2.1（转正）" "$JS" '"version":"0.2.1"'
 BAD=0; while read -r h f; do [ -z "$h" ] && continue
   a=$(sha256sum "$f" 2>/dev/null | cut -d' ' -f1); [ "$a" = "$h" ] || BAD=1
 done < RUN_core_sha.txt

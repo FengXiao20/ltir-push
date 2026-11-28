@@ -34,7 +34,7 @@ bash ltir.sh                    # gate check -> build -> SMOKE -> demo
 ./ltir006 verify paper.ltir --tri      # bare True/False/UNDECIDED per line
 ./ltir006 verify paper.ltir --explain  # verbose: caret pointer + code-table reason
 ./ltir006 verify paper.ltir --json     # structured output
-./ltir006 --version            # ltir006 0.2.0
+./ltir006 --version            # ltir006 0.2.1
 ```
 
 C++17, standard library only. Linux + Termux (`pkg install clang make`; keep the
@@ -157,12 +157,24 @@ into `False`. Abstention is a feature, not a bug.
 
 ## Version
 
-**0.2.0** — see `VERSION` (plain text) and `LTIR_STAMP` (build stamp).
+**0.2.1** — see `VERSION` (plain text) and `LTIR_STAMP` (build stamp).
 Lineage: frozen ℚ kernel (0.0.1–2) → capability extension (0.0.4-lab) → shorthand,
 containers, LaTeX, trig, ZFC ledger (0.0.5) → self-contained C++ layer (0.0.6,
 reinforced) → set-theory map & quantifiers (0.0.7) → formal defs & multiverse (0.0.8)
 → implicit product, π/12 exact angles, output modes (0.0.9) → exam library,
-radix glasses, binding environment, consistency-strength ledger → axiom-identity fingerprint, single-source version (0.1.1) → metaprogramming & authorized abstain codes (0.2.0). MIT licensed.
+radix glasses, binding environment, consistency-strength ledger → axiom-identity fingerprint, single-source version (0.1.1) → metaprogramming & authorized abstain codes (0.2.0) → four-station metawords ratified, arrow-tail full ban, four dedicated codes (0.2.1). MIT licensed.
+
+## 0.2.1 at a glance
+
+```bash
+bash tests/trial_rewrite.sh        # 98 assertions: shape/bind/rewrite/split/mode
+./ltir006 verify fixtures/algebraic_complexity_instances.ltir   # 5 True
+```
+
+- **Metaprogramming ratified**: `shape:` / `bind:` / `rewrite:` / `split:` / `mode:` five words,
+  four dedicated codes (`E-SHAPE-UNKNOWN` / `E-REWRITE-ARITY` / `E-REWRITE-CONFLICT` / `E-REWRITE-REDEEM`),
+  strict-by-default, truth still only from the core.
+- **Arrow-tail full ban**: `->` + unparseable verdict word → `E-SYN`; verdict laundering closed.
 
 ## 0.2.0 at a glance
 

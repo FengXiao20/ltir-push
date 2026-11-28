@@ -144,7 +144,8 @@ preserved / inferences / answers`，每行带 `tag`；简明档末尾只在显�
 | 0.0.7 / 0.0.8 / 0.0.9 | 历史 | 集合论地图 / 形式化定义与多宇宙 / 隐式乘法与输出模式（347 SMOKE） |
 | 0.1.0 | 历史 | 试卷库 / 进制眼镜 / 赋值环境 / 一致性强度台账 / 387 SMOKE |
 | 0.1.1 | 历史 | 试卷库 / 进制眼镜 / 赋值环境 / 一致性强度台账 / A 公理本体化 / bugfix |
-| **0.2.0** | **本版（正式版）** | 元编程（quote: / gap: / reformulate: / depth: / trace: / reflect:） / 授权弃权码（E-GODEL-II · E-STRENGTH-NOCERT / -INCOMPARABLE / -CYCLE 只立码） / 1.1E17 科学计数 / regress 117 |
+| 0.2.0 | 历史 | 元编程（quote: / gap: / reformulate: / depth: / trace: / reflect:） / 授权弃权码（E-GODEL-II · E-STRENGTH-NOCERT / -INCOMPARABLE / -CYCLE 只立码） / 1.1E17 科学计数 / regress 117 |
+| **0.2.1** | **本版（正式版）** | 四工位五词转正（shape: / bind: / rewrite: / split: / mode:） / 四专码定稿（E-SHAPE-UNKNOWN · E-REWRITE-ARITY · E-REWRITE-CONFLICT · E-REWRITE-REDEEM） / 箭尾全禁（`->` + 认不出的判定词 → E-SYN） / 代数复杂性两卷 / regress 127 · trial_rewrite 98 |
 
 旧 JS 文本层 / Python 验真 / MCP 嘴已按删除令退场，销案不回退。
 立法文本见 `SYNTAX.md`，实跑记录见 `RUNRESULT.md`，错误解释由 `lab_codes.tsv` 驱动。
@@ -375,7 +376,7 @@ registered, never judged). Extra ellipses collapse to one `...` + tsundere easte
 bash ltir.sh          # SHA gate -> build -> SMOKE -> demo
 bash ltir.sh b / t    # build only / SMOKE only (Termux auto-switches to clang++)
 ./ltir006 verify 卷.ltir --explain / --json / --tri / --lang=en
-./ltir006 --version   # ltir006 0.2.0
+./ltir006 --version   # ltir006 0.2.1
 ```
 
 **Termux**: `pkg install clang make`; keep off `/storage/emulated/0` (noexec) —
@@ -387,7 +388,7 @@ Frozen ℚ kernel (0.0.1–2) → capability extension (0.0.4-lab) → shorthand
 LaTeX/trig/ZFC ledger (0.0.5) → self-contained C++ layer (0.0.6 reinforced, 69 SMOKE)
 → set-theory map + quantifiers (0.0.7, 136→225 SMOKE) → formal defs + multiverse
 (0.0.8) → implicit product, π/12 exact angles, `--tri` output modes (0.0.9, 347 SMOKE)
-→ exam library, radix glasses, binding env, strength ledger → axiom fingerprint, single-source version (0.1.1) → metaprogramming & authorized abstain codes (0.2.0).
+→ exam library, radix glasses, binding env, strength ledger → axiom fingerprint, single-source version (0.1.1) → metaprogramming & authorized abstain codes (0.2.0) → four-station metawords ratified, arrow-tail full ban (0.2.1).
 
 Still not doing (listed, not forgotten): piecewise functions, parametric/polar,
 triangle solving, solid geometry, linear regression, distribution tables, highlighted

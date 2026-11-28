@@ -77,7 +77,7 @@ Single-binary C++17, stdlib only. Linux / Termux: `bash ltir.sh`.
 ## D 版 · 极客硬核版
 
 ```
-LTIR 0.2.0
+LTIR 0.2.1
   verdicts      True | False | UNDECIDED        (UNDECIDED never folds into False)
   truth         self-computed; "-> True" is a claim, not a certificate
   arithmetic    ℚ / RAD / RAD2 / CPX, exact; Richardson-style abstain
@@ -110,7 +110,7 @@ LTIR 0.2.0
   `axioms/` 公理模块 · `fixtures/` 示范卷 · `tests/` 自测 ·
   `termux/termux-file-editor` 文件管理器钩子 · `SYNTAX.md` 语法条文 ·
   `AXIOM_NOTES.md` 学术口径 · `BACKLOG.md` 欠账
-- **Release 标题建议**：`LTIR 0.2.0 — 元编程 / 授权弃权码 / 公理本体化指纹 / 进制眼镜 / 赋值环境 / 试卷库 / 卸载`
+- **Release 标题建议**：`LTIR 0.2.1 — 四工位元词转正 / 箭尾全禁 / 四专码定稿 / 元编程 / 授权弃权码 / 试卷库 / 卸载`
 - **`card:` 只认名字**：`card: A` 才出势，`card: |A|` → `E-REF-UNKNOWN`；
   `|A|` 只是展示记号，不是引擎语法。
 - **别写进 README 的**：不要承诺「判定 CH」「证明哥德巴赫」；

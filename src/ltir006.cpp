@@ -9,7 +9,7 @@
 #include "value.hpp"
 
 /* 0.1.1：版本号单一来源——所有横幅/JSON/help 引用本宏，杜绝重复字面量 */
-#define LTIR_VER "0.2.0"
+#define LTIR_VER "0.2.1"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
