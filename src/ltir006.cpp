@@ -262,7 +262,9 @@ static bool isKeyword(const std::string& k) {
     /* 0.1.1：顶层证书行 by: 只登记，不再落 E-UNK-LINE（短写表仍冻结） */
     "by:",
     /* 0.2.0 元编程：只登记、0 三态、不自举（全英文长名，短写表仍冻结） */
-    "gap:","reformulate:","quote:","reflect:","depth:","trace:"
+    "gap:","reformulate:","quote:","reflect:","depth:","trace:",
+    /* 0.2.1 重制：四项元能力各占一个工位词 + 试验门禁（全英文长名，短写表仍冻结） */
+    "shape:","bind:","rewrite:","split:","mode:"
   };
   return K.count(k)>0;
 }
@@ -783,10 +785,25 @@ struct Ctx {
    * strengthLabels 是展示型值标签，只登记、不进指纹、不产三态。 */
   std::string sigMode="named";
   std::vector<std::string> strengthLabels;
+  /* ── 0.2.1 重制：四工位各有一个容器，零复用旧词语义 ──
+   * shape: 认形状 / bind: 补槽位 / rewrite: 摊开回投 / split: 拆账本；mode: 试验门禁。
+   * 这些容器只装「写法与登记」，不装真值；True/False 永远只由原判定核写。 */
+  struct ShapeDef { std::string id, head, target; std::vector<std::string> slots; };
+  std::map<std::string,ShapeDef> shapes;
+  std::map<std::string,std::vector<std::string>> binds;
+  std::set<std::string> bindSeen;
+  std::map<std::string,std::string> reformNames;   // fn -> 规则原文；撞名即弃权，绝不 last-wins
+  std::vector<std::string> splits;
+  std::string reflExtra;                  /* 0.2.1 r2 / bug B：reflect 新目标的人话档出口 */
+  std::string metaMode="strict";
+  int rewriteOk=0, rewriteRejected=0, illegalHits=0;
+  std::vector<std::string> rewriteTraceAll;
+  /* 回投队列：(产物行, 触发行号)。主循环直接 handle，不插行、不漂移 file_line。 */
+  std::vector<std::pair<std::string,int>> replayQueue;
   bool inContainer() const { return !containers.empty(); }
   std::string curContainer() const { return containers.empty()?"":containers.back(); }
 };
-struct Result { int state=0; std::string line, out, code, detail, tag; int fileLine=0; }; // 1=True 0=False 2=UNDECIDED 3=ERROR -1=登记
+struct Result { int state=0; std::string line, out, code, detail, tag; int fileLine=0; int derivedFrom=0; }; // 1=True 0=False 2=UNDECIDED 3=ERROR -1=登记
 
 /* ══════════ 0.1.0 A 增量：公理本体化（只登记，不构造判定核） ══════════
  * 立法点：一致性强度由 lang + 公理公式 + 推导规则这套本体给出，不是名字给出。
@@ -1096,6 +1113,112 @@ static bool evalSetAssert(Ctx& c, const std::string& expr, Result& R,
   R.state=1; R.out=setStr(a); return true;
 }
 
+/* ══════════ 0.2.1 重制：受控改写层的静态护栏（L2 词表 / L3 兑换权） ══════════
+ * 纪律：元操作行只准描述写法，不准夹带判定词、手写结论、自证或关闭目标。
+ * 宽档（quote 内层 / witness 体 / 回投产物）允许 V: <表达式>，仍禁手写结论。
+ * 旧词零改义：expand: 仍只管 δ 展开，grammar: 仍只收 BNF。 */
+static bool metaWordHit(const std::string& s,const char* w){
+  const std::size_t n=std::string(w).size();
+  std::size_t q=s.find(w);
+  while(q!=std::string::npos){
+    if(q==0||!isalnum((unsigned char)s[q-1])) return true;
+    q=s.find(w,q+n);
+  }
+  return false;
+}
+/* 0.2.1 r2 / bug A：禁「一切手写结论」，第三态 UNDECIDED 不再漏。
+ * 切词口径与 findVerdict 一致（含中文标点），扫所有 -> 而非只扫最后一个。 */
+static bool isVerdictWord(const std::string& w){
+  std::string low=w;
+  for(char& ch:low) ch=(char)std::tolower((unsigned char)ch);
+  return low=="true"||low=="false"||low=="undecided"||
+         w=="真"||w=="假"||w=="成立"||w=="不成立"||w=="不知道"||w=="弃权";
+}
+static std::string arrowTailWord(const std::string& s,std::size_t q){
+  std::string tail=trim(s.substr(q+2));
+  std::size_t cut=tail.find_first_of(" \t\r\n.,;:!?");
+  for(const char* pu:{"。","，","．","：","；"}){
+    const std::size_t z=tail.find(pu);
+    if(z!=std::string::npos&&(cut==std::string::npos||z<cut)) cut=z;
+  }
+  return trim(cut==std::string::npos?tail:tail.substr(0,cut));
+}
+static bool hasVerdictTail(const std::string& s){
+  std::size_t q=s.find("->");
+  while(q!=std::string::npos){
+    if(isVerdictWord(arrowTailWord(s,q))) return true;
+    q=s.find("->",q+2);
+  }
+  return false;
+}
+static bool metaRedeem(const std::string& s){
+  /* 手写 True / False / UNDECIDED 一律先验拒收；不再只查两种。 */
+  if(hasVerdictTail(s)) return true;
+  static const char* B[]={"A:","assert:","con:","submit:","close:","exact:","goal:","eval:",nullptr};
+  for(int i=0;B[i];++i) if(metaWordHit(s,B[i])) return true;
+  return false;
+}
+static bool metaStrictIllegal(const std::string& s){
+  if(metaRedeem(s)) return true;
+  static const char* B[]={"V:","value:","val:","solve:","expand:","derive:","claim:","forall:",nullptr};
+  for(int i=0;B[i];++i) if(metaWordHit(s,B[i])) return true;
+  return false;
+}
+static bool metaProductAllowed(const std::string& L){ return !metaRedeem(L); }
+/* 槽位字面量：只收整数 / 单个分数 / 负数。1/2/3 连除一律拒收（bug 7）。 */
+static bool slotLiteralOk(const std::string& v){
+  if(v.empty()) return false;
+  std::size_t i=0; if(v[0]=='-') i=1;
+  if(i>=v.size()) return false;
+  bool slash=false, digit=false;
+  for(;i<v.size();++i){
+    const char ch=v[i];
+    if(ch>='0'&&ch<='9'){ digit=true; continue; }
+    if(ch=='/'){ if(slash||!digit||i+1>=v.size()) return false; slash=true; digit=false; continue; }
+    return false;
+  }
+  return digit;
+}
+static std::vector<std::string> plainSplit(const std::string& s){
+  std::vector<std::string> out; std::stringstream ss(s); std::string x;
+  while(std::getline(ss,x,',')){ const std::string v=trim(x); if(!v.empty()) out.push_back(v); }
+  return out;
+}
+/* shape: <id> ::= "<head>" slots: a,b,c,d target: <fn>
+ * 与 load: 模块路径共用同一解析器，避免两处隐式约定分叉。 */
+static bool parseShapeLine(const std::string& b,Ctx::ShapeDef& d,std::string& why){
+  const std::size_t dc=b.find("::=");
+  if(dc==std::string::npos){ why="E-REWRITE-ARITY"; return false; }
+  d.id=trim(b.substr(0,dc));
+  if(!isIdent(d.id)){ why="E-REWRITE-ARITY"; return false; }
+  const std::size_t q1=b.find('"',dc+3), q2=(q1==std::string::npos)?std::string::npos:b.find('"',q1+1);
+  if(q1==std::string::npos||q2==std::string::npos||q2<=q1){ why="E-REWRITE-ARITY"; return false; }
+  d.head=b.substr(q1+1,q2-q1-1);
+  if(d.head.empty()){ why="E-REWRITE-ARITY"; return false; }
+  const std::size_t sp=b.find("slots:",q2), tp=b.find("target:",q2);
+  if(sp==std::string::npos||tp==std::string::npos||tp<sp){ why="E-REWRITE-ARITY"; return false; }
+  d.slots=plainSplit(b.substr(sp+6,tp-sp-6));
+  d.target=trim(b.substr(tp+7));
+  if(d.slots.empty()||!isIdent(d.target)){ why="E-REWRITE-ARITY"; return false; }
+  std::set<std::string> seen;
+  static const std::set<std::string> RESERVED={"i","e","pi","inf","oo","con","base","rule","sig","x"};
+  for(const auto& p:d.slots){
+    if(!isIdent(p)||RESERVED.count(p)||seen.count(p)){ why="E-REWRITE-ARITY"; return false; }
+    seen.insert(p);
+  }
+  return true;
+}
+/* bind: <shape-id> <- 1,2,3,4  或  <- [[1,2],[3,4]] */
+static std::vector<std::string> parseBindVals(const std::string& rhs){
+  std::string v=trim(rhs);
+  if(v.size()>=2&&v[0]=='['){
+    std::string flat;
+    for(char ch:v) if(ch!='['&&ch!=']') flat.push_back(ch);
+    v=flat;
+  }
+  return plainSplit(v);
+}
+
 /* ══════════════ 0.0.7 公理模块：preset: 内置 / load: 外部 .ltir ══════════════ */
 struct Preset { const char* name; const char* system; const char* choice; const char* axioms; const char* refs; };
 static const Preset PRESETS[] = {
@@ -1157,6 +1280,24 @@ static void loadModuleFile(Ctx& c,const std::string& path,int depth){
     if(k=="ref:"){ c.refsSeen.push_back(b); continue; }
     if(k=="load:"){ loadModuleFile(c,b,depth+1); continue; }
     if(k=="preset:"){ continue; }
+    /* 0.2.1 重制 bug 5：模块路径不再静默丢 meta 行 —— 登记 + 计数 + 诊断。
+     * 模块内不重新解析形状/不回投，只把登记事实带回顶卷账本。 */
+    if(k=="gap:"||k=="reformulate:"||k=="quote:"||k=="reflect:"||k=="depth:"||k=="trace:"||
+       k=="shape:"||k=="bind:"||k=="rewrite:"||k=="split:"||k=="mode:"||k=="by:"||k=="witness:"){
+      if(k=="gap:"){ const std::string id=trim(b.substr(0,b.find_first_of(" \t")));
+        if(!id.empty()&&!c.gapSeen.count(id)){ c.gaps.push_back(b); c.gapSeen[id]=b; } }
+      else if(k=="reformulate:") c.reformulations.push_back(b);
+      else if(k=="quote:") c.quotes.push_back(b);
+      else if(k=="shape:"){ Ctx::ShapeDef d; std::string why;
+        if(parseShapeLine(b,d,why)&&!c.shapes.count(d.id)) c.shapes[d.id]=d; }
+      else if(k=="split:") c.splits.push_back(b);
+      else if(k=="by:") c.hasBy=true;
+      else if(k=="witness:") c.witnesses.push_back(b);
+      else if(k=="mode:"&&(b=="trial"||b=="strict")) c.metaMode=b;
+      c.loadDiags.push_back("E-LOAD-META: "+k+" registered (no re-eval)");
+      c.registered++;
+      continue;
+    }
     if(k=="assert:"||k=="value:"||k=="numth:"||k=="ident:"||k=="solve:"||(t[0]=='A'&&t.find("->")!=std::string::npos)){
       c.loadDiags.push_back("E-LOAD-ASSERT: 模块内不应含断言行"); continue; }
     c.registered++;
@@ -1532,6 +1673,94 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   /* ══════════ 0.2.0 元编程：quotation 可做，eval 永久不做 ══════════
    * 六词全部只登记：0 三态、不进指纹、不搬真值、不执行自产 .ltir。
    * 0.2.0 B：参数越界立 E-META-RANGE（TA 令），缺锚弃权 E-META-ANCHOR；撞名仍 E-DEF-SIG。 */
+  /* ══════════ 0.2.1 重制：命名权显式、兑换权不给 ══════════
+   * 五词全只登记；仅 rewrite: 在 mode: trial 下产出「旧词行」回投原判定核。
+   * 缺省 mode: strict —— 旧卷零回归，试验态必须写进卷面，不留「跑的是哪套」疑案。 */
+  if (key=="mode:") {
+    const std::string v=trim(body);
+    if(v!="trial"&&v!="strict") return codeRes("E-META-RANGE",3);
+    c.metaMode=v; c.registered++; c.ledger.push_back("mode: "+v); R.state=-1; return R;
+  }
+  if (key=="shape:") {
+    const std::string b=trim(body);
+    if(metaStrictIllegal(b)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    Ctx::ShapeDef d; std::string why;
+    if(!parseShapeLine(b,d,why)){ c.rewriteRejected++; return codeRes(why,2); }
+    if(c.shapes.count(d.id)){ c.rewriteRejected++; return codeRes("E-REWRITE-CONFLICT",2); }
+    c.shapes[d.id]=d; c.registered++; c.ledger.push_back("shape: "+d.id);
+    R.state=-1; return R;
+  }
+  if (key=="bind:") {
+    const std::string b=trim(body);
+    if(metaStrictIllegal(b)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    const std::size_t ar=b.find("<-");
+    if(ar==std::string::npos){ c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    const std::string id=trim(b.substr(0,ar));
+    auto si=c.shapes.find(id);
+    if(si==c.shapes.end()){ c.rewriteRejected++; return codeRes("E-SHAPE-UNKNOWN",2); }
+    if(c.bindSeen.count(id)){ c.rewriteRejected++; return codeRes("E-REWRITE-CONFLICT",2); }
+    const std::vector<std::string> vals=parseBindVals(b.substr(ar+2));
+    if(vals.size()!=si->second.slots.size()){ c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    for(const auto& v:vals) if(!slotLiteralOk(v)){ c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    c.binds[id]=vals; c.bindSeen.insert(id);
+    c.registered++; c.ledger.push_back("bind: "+id); R.state=-1; return R;
+  }
+  if (key=="split:") {
+    const std::string b=trim(body);
+    if(metaRedeem(b)){ c.illegalHits++; c.rewriteRejected++;
+      if(metaWordHit(b,"con:")) return codeRes("E-GODEL-II",2);
+      return codeRes("E-REWRITE-REDEEM",3); }
+    if(b.find("by:")==std::string::npos) return codeRes("E-META-ANCHOR",2);
+    const std::string id=trim(b.substr(0,b.find_first_of(" \t")));
+    if(id.empty()||!isIdent(id)) return codeRes("E-REWRITE-ARITY",2);
+    c.splits.push_back(b); c.registered++; c.ledger.push_back("split: "+id);
+    R.state=-1; return R;   /* 只拆账本，没有 close、没有 exact */
+  }
+  if (key=="rewrite:") {
+    const std::string id=trim(body);
+    if(metaStrictIllegal(id)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    if(id.empty()||!isIdent(id)){ c.rewriteRejected++; return codeRes("E-SHAPE-UNKNOWN",2); }
+    /* L1 门禁：strict 下只登记，不展开（旧卷零回归 + 试验态显式） */
+    if(c.metaMode!="trial"){
+      c.ledger.push_back("rewrite: "+id+" (strict: registered only)");
+      c.registered++; R.state=-1; return R;
+    }
+    /* L1 锚定 / L6 有限步 */
+    if(!c.hasBy||c.defSigs.empty()) return codeRes("E-META-ANCHOR",2);
+    if(c.rewriteOk>=c.expandDepth) return codeRes("E-DEF-DEPTH",2);
+    auto si=c.shapes.find(id);
+    auto bi=c.binds.find(id);
+    if(si==c.shapes.end()||bi==c.binds.end()){ c.rewriteRejected++; return codeRes("E-SHAPE-UNKNOWN",2); }
+    auto ri=c.reformNames.find(si->second.target);
+    if(ri==c.reformNames.end()){ c.rewriteRejected++; return codeRes("E-SHAPE-UNKNOWN",2); }
+    /* 规则本体：fn(p1,..,pn) = <旧表达式>；参数名必须与 shape 槽位逐字一致 */
+    const std::string rule=ri->second;
+    const std::size_t lp=rule.find('('), rp=rule.find(')'), eq=rule.find('=');
+    if(lp==std::string::npos||rp==std::string::npos||eq==std::string::npos||rp<lp||eq<rp){
+      c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    const std::vector<std::string> ps=plainSplit(rule.substr(lp+1,rp-lp-1));
+    const std::string expr=trim(rule.substr(eq+1));
+    if(ps.size()!=si->second.slots.size()||expr.empty()||expr.find(':')!=std::string::npos){
+      c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    for(std::size_t k=0;k<ps.size();++k)
+      if(!isIdent(ps[k])||ps[k]!=si->second.slots[k]){
+        c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    if(!metaProductAllowed(expr)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    /* 产物只准是已立法词条：at: 绑定 + V: 表达式，交回原判定核算三态 */
+    std::string atLine="at: ";
+    for(std::size_t k=0;k<ps.size();++k)
+      atLine+=(k?", ":"")+ps[k]+"="+bi->second[k];
+    std::string vLine="V: "+expr;
+    if(!metaProductAllowed(atLine)||!metaProductAllowed(vLine)){
+      c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    c.replayQueue.push_back({atLine,R.fileLine});
+    c.replayQueue.push_back({vLine,R.fileLine});
+    c.rewriteTraceAll.push_back(atLine); c.rewriteTraceAll.push_back(vLine);
+    c.rewriteOk++; c.registered++; c.ledger.push_back("rewrite: "+id+" -> 2 derived lines");
+    if(c.traceOn){ std::cerr<<"[rewrite] "<<atLine<<"\n"; std::cerr<<"[rewrite] "<<vLine<<"\n"; }
+    R.state=-1; return R;   /* 触发行自身 0 三态；真值由回投产物给 */
+  }
+
   if (key=="depth:") {
     const std::string dv=trim(body); int d=0; bool ok=!dv.empty();
     for(char ch:dv){ if(ch<'0'||ch>'9'){ok=false;break;} d=d*10+(ch-'0'); if(d>1000){ok=false;break;} }
@@ -1547,16 +1776,28 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     const std::string b=trim(body);
     const std::string id=trim(b.substr(0,b.find_first_of(" \t")));
     if(id.empty()) return codeRes("E-DEF-SIG",3);
+    if(metaStrictIllegal(b)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
     if(c.gapSeen.count(id)) return codeRes("E-DEF-SIG",2);  /* 同 id 两条：弃权，不静默择一 */
     c.gapSeen[id]=b; c.gaps.push_back(b); c.gapTrace.push_back({R.fileLine,R.line}); c.registered++; c.ledger.push_back("gap: "+id); R.state=-1; return R;
   }
   if (key=="reformulate:") {
-    c.reformulations.push_back(trim(body)); c.reformTrace.push_back({R.fileLine,R.line}); c.registered++; R.state=-1; return R;
+    const std::string b=trim(body);
+    if(metaStrictIllegal(b)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    const std::size_t lp=b.find('(');
+    const std::string fn=trim(b.substr(0,lp==std::string::npos?b.find_first_of(" \t"):lp));
+    if(fn.empty()||!isIdent(fn)){ c.rewriteRejected++; return codeRes("E-REWRITE-ARITY",2); }
+    /* bug 1：同 fn 两条不再 last-wins，撞名即弃权 */
+    if(c.reformNames.count(fn)){ c.rewriteRejected++; return codeRes("E-REWRITE-CONFLICT",2); }
+    c.reformNames[fn]=b;
+    c.reformulations.push_back(b); c.reformTrace.push_back({R.fileLine,R.line}); c.registered++; R.state=-1; return R;
   }
   if (key=="quote:") {
     const std::string b=trim(body);
     const std::size_t op=b.find("<ltir>"), cl=b.find("</ltir>");
     if(op==std::string::npos||cl==std::string::npos||cl<op) return codeRes("E-SYN",3);  /* 未闭合残词：有意报错，不静默吞行 */
+    const std::string inner=b.substr(op+6,cl-op-6);
+    if(metaRedeem(inner)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+    /* 重制：quote 只作展示数据，不参与求值；不存在「取第一个」的选择规则 */
     c.quotes.push_back(b); c.registered++; R.state=-1; return R;
   }
   if (key=="reflect:") {
@@ -1567,6 +1808,45 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       c.reflGaps=ids; }  /* 0.2.0 B：人话档列已登记 id，--tri/--json 不受污染 */
     else if(w=="rules") for(const auto& g:c.reformulations) c.ledger.push_back("reflect/rule: "+g);
     else if(w=="quotes") for(const auto& g:c.quotes) c.ledger.push_back("reflect/quote: "+g);
+    else if(w=="rewrites"){
+      c.reflExtra+="reflect: rewrites ->\n";
+      for(const auto& r:c.rewriteTraceAll){
+        c.ledger.push_back("reflect/rewrite: "+r);
+        c.reflExtra+="  "+r+"\n";       /* L5：逐字列出回投产物 */
+      }
+      if(c.rewriteTraceAll.empty()) c.reflExtra+="  (none)\n";
+    }
+    else if(w=="shapes"){
+      c.reflExtra+="reflect: shapes ->\n";
+      for(const auto& p:c.shapes){
+        c.ledger.push_back("reflect/shape: "+p.first);
+        c.reflExtra+="  "+p.first+" ::= \""+p.second.head+"\" slots: ";
+        for(std::size_t k=0;k<p.second.slots.size();++k)
+          c.reflExtra+=(k?",":"")+p.second.slots[k];
+        c.reflExtra+=" target: "+p.second.target+"\n";
+      }
+      if(c.shapes.empty()) c.reflExtra+="  (none)\n";
+    }
+    else if(w=="binds"){
+      c.reflExtra+="reflect: binds ->\n";
+      for(const auto& p:c.binds){
+        c.ledger.push_back("reflect/bind: "+p.first);
+        c.reflExtra+="  "+p.first+" <- ";
+        for(std::size_t k=0;k<p.second.size();++k)
+          c.reflExtra+=(k?",":"")+p.second[k];
+        c.reflExtra+="\n";
+      }
+      if(c.binds.empty()) c.reflExtra+="  (none)\n";
+    }
+    else if(w=="splits"){
+      c.reflExtra+="reflect: splits ->\n";
+      for(const auto& r:c.splits){ c.ledger.push_back("reflect/split: "+r); c.reflExtra+="  "+r+"\n"; }
+      if(c.splits.empty()) c.reflExtra+="  (none)\n";
+    }
+    else if(w=="mode"){
+      c.ledger.push_back("reflect/mode: "+c.metaMode);
+      c.reflExtra+="reflect: mode -> "+c.metaMode+"\n";
+    }
     else if(w=="codes") c.ledger.push_back("reflect/codes: read-only");  /* 码表只读镜，不列内容 */
     else return codeRes("E-DEF-SIG",3);
     c.registered++; R.state=-1; return R;
@@ -2112,7 +2392,11 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
       key=="model:"||key=="cite:") {
     if(key=="under:") c.givens.push_back(body);
     if(key=="cert:") c.certificates.push_back(body);
-    if(key=="witness:") c.witnesses.push_back(body);
+    if(key=="witness:"){
+      /* bug 3：witness 体也扫手写结论；但允许 V:/solve: 作「旧错→修后」对照 */
+      if(metaRedeem(body)){ c.illegalHits++; c.rewriteRejected++; return codeRes("E-REWRITE-REDEEM",3); }
+      c.witnesses.push_back(body);
+    }
     if(key=="problem:"||key=="status:") c.problems.push_back(body);
     if(key=="theory:"||key=="inner:"||key=="map:"||key=="independent:"||
        key=="model:"||key=="cite:") c.theories.push_back(body);
@@ -2127,6 +2411,19 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
   }
   if (key=="absolute:") { c.registered++; return codeRes("E-SCOPE-ABSOLUTE",2); }
   if (key=="assert:") {
+    /* 0.2.1 纯实践收编 / 补回全禁版：箭头尾巴完整性。
+     * 写了 -> 但 findVerdict 认不出合法 True/False（-> Maybe / 乱写尾巴 /
+     * -> UNDECIDED / 中文弃权词）→ E-SYN，不静默吞尾巴给实算真值。
+     * 立法同步：tests/smoke009.sh 第 43 条期望由「报实算真值」改为「一律给码」；
+     * tests/archive/smoke00{6,7,8}.sh 是历史归档，按口径不动、不跑。
+     * 合法声明（含中文标点尾巴 / 行尾 by:）仍走原比对，零回归。 */
+    {
+      const std::size_t av=body.rfind("->");
+      if(av!=std::string::npos){
+        std::string vl; bool vc=false;
+        if(!findVerdict(body,vl,vc)) return codeRes("E-SYN",3);
+      }
+    }
     std::string expr=body;
     /* 补丁二：量词符号 ∀ / ∃（gate 已归一为 "forall " / "exists "）转译给统一判定 */
     if(expr.rfind("forall ",0)==0||expr.rfind("exists ",0)==0){
@@ -2218,6 +2515,19 @@ static Result handle(Ctx& c,const std::string& key,const std::string& raw,int li
     return R;
   }
   if (key=="value:"||key=="numth:") {
+    /* 0.2.1 纯实践收编 / 补回全禁版：箭头尾巴完整性。
+     * 写了 -> 但 findVerdict 认不出合法 True/False（-> Maybe / 乱写尾巴 /
+     * -> UNDECIDED / 中文弃权词）→ E-SYN，不静默吞尾巴给实算真值。
+     * 立法同步：tests/smoke009.sh 第 43 条期望由「报实算真值」改为「一律给码」；
+     * tests/archive/smoke00{6,7,8}.sh 是历史归档，按口径不动、不跑。
+     * 合法声明（含中文标点尾巴 / 行尾 by:）仍走原比对，零回归。 */
+    {
+      const std::size_t av=body.rfind("->");
+      if(av!=std::string::npos){
+        std::string vl; bool vc=false;
+        if(!findVerdict(body,vl,vc)) return codeRes("E-SYN",3);
+      }
+    }
     if(hitParadox(body)) return codeRes("E-PARADOX-RUSSELL",2);
     if (key=="numth:" && body.rfind("factors(",0)==0) {
       const std::size_t e=body.find(')');
@@ -2457,6 +2767,21 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
       std::size_t start = (colon==std::string::npos) ? 0 : (colon+1);
       if (key=="assert:" && colon==1) start=2;        // A: 短写
       Result R=handle(c,key,body.substr(start),(int)i+1);
+      /* 0.2.1 重制 bug 2：回投产物直接 handle，不往 lines 插行。
+       * file_line 恒指向触发行，JSON 带 derived_from；产物行号不再 +N 漂移。 */
+      if(!c.replayQueue.empty()){
+        const auto q=c.replayQueue; c.replayQueue.clear();
+        for(const auto& it:q){
+          const std::string& pl=it.first;
+          const std::size_t pc=pl.find(':');
+          if(pc==std::string::npos) continue;
+          const std::string pk=normalizeKey(pl.substr(0,pc+1));
+          std::size_t ps=pc+1; if(pk=="assert:"&&pc==1) ps=2;
+          Result P=handle(c,pk,pl.substr(ps),it.second);
+          P.line="<derived> "+pl; P.derivedFrom=it.second;
+          if(P.state!=-1){ rs.push_back(P); if(P.state==3) err++; }
+        }
+      }
       if(R.state==-1) continue;
       R.line=raw;
       if(key=="assert:"){ R.tag="answer"; c.answers.push_back(body.substr(start)); } // A: → <answer> 归一
@@ -2499,6 +2824,7 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
                <<"\",\"tag\":\""<<R.tag<<"\"";
       if(R.code=="E-INDETERMINATE")
         std::cout<<",\"indeterminate_form\":\"0/0\",\"rules\":[\"N\",\"R1\",\"R2\",\"R3\",\"R4\"]";
+      if(R.derivedFrom>0) std::cout<<",\"derived_from\":"<<R.derivedFrom;
       std::cout<<"}"; }
     std::cout<<"],\"counts\":{\"True\":"<<nt<<",\"False\":"<<nf<<",\"UNDECIDED\":"<<nu
              <<"},\"registered\":"<<c.registered
@@ -2531,6 +2857,13 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
              <<",\"meta_rules\":"<<c.reformulations.size()
              <<",\"meta_quotes\":"<<c.quotes.size()
              <<",\"meta_depth\":"<<c.expandDepth
+             <<",\"meta_shapes\":"<<c.shapes.size()
+             <<",\"meta_binds\":"<<c.binds.size()
+             <<",\"meta_splits\":"<<c.splits.size()
+             <<",\"meta_rewrites\":"<<c.rewriteOk
+             <<",\"meta_illegal\":"<<c.illegalHits
+             <<",\"meta_rejected\":"<<c.rewriteRejected
+             <<",\"meta_mode\":\""<<c.metaMode<<"\""
              <<",\"axiom_bodies\":"<<c.axiomBodies.size()
              <<",\"lang\":\""<<jesc(c.langSig)<<"\""
              <<",\"theory_sig\":\""<<c.theorySigHex<<"\""
@@ -2568,6 +2901,8 @@ static int verify(const std::string& path,bool explainMode,bool jsonMode,
   }
   std::cout<<"── "<<total<<" lines: "<<nt<<" True, "<<nf<<" False, "<<nu<<" UNDECIDED ──\n";
   if(!c.reflGaps.empty()) std::cout<<"reflect: gaps -> "<<c.reflGaps<<"\n";  /* 0.2.0 B：只列已登记 id */
+  if(c.metaMode=="trial"&&c.rewriteOk) std::cout<<"rewrite: "<<c.rewriteOk<<" replayed (mode: trial)\n";
+  if(!c.reflExtra.empty()) std::cout<<c.reflExtra;   /* 0.2.1 r2 / bug B：L5 回投可复原的 stdout 出口 */
   if(c.registered) std::cout<<"registered: "<<c.registered<<" (zf/zfc/given/case/check/const/define/seq/set/radix/mapping/limit/axiom/gap/reformulate/quote/reflect/depth/trace 等, ledger only)\n";
   if(!c.domainsSeen.empty())
     std::cout<<"domain: "<<c.domain<<" ("<<c.domainNames.size()<<" registered)\n";

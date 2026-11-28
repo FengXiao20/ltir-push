@@ -214,3 +214,22 @@ JSON 四字段 `axiom_bodies` / `lang` / `theory_sig` / `sig_mismatch` ·
   弃权原因→gap id、`__int128` 通分重签 core、Lean 桥接读外部文件、
   版本推进（发行事件，不夹在审批包里）、彩蛋整族。
 - 仍挂技术账（非待批项）：偏序 DAG、证书边闭包、τ 保真校验、一次式区间输出。
+
+---
+
+## 0.2.1 纯实践收编（立法者放权「全实现」后落盘）
+
+- 已收编：四项元能力五词（`shape:`/`bind:`/`rewrite:`/`split:`/`mode:`）、
+  四项专码定稿（65 → 69）、七格 + 三格 bug 修复、词库外判定词补回全禁版、
+  `fixtures/algebraic_complexity{,_instances}.ltir`、
+  `fixtures/metacapability_gaps.ltir`、历史卷 v3 负面 witness、
+  `META_KEYWORDS.md` / `SYNTAX.md` 两节条文。
+- **代数复杂性证书接收**：已落户（领域登记卷 + 固定 m 实例），只登记不判；
+  `PERM_m` 符号族 / 全称渐近下界 / ∀ 域及扩域仍 `E-SCOPE-*` 弃权，不新增判定核。
+- 四行能力边界 gap 已登记卷面（宏 / 扩展语法 / elaborator / tactic 各一行），
+  连「哪天转正、推版本」也不拍 True，安静躺着。
+- 仍挂技术账（非待批）：`witness:` 引擎内自动比对（现脚本层）、
+  `reflect: mode` 作硬门禁（现只自报）、形状族扩到 3×3 / Σ 记法、
+  弃权原因码 → gap id 自动暴露、偏序 DAG、证书边闭包、一次式区间输出。
+- 永久不取：自举、`quote:` eval 外部、运行时写回码表、close goal、生成内核项、
+  跨图搬真值、自证 `Con(T)`、把 `UNDECIDED` 降级成「待证目标」。

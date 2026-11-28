@@ -1,0 +1,9 @@
+# Gödel II（Hilbert–Bernays 1939 / Löb 1955 D1-D3）：一致且含 Q 的 T 证不了 Con(T)
+# 外部证书可登记；自证结构一律 E-GODEL-II 弃权，绝不并入 False
+mode: strict
+sig: lob_derivability : Meta -> Cert
+by: Hilbert-Bernays-1939
+gap: con_self   where: T proves Con(T) from within T
+split: con_self into: gap: D1D2D3 ; witness: Loeb-1955 ; by: cert-loeb-001
+con: PA -> PA
+reflect: splits

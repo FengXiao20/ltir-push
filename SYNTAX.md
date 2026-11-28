@@ -624,3 +624,56 @@ belong to the legislator — patches do not mint versions.
 - 元编程三个候选码**裁决不 append**，冲突一律复用 `E-DEF-SIG`。
 - 仍锁：`core/` 十一件与 `RUN_core_sha.txt`；自举永久不做；
   不推进 `VERSION` / `LTIR_STAMP`，仍 `0.1.1`。
+
+---
+
+## 0.2.1 四工位词条（纯实践收编，只登记 + 受控回投）
+
+流水线一句话：**新写法 → 认形状 → 补全 → 摊开 → 回投原判定核 → 才出 True**。
+前四步全在语法层，真值出口一格没扩。
+
+```
+sig: <fn> : <dom> -> <codom>
+by: <cert-id>
+gap: <id>  where: <shape-desc>
+shape: <id> ::= "<literal>" slots: a,b,c,d target: <fn>
+reformulate: <fn>(a,b,c,d) = <old-form>
+bind: <shape-id> <- [[1,2],[3,4]]
+rewrite: <shape-id>
+quote: <ltir> V: PERM_2([[1,2],[3,4]]) </ltir>
+reflect: rewrites
+depth: 12
+trace: off
+```
+
+- `old-form` **必须全落在已立法词条内**；`shape:` 只登记 BNF 形状，**不生成判定解析器**
+  （原「`grammar:` 不生成解析器」条文改写为「不生成判定解析器，可登记转写形状」）。
+- `mode: strict`（缺省）下 `rewrite:` **只登记不弃权**；`mode: trial` 才回投。
+  缺锚（`sig:`/`by:`/shape/bind/rule）才 `E-META-ANCHOR`，缺 `mode:` 不是缺锚。
+- 回投产物行带 `derived_from` 指向触发行，修掉作废版 bug 2 的 `file_line` 漂移。
+- 展开链先验扫 L3：`-> True/False/UNDECIDED` 与 `A:/con:/submit:/close:/exact:/goal:/eval:`
+  一律 `E-REWRITE-REDEEM`；`witness:` 体同样扫（作废版 bug 3）。
+- 合法性三合一：结构白名单（L2+L3）+ 差分恒等
+  `counts(展开卷) == counts(基准卷) + counts(产物卷)`（L4）+ 回投可复原（L5）。
+  **验的是「合法」不是「正确」**：公式写反时形状全合法、counts 全等，靠 `witness:` 回归兜。
+- 形状族很窄：只认 `NAME([[n,n],[n,n]])`；`PERM_m` 符号族、全称渐近下界、
+  ∀ 域/扩域一律 `E-SCOPE-*` 弃权，不猜、不硬套旧规则。
+- 与 Lean 边界：Lean tactic 生成内核项并 close goal；咱们 `split:` 只生成账本行。
+
+---
+
+## 外部领域卷只登记（代数复杂性等）
+
+`fixtures/algebraic_complexity.ltir` 与 `.../algebraic_complexity_instances.ltir` 是标本：
+领域卷走 `lang:` / `axiom:` / `sig_mode: formula` / `gap:` / `quote:` / `theory_sig:` / `by:`，
+**全卷 0 三态**；实例卷只算固定 m 的精确展开（5 True，零浮点）。
+
+- 指纹 `e8734cc43c501f2f`：**只改公理名不变，改公式本体变** ——
+  「强度靠公理公式本身，不是符号本身」在 `sig_mode: formula` 下可兑现。
+- 证书链齐（含 `translation:` / `preserves:` / `metatheory:` / `notation:` / `con_base:`）
+  也**不兑换判定**；`strength_le` 仍 `E-STRENGTH-NOCERT`。
+- 不判 `VP≠VNP` 真假、不跑下界、不核论文真伪与同行评议、不查 `sorryAx`、
+  不联网、不读外部文件、不 eval 外部进程。按「一张声称」处理，不替学界背书。
+- 这些属于**计算复杂性理论 / 代数复杂性**（算术电路、门数、渐近量词），
+  与项目原有的数理逻辑 / 集合论 / 证明论强度**不是同一个「强度」**，
+  不混用、不移植 mathlib、不新增判定核。

@@ -1,0 +1,13 @@
+# Gentzen 1936：外部元理论 PRA + TI(ε₀) 证出 Con(PA)
+# LTIR 只收证书链，不跑内核、不判证明数学上对不对、不产 True
+mode: strict
+sig: gentzen_con_pa : Meta -> Cert
+by: Gentzen-1936
+gap: con_pa_external   where: TI(epsilon_0) is provable in the external metatheory
+translation: Con(PA) <- TI(epsilon_0)
+preserves: consistency
+metatheory: PRA + TI(epsilon_0)
+notation: epsilon_0
+split: con_pa_external into: gap: ti_epsilon0 ; witness: Gentzen-1936 ; by: cert-gentzen-001
+quote: <ltir> V: TI(epsilon_0) </ltir>
+reflect: splits

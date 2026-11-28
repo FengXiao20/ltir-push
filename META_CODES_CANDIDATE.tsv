@@ -4,3 +4,15 @@
 # E-RULE-GAP        → 不准：现成 E-DEF-SIG 已覆盖「缺口无规则」
 # E-RULE-CONFLICT   → 不准：同 id / 撞模式一律 E-DEF-SIG，不静默择一
 # E-META-EVAL       → 不准：自举是永久锁，不靠错误码挡，靠「没有实现路径」
+
+# ── 0.2.1 重制：四行专码随实现 append 到 lab_codes.tsv（65 → 69）──
+# 旧「三行不准」针对 0.2.0 复用档；重制版四工位各占一词后，
+# 撞名 / arity / 未知 id / 兑换权走私已不是「签名不符」同族，
+# 继续蹭 E-DEF-SIG 会重演作废版 bug 4「错位码」。
+# E-SHAPE-UNKNOWN    → 已 append（level 3）
+# E-REWRITE-ARITY    → 已 append（level 3）
+# E-REWRITE-CONFLICT → 已 append（level 3）
+# E-REWRITE-REDEEM   → 已 append（level 3）
+# 纯实践收编（立法者已放权）：4 行专码正式定稿，65 → 69 不再可删。
+# 旧「不放权就删回 65」的回退路径作废；regress 已加末尾四行存在性断言。
+# 本文件此后只作裁决留痕，不再表达「待批」状态。

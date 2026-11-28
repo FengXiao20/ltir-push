@@ -27,3 +27,17 @@ quote: <ltir> V: 2sqrt(2) </ltir>
 reflect: gaps
 reflect: rules
 depth: 12
+
+# ── 0.2.1 纯实践收编：失败留痕（负面 witness，不粉成前奏）──
+gap: zero_new_word_trap where: 零新词试验把立法塞进 C++ 隐式约定
+witness: 同 fn 两条宏 last-wins / file_line 漂移 / L3a 漏扫 witness 体 等七格
+by: cert-reject-021
+
+gap: r2_three_bugs where: 第三态漏禁 / reflect 无 stdout / L1 文档措辞
+witness: 三格修订后 trial_rewrite 95 项，干净基底全绿
+by: cert-r2-001
+
+gap: verdict_tail_restored where: 词库外判定词曾静默吞尾巴给实算值
+witness: smoke009 第 43 条期望同步为 E-SYN，全禁版补回
+by: cert-tail-001
+reflect: gaps

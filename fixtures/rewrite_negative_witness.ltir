@@ -1,0 +1,9 @@
+# 0.2.1 旧试验版作废证据（零新词 / 一词两义）：只登记，不判
+# 失败的是实现形态；「写法变写法而真值不碰」的结论未失败
+mode: strict
+sig: negative_witness_021 : Trial -> Ledger
+by: cert-021-failure-001
+gap: zero_new_words_trap   where: one keyword carried two semantics; lawmaking bypassed the table
+witness: 68/68 was self-asserted; the seven defects were not covered
+quote: <ltir> V: 1 + 1 </ltir>
+reflect: gaps

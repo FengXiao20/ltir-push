@@ -1,0 +1,13 @@
+# LTIR 固定 m 实例卷 · 精确有理/复数，零浮点
+# 只算具体矩阵展开，不求下界、不判 VP≠VNP、不产渐近断言。
+problem: algebraic-complexity-instances
+status: calculator
+
+at: a=1, b=2, c=3, d=4
+V: a*d + b*c
+at: u=1, v=0, w=0, z=1
+V: u*z + v*w
+at: p=1/2, q=0, r=0, s=5i
+V: p*s + q*r
+V: 1+1+1+1+1+1
+V: 1+1

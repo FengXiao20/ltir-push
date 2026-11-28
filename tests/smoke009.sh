@@ -124,7 +124,7 @@ ET="$($BIN verify "$TMP/eqtrue.ltir")"
 ckc "=True 不产判定记号，按普通表达式弃权" "$ET" 'UNDECIDED'
 printf 'A: 2+2=4 -> Maybe\n' > "$TMP/maybe.ltir"
 MB="$($BIN verify "$TMP/maybe.ltir")"
-ckc "词库外不判定不报错，报实算真值" "$MB" 'L01 True'
+ckc "词库外判定词一律给码（补回全禁版，替换旧第43条立法）" "$MB" 'E-SYN'
 
 echo "== 版本锚点（以 --version 为准） =="
 ck  "版本归 VERSION" "$($BIN --version)" "ltir006 $VER"

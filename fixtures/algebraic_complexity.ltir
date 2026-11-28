@@ -1,0 +1,35 @@
+# LTIR 外部领域卷 · 代数复杂性（Valiant 1979 / GCT）
+# 只登记、0 三态：不判 VP≠VNP、不跑下界、不查 Lean sorryAx、不背书论文。
+# "外部领域卷只登记" 与 quote: 不 eval 同纪律；链齐也不兑换 True。
+problem: algebraic-complexity-ledger
+status: ledger
+ref: Valiant-1979, Burgisser-2000, GCT, Tarski-1936
+
+lang: L_AC = { VP, VNP, PERM_m, HC_m, gates, circuit, field }
+sig_mode: formula
+sig: ac_ledger : Formula -> Cert
+by: cert-ac-001
+
+axiom: A1 = PERM_m(X) == sum_{sigma in S_m} prod_{i=1..m} X_{i,sigma(i)}
+axiom: A2 = HC_m(X) == sum_{ham-cycle C} prod_{e in C} X_e
+axiom: A3 = VP == { poly-family f_m : circuit-size(f_m) <= poly(m) }
+axiom: A4 = VNP == { poly-family f_m : exists poly-size g, f_m = sum over 0/1 of g }
+axiom: A5 = VP != VNP  <=>  PERM_m not in VP
+axiom: A6 = lower-bound: gates(PERM_m) > m^{c (log m)^{1/3}}
+axiom: A7 = char-2-detour: HC_m replaces PERM_m when char(F) = 2
+axiom: A8 = boolean-boundary: lower-bound does NOT apply to boolean circuits
+axiom: A9 = upper-bound: gates(PERM_m) <= 2^{O(m)}
+axiom: A10 = bridge: VP=VNP implies P/poly=NP/poly, converse open
+
+gap: symbolic_family   where: PERM_m / HC_m with unconstrained m
+gap: asymptotic_bound  where: forall sufficiently-large m, forall circuit
+gap: all_fields        where: forall field F and all extensions, char 2 included
+quote: <ltir> VP != VNP </ltir>
+translation: VP != VNP <- algebraic-circuit-lower-bound
+preserves: statement-identity
+metatheory: external (not T)
+notation: epsilon_0-free
+con_base: none
+by: cert-ac-bridge-001
+theory_sig: ?
+reflect: gaps

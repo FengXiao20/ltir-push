@@ -1,0 +1,14 @@
+# 0.2.1 重制：四工位各占一词；mode: trial 才展开，strict 缺省只登记
+mode: trial
+sig: perm2_expand : Matrix2 -> Num
+shape: perm2_lit ::= "PERM_2" slots: a,b,c,d target: perm2_expand
+reformulate: perm2_expand(a,b,c,d) = a*d + b*c
+by: cert-perm2-001
+gap: perm2_shape   where: PERM_2([[a,b],[c,d]])
+bind: perm2_lit <- [[1,2],[3,4]]
+rewrite: perm2_lit
+quote: <ltir> V: PERM_2([[1,2],[3,4]]) </ltir>
+reflect: rewrites
+reflect: mode
+depth: 12
+trace: off

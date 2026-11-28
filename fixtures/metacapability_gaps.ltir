@@ -1,0 +1,14 @@
+# LTIR 四项元能力 · 边界 gap 登记（0 三态，只登记不转正）
+# 立法者口径：「扩的是写法，不是判法」；连「哪天转正」也不拍 True。
+problem: metacapability-gaps
+status: ledger
+
+sig: meta_gap_ledger : Shape -> Cert
+by: cert-meta-gap-001
+gap: macro_boundary        where: rewrite 只摊成旧词，不产三态
+gap: syntax_boundary       where: shape 只登记形状，不生成判定解析器
+gap: elaborator_boundary   where: bind 补不出即空着，不猜、不产默认值
+gap: tactic_boundary       where: split 只拆账本，不关闭目标
+quote: <ltir> V: PERM_2([[1,2],[3,4]]) </ltir>
+reflect: gaps
+depth: 12

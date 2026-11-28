@@ -259,7 +259,9 @@ ckc "interprets 同档" "$($BIN verify "$TMP/au3.ltir")" 'E-STRENGTH-NOCERT'
 ck "Gödel II 定理卷 0 三态" "$($BIN verify fixtures/godel_ii.ltir | grep -c '^L0')" '0'
 ckc "定理卷 counts 全 0" "$($BIN verify fixtures/godel_ii.ltir --json)" '"counts":{"True":0,"False":0,"UNDECIDED":0}'
 ckn "候选三码未入正式码表" "$(cat lab_codes.tsv)" 'E-RULE-CONFLICT'
-ck "码表 E- 条目 59 → 65（0.1.2/0.2.0 四行 + B 批 E-META-RANGE/E-META-ANCHOR 两行）" "$(grep -c '^E-' lab_codes.tsv)" '65'
+ck "码表 E- 条目 59 → 69（0.1.2/0.2.0 四行 + B 批两行 + 0.2.1 重制四行专码）" "$(grep -c '^E-' lab_codes.tsv)" '69'
+ck "四项专码已放权定稿：末尾 4 行俱在（不再可删回 65）" "$(tail -4 lab_codes.tsv | grep -c '^E-')" '4'
+ck "历史行未动：E-GODEL-II 仍在" "$(grep -c '^E-GODEL-II' lab_codes.tsv)" '1'
 
 echo "== EXAM_SCORING 计分立法（0.2.0 反号修复，豆包发现） =="
 exrun(){ printf '%s\nsubmit:\n' "$2" > "$TMP/ex.ltir"; bash ./ltir_exam.sh "$TMP/ex.ltir" 2>/dev/null | grep -oE 'score=[0-9]+/100' | head -1; }

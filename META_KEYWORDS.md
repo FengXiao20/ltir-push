@@ -132,3 +132,30 @@ reflect: gaps
 - **验收新增**：`tests/trial_meta.sh` 自检；`--json` 追加 `meta_gaps/meta_rules/meta_quotes/meta_depth`
   四个结构字段；SMOKE 与 regress 分组标题已去版本号，不因新增断言改文案。
 - 回退：删四个新词分支即退回 0.1.2 行为，三条 bug 修复互不影响。
+
+---
+
+## 0.2.1 纯实践收编：五词立法（已放权，非发行）
+
+四项元能力各占一个**工位词**，不再塞进旧词 body 里当隐式约定（零新词试验已作废）。
+五词全进 `isKeyword`，`expand:` 还给 δ 展开、`grammar:` 仍只收 BNF、`quote:` 不 eval。
+
+| 词条 | 工位 | 只准干的事 | 三态 |
+|---|---|---|---|
+| `shape:` | 认形状 | 登记长相 + 槽位名 + 转写目标，**不生成解析器** | 0 |
+| `bind:` | 补全 | 槽位 → 标识符/字面量，补不出就空着，**不猜、不产值** | 0 |
+| `rewrite:` | 展开 | 有限步摊成旧词、回投原判定核，**自己不出 True/False** | 0 |
+| `split:` | 拆目标 | 拆成 `gap:`+`witness:`+`by:`，**没有 close** | 0 |
+| `mode:` | 门禁 | `strict`（缺省，只登记）/ `trial`（才回投），卷面自报 | 0 |
+
+- **一词一义**：`bind:` 管槽位映射、`at:` 管常量绑定，不许糊；`expand:` 不再兼职改写。
+- **撞名即弃权**：同 shape / bind / rule id → `E-REWRITE-CONFLICT`，绝不 last-wins（作废版 bug 1）。
+- **四项专码已放权定稿**：`E-SHAPE-UNKNOWN` / `E-REWRITE-ARITY` / `E-REWRITE-CONFLICT` /
+  `E-REWRITE-REDEEM`，`lab_codes.tsv` 65 → 69，历史行未动，不再可删回 65。
+- **L3 全禁**：元操作行、`quote:` 内层、`witness:` 体先验拒收**全部手写三态**
+  （`-> True` / `-> False` / `-> UNDECIDED`，含大小写与中文弃权词）与判定词；
+  判定核另把「词库外判定词」补回全禁版（`-> Maybe` / 乱写尾巴 → `E-SYN`）。
+- **L5 有出口**：`reflect: rewrites/shapes/binds/splits/mode` 人话档逐字列出，
+  `--tri` / `--json` 零污染（作废版 bug 5 / r2 bug B 的实证修复）。
+- **给命名权，不给兑换权**：唯一 True/False 出口仍是原判定核；`split:` 不关闭目标，
+  `con: T->T` 仍 `E-GODEL-II`，自举永久不做。
